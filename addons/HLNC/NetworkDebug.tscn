@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://di5cev80nag76"]
+
+[ext_resource type="Script" path="res://addons/HLNC/NetworkDebug.gd" id="1_bxfok"]
+
+[node name="NetworkDebug" type="Node"]
+script = ExtResource("1_bxfok")

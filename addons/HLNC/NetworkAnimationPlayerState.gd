@@ -1,0 +1,2 @@
+extends NetworkNode3D
+
