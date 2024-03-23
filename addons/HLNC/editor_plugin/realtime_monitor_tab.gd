@@ -63,21 +63,21 @@ func _process(_delta):
 		return
 	if stream.get_available_packet_count() > 0:
 		var val = stream.get_var() # discard the packet
-		if val[0] == NetworkDebug.Message.BYTES_PER_SECOND:
-			bandwidth_graph.y_max = max(bandwidth_graph.y_max, val[1])
-			bandwidth_graph.x_max = bytes_plot_count + 1
-			tick_bandwidth_graph.y_max = max(tick_bandwidth_graph.y_max, val[2])
-			tick_bandwidth_graph.x_max = bytes_plot_count + 1
-			bytes_plot.add_point(Vector2(bytes_plot_count, val[1]))
-			bytes_tick_plot.add_point(Vector2(bytes_plot_count, float(val[1]) / NetworkRunner.TPS))
-			bytes_largest_tick_plot.add_point(Vector2(bytes_plot_count, val[2]))
-			bytes_plot_count += 1
-		elif val[0] == NetworkDebug.Message.PING:
-			var peer_id = val[1]
-			var avg_ping = val[2] * (1000 / NetworkRunner.TPS)
-			if not ping_plots.has(peer_id):
-				ping_plots[peer_id] = ping_graph.add_plot_item("Peer {0}".format([peer_id]), Color.YELLOW, 1)
-			var plot = ping_plots[peer_id]
-			ping_graph.y_max = max(ping_graph.y_max, avg_ping)
-			ping_graph.x_max = bytes_plot_count + 1
-			ping_plots[peer_id].add_point(Vector2(bytes_plot_count, avg_ping))
+		# if val[0] == NetworkDebug.Message.BYTES_PER_SECOND:
+		# 	bandwidth_graph.y_max = max(bandwidth_graph.y_max, val[1])
+		# 	bandwidth_graph.x_max = bytes_plot_count + 1
+		# 	tick_bandwidth_graph.y_max = max(tick_bandwidth_graph.y_max, val[2])
+		# 	tick_bandwidth_graph.x_max = bytes_plot_count + 1
+		# 	bytes_plot.add_point(Vector2(bytes_plot_count, val[1]))
+		# 	bytes_tick_plot.add_point(Vector2(bytes_plot_count, float(val[1]) / NetworkRunner.TPS))
+		# 	bytes_largest_tick_plot.add_point(Vector2(bytes_plot_count, val[2]))
+		# 	bytes_plot_count += 1
+		# elif val[0] == NetworkDebug.Message.PING:
+		# 	var peer_id = val[1]
+		# 	var avg_ping = val[2] * (1000 / NetworkRunner.TPS)
+		# 	if not ping_plots.has(peer_id):
+		# 		ping_plots[peer_id] = ping_graph.add_plot_item("Peer {0}".format([peer_id]), Color.YELLOW, 1)
+		# 	var plot = ping_plots[peer_id]
+		# 	ping_graph.y_max = max(ping_graph.y_max, avg_ping)
+		# 	ping_graph.x_max = bytes_plot_count + 1
+		# 	ping_plots[peer_id].add_point(Vector2(bytes_plot_count, avg_ping))
