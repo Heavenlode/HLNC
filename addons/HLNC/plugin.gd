@@ -1,8 +1,9 @@
 @tool
 extends EditorPlugin
 
-# const AUTOLOAD_RUNNER = "NetworkRunner"
-# const AUTOLOAD_STATE_MANAGER = "NetworkStateManager"
+const AUTOLOAD_RUNNER = "NetworkRunner"
+const AUTOLOAD_STATE_MANAGER = "NetworkStateManager"
+const AUTOLOAD_SCENES_REGISTER = "NetworkScenesRegister"
 # const MainPanel = preload("res://addons/HLNC/editor_plugin/main_screen.tscn")
 
 # var main_panel_instance
@@ -11,7 +12,7 @@ func _build():
 	# main_panel_instance.get_node("TabBar/RealtimeMonitor").start_server()
 	return true
 
-# func _enter_tree():
+func _enter_tree():
 # 	var editor_file_system = get_editor_interface().get_resource_filesystem()
 # 	var dir = DirAccess.open("res://")
 # 	dir.make_dir_recursive("res://addons/HLNC/generated")
@@ -27,8 +28,9 @@ func _build():
 # 		file.close()
 # 		editor_file_system.reimport_files(["res://addons/HLNC/generated/registered_nodes.cs"])
 # 		editor_file_system.scan()
-# 	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/NetworkRunner.cs")
-# 	add_autoload_singleton(AUTOLOAD_STATE_MANAGER, "res://addons/HLNC/NetworkStateManager.cs")
+	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/NetworkRunner.cs")
+	add_autoload_singleton(AUTOLOAD_STATE_MANAGER, "res://addons/HLNC/NetworkStateManager/NetworkStateManager.cs")
+	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/NetworkStateManager/NetworkScenesRegister.cs")
 # 	main_panel_instance = MainPanel.instantiate()
 # 	# Add the main panel to the editor's main viewport.
 # 	get_editor_interface().get_editor_main_screen().add_child(main_panel_instance)
@@ -40,11 +42,12 @@ func _build():
 # 	_make_visible(false)
 
 
-# func _exit_tree():
+func _exit_tree():
 # 	if main_panel_instance:
 # 		main_panel_instance.queue_free()
-# 	remove_autoload_singleton(AUTOLOAD_STATE_MANAGER)
-# 	remove_autoload_singleton(AUTOLOAD_RUNNER)
+	remove_autoload_singleton(AUTOLOAD_SCENES_REGISTER)
+	remove_autoload_singleton(AUTOLOAD_STATE_MANAGER)
+	remove_autoload_singleton(AUTOLOAD_RUNNER)
 
 
 # func _has_main_screen():

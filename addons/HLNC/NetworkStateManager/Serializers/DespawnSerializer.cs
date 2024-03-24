@@ -20,6 +20,8 @@ namespace HLNC.StateSerializers
 			return;
 		}
 
+		public void Cleanup() {}
+
 		public HLBuffer Export(IGlobalNetworkState networkState, PeerId peerId)
 		{
 			var buffer = new HLBuffer();

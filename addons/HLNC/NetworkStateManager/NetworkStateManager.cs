@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace HLNC
@@ -72,13 +73,15 @@ namespace HLNC
 				for (byte i = 0; i < MAX_NETWORK_NODES; i++)
 				{
 					byte localNodeId = (byte)(i+1);
-					if ((availablePeerNodes[peer.Value] & (1 << localNodeId)) == 0)
+					if ((availablePeerNodes[peer.Value] & ((long)1 << localNodeId)) == 0)
 					{
 						globalNodeToLocalNodeMap[peer.Value][node.NetworkId] = localNodeId;
-						availablePeerNodes[peer.Value] |= (long)(1 << localNodeId);
+						availablePeerNodes[peer.Value] |= (long)1 << localNodeId;
 						return localNodeId;
 					}
 				}
+
+				GD.PrintErr("Peer " + peer.Value + " has reached the maximum amount of nodes.");
 				return 0;
 			}
 
@@ -120,10 +123,10 @@ namespace HLNC
 			availablePeerNodes[peerId] = 0;
 		}
 
-		public Dictionary<PeerId, HLBuffer> ExportState(Tick currentTick)
+		public Dictionary<PeerId, HLBuffer> ExportState(int[] peers, Tick currentTick)
 		{
 			Dictionary<PeerId, HLBuffer> peerBuffers = new Dictionary<PeerId, HLBuffer>();
-			foreach (PeerId peerId in NetworkRunner.Instance.MultiplayerInstance.GetPeers())
+			foreach (PeerId peerId in peers)
 			{
 				long updatedNodes = 0;
 				peerBuffers[peerId] = new HLBuffer();
@@ -148,7 +151,11 @@ namespace HLNC
 					{
 						continue;
 					}
-					var localNodeId = globalNodeToLocalNodeMap[peerId][node.NetworkId];
+					// if (!globalNodeToLocalNodeMap[peerId].TryGetValue(node.NetworkId, out byte localNodeId))
+					// {
+					// 	continue;
+					// }
+					byte localNodeId = globalNodeToLocalNodeMap[peerId][node.NetworkId];
 					updatedNodes |= localNodeId;
 					peerNodesSerializersList[localNodeId] = serializersRun;
 					peerNodesBuffers[localNodeId] = new HLBuffer();
@@ -172,14 +179,23 @@ namespace HLNC
 				}
 			}
 
+			foreach (var node in NetworkRunner.Instance.NetworkNodes.Values)
+			{
+				// Finally, cleanup serializers
+				foreach (var serializer in node.Serializers)
+				{
+					serializer.Cleanup();
+				}
+			} 
+
 			return peerBuffers;
 		}
 
 		public void ImportState(HLBuffer stateBytes)
 		{
 			var affectedNodes = HLBytes.UnpackInt64(stateBytes);
-			var seralizers = new Dictionary<long, byte>();
-			for (var i = 0; i < MAX_NETWORK_NODES; i++)
+			var seralizers = new Dictionary<byte, byte>();
+			for (byte i = 0; i < MAX_NETWORK_NODES; i++)
 			{
 				if ((affectedNodes & ((long)1 << i)) == 0)
 				{

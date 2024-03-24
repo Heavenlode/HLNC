@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
@@ -10,6 +11,7 @@ namespace HLNC.StateSerializers
 		private Dictionary<PeerId, bool> spawnAware = new Dictionary<PeerId, bool>();
 
 		private NetworkNode3D node;
+		private Dictionary<PeerId, Tick> setupTicks = new Dictionary<PeerId, Tick>();
 		public SpawnSerializer(NetworkNode3D node) {
 			this.node = node;
 		}
@@ -35,7 +37,8 @@ namespace HLNC.StateSerializers
 			node.QueueFree();
 			
 			// Replace the node with the desired scene
-			nodeOut = (NetworkNode3D)NetworkScenesRegister.SCENES_MAP[classId].Instantiate();
+			var newNode = NetworkScenesRegister.SCENES_MAP[classId].Instantiate();
+			nodeOut = (NetworkNode3D)newNode;
 
 			// Contextually we already know the NetworkId
 			nodeOut.NetworkId = node.NetworkId;
@@ -88,13 +91,24 @@ namespace HLNC.StateSerializers
 				HLBytes.Pack(buffer, (byte)0);
 			}
 
+			setupTicks[peerId] = networkState.CurrentTick;
+
 			return buffer;
         }
 
 		public void Acknowledge(IGlobalNetworkState networkState, PeerId peer, Tick tick) {
-			spawnAware[peer] = true;
+			var peerTick = setupTicks.TryGetValue(peer, out var setupTick) ? setupTick : 0;
+			if (setupTick == 0) {
+				return;
+			}
+
+			if (tick >= peerTick) {
+				spawnAware[peer] = true;
+			}
 		}
 
 		public void PhysicsProcess(double delta) {}
+
+		public void Cleanup() { }
 	}
 }

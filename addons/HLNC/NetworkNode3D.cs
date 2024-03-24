@@ -9,22 +9,22 @@ namespace HLNC
 
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
-        private List<NetworkNode3D> networkChildren = new List<NetworkNode3D>();
+        public List<NetworkNode3D> NetworkChildren = new List<NetworkNode3D>();
         private bool networkScene = false;
         public bool NetworkScene => networkScene;
         public bool DynamicSpawn = false;
 
         // Cannot have more than 8 serializers
         public List<IStateSerailizer> Serializers { get; }
+
         public NetworkNode3D()
         {
             // First, determine if the Node class has the NetworkScene attribute.
-			networkScene = GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0;
+            networkScene = GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0;
             Serializers = new List<IStateSerailizer> {
                 new SpawnSerializer(this),
                 new NetworkPropertiesSerializer(this),
             };
-            
         }
         public NetworkId NetworkId = -1;
         public PeerId InputAuthority = -1;
@@ -69,14 +69,17 @@ namespace HLNC
             if (DynamicSpawn)
                 return;
 
-            if (NetworkScene) {
+            if (NetworkScene)
+            {
                 var children = GetChildren();
-                while (children.Count > 0) {
+                while (children.Count > 0)
+                {
                     var child = children[0];
                     children.RemoveAt(0);
                     children.AddRange(child.GetChildren());
-                    if (child is NetworkNode3D) {
-                        networkChildren.Add((NetworkNode3D)child);
+                    if (child is NetworkNode3D)
+                    {
+                        NetworkChildren.Add((NetworkNode3D)child);
                     }
                 }
                 NetworkRunner.Instance.RegisterStaticSpawn(this);
@@ -85,11 +88,7 @@ namespace HLNC
 
         public virtual void _NetworkProcess(int _tick)
         {
-            if (IsQueuedForDeletion())
-                return;
-            foreach (var child in networkChildren) {
-                child._NetworkProcess(_tick);
-            }
+  
         }
 
         public object GetInput()
@@ -103,15 +102,15 @@ namespace HLNC
         {
             if (IsQueuedForDeletion())
                 return;
-            if (NetworkRunner.Instance.IsServer)
-                return;
-
-            if (NetworkScene) {
+            if (NetworkScene)
+            {
                 for (var i = 0; i < Serializers.Count; i++)
                 {
                     Serializers[i].PhysicsProcess(delta);
                 }
             }
+            if (NetworkRunner.Instance.IsServer)
+                return;
         }
     }
 }

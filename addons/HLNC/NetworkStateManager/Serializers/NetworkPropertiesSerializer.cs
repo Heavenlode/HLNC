@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 
@@ -176,8 +177,10 @@ namespace HLNC.StateSerializers
 			foreach (var propIndex in propertyUpdated.Keys)
 			{
 				var prop = networkProperties[propIndex];
+				// GD.Print("Property updated: " + prop.Name + " on " + prop.Node.Name + " to " + prop.Node.Get(prop.Name));
 				var varVal = prop.Node.Get(prop.Name);
 				propertiesUpdated |= (long)1 << propIndex;
+				propertyUpdated[propIndex] = false;
 			}
 
 			// Store them in the cache to resend in the future until the client acknowledges having received the update
@@ -216,8 +219,17 @@ namespace HLNC.StateSerializers
 			return buffer;
 		}
 
+		public void Cleanup()
+		{
+			propertyUpdated.Clear();
+		}
+
 		public void Acknowledge(IGlobalNetworkState networkState, PeerId peerId, Tick latestAck)
 		{
+			if (!peerBufferCache.ContainsKey(peerId))
+			{
+				return;
+			}
 			foreach (var tick in peerBufferCache[peerId].Keys.Where(x => x <= latestAck).ToList())
 			{
 				peerBufferCache[peerId].Remove(tick);
@@ -235,7 +247,7 @@ namespace HLNC.StateSerializers
 		public void PhysicsProcess(double delta)
 		{
 
-			foreach (var propName in lerpableChangeQueue.Keys)
+			foreach (var propName in lerpableChangeQueue.Keys.ToList())
 			{
 				var toLerp = lerpableChangeQueue[propName];
 				if (toLerp.Weight < 1.0)
@@ -257,6 +269,7 @@ namespace HLNC.StateSerializers
 					if ((float)toLerp.Weight >= 1.0)
 						lerpableChangeQueue.Remove(propName);
 				}
+				lerpableChangeQueue[propName] = toLerp;
 			}
 		}
 	}

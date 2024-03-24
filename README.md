@@ -2,7 +2,6 @@
 
 Simple yet powerful netcode for Godot!
 
-
 ## Table of contents
 - [HLNC](#hlnc)
   - [Table of contents](#table-of-contents)

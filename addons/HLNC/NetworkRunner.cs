@@ -7,30 +7,27 @@ using Godot;
 using Godot.Collections;
 using System.Linq;
 using System;
+using System.Diagnostics;
 
 namespace HLNC
 {
 	public partial class NetworkRunner : Node
 	{
-		public static int LAYER_VISIBLE_SHAPE = 1 << 19;
 		[Export] public string ServerAddress = "127.0.0.1";
 		[Export] public int Port = 8888;
 		[Export] public int MaxPeers = 5;
 
 		public ENetMultiplayerPeer NetPeer = new ENetMultiplayerPeer();
 		public MultiplayerApi MultiplayerInstance;
-		public bool IsServer = false;
-		public bool NetStarted = false;
+
+		private bool _isServer = false;
+		public bool IsServer => _isServer;
+
+		private bool _netStarted = false;
+		public bool NetStarted => _netStarted;
 
 		// public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
 
-		// Unfortunately RPCs cannot use a static enum for a channel name
-		// So we keep this here as documentation
-		// enum TRANSFER_CHANNEL {
-		//     STATE_TRANSFER = 0, (DEFAULT)
-		//     CLIENT_INPUT = 1,
-		//     VISUAL_EFFECTS = 2,
-		// }
 		public int NetworkId_counter = 0;
 		public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = new System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D>();
 		public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = new System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>>();
@@ -79,22 +76,6 @@ namespace HLNC
 			}
 		}
 
-		public void start_network()
-		{
-			if (IsServer)
-			{
-				StartServer();
-				// TODO Ensure this only happens in development
-				// network_debug = (NetworkDebug)DebugScene.Instantiate();
-				// AddChild(network_debug);
-				// network_debug.ConnectToMonitor();
-			}
-			else
-			{
-				start_client();
-			}
-		}
-
 		public void RegisterStaticSpawn(NetworkNode3D node)
 		{
 			if (IsServer) {
@@ -113,6 +94,7 @@ namespace HLNC
 
 		public void StartServer()
 		{
+			_isServer = true;
 			DebugPrint("Starting Server");
 			GetTree().MultiplayerPoll = false;
 			var custom_port = Port;
@@ -132,11 +114,11 @@ namespace HLNC
 			MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
 			GetTree().SetMultiplayer(MultiplayerInstance, "/root");
 			MultiplayerInstance.MultiplayerPeer = NetPeer;
-			NetStarted = true;
+			_netStarted = true;
 			DebugPrint("Started");
 		}
 
-		public void start_client()
+		public void StartClient()
 		{
 			GetTree().MultiplayerPoll = false;
 			var err = NetPeer.CreateClient(ServerAddress, Port);
@@ -150,7 +132,7 @@ namespace HLNC
 			MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
 			GetTree().SetMultiplayer(MultiplayerInstance, "/root");
 			MultiplayerInstance.MultiplayerPeer = NetPeer;
-			NetStarted = true;
+			_netStarted = true;
 			DebugPrint("Started");
 		}
 
@@ -178,20 +160,21 @@ namespace HLNC
 			// 	network_debug.log(new Array<object> { NetworkDebug.Message.BYTES_PER_SECOND, bytes_per_second, largest_tick_value });
 			// 	debug_data_sizes.Clear();
 			// }
-			// foreach (var peer_id in debug_player_ping.Keys)
+			// foreach (var peerId in debug_player_ping.Keys)
 			// {
-			// 	var ping = debug_player_ping[peer_id];
+			// 	var ping = debug_player_ping[peerId];
 			// 	if (ping.Count >= TPS)
 			// 	{
 			// 		var avg_ping = ping.Sum() / TPS;
-			// 		network_debug.log(new Array<object> { NetworkDebug.Message.PING, peer_id, avg_ping });
-			// 		debug_player_ping[peer_id].Clear();
+			// 		network_debug.log(new Array<object> { NetworkDebug.Message.PING, peerId, avg_ping });
+			// 		debug_player_ping[peerId].Clear();
 			// 	}
 			// }
 		}
 
 		public void ServerProcessTick()
 		{
+			var peers = NetworkRunner.Instance.MultiplayerInstance.GetPeers();
 			foreach (var net_id in NetworkNodes.Keys)
 			{
 				var node = NetworkNodes[net_id];
@@ -203,22 +186,26 @@ namespace HLNC
 					continue;
 				}
 				node._NetworkProcess(CurrentTick);
+				foreach (var networkChild in node.NetworkChildren)
+				{
+					networkChild._NetworkProcess(CurrentTick);
+				}
 			}
 
-			var exportedState = NetworkStateManager.Instance.ExportState(CurrentTick);
-			foreach (var peer_id in MultiplayerInstance.GetPeers())
+			var exportedState = NetworkStateManager.Instance.ExportState(peers, CurrentTick);
+			foreach (var peerId in MultiplayerInstance.GetPeers())
 			{
-				if (peer_id == 1)
+				if (peerId == 1)
 					continue;
-				if (!exportedState.ContainsKey(peer_id))
+				if (!exportedState.ContainsKey(peerId))
 				{
-					GD.PrintErr($"No state to send to peer {peer_id}");
+					GD.PrintErr($"No state to send to peer {peerId}");
 				}
 				else
 				{
-					// GD.Print("SENT STATE " +  BitConverter.ToString(exportedState[peer_id].bytes));
-					var compressed_payload = HLBytes.Compress(exportedState[peer_id].bytes);
-					var size = exportedState[peer_id].bytes.Length;
+					// GD.Print("SENT STATE for peer " + peerId + " : " + BitConverter.ToString(exportedState[peerId].bytes));
+					var compressed_payload = HLBytes.Compress(exportedState[peerId].bytes);
+					var size = exportedState[peerId].bytes.Length;
 					// if (network_debug != null)
 					// {
 					// 	debug_data_sizes.Add(compressed_payload.Length);
@@ -227,7 +214,7 @@ namespace HLNC
 					{
 						DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
 					}
-					NetworkStateManager.Instance.RpcId(peer_id, "Tick", CurrentTick, compressed_payload);
+					NetworkStateManager.Instance.RpcId(peerId, "Tick", CurrentTick, compressed_payload);
 				}
 			}
 		}
@@ -252,30 +239,37 @@ namespace HLNC
 			}
 		}
 
-		public void _OnPeerConnected(long peer_id)
+		[Signal]
+		public delegate void PlayerConnectedEventHandler();
+
+		public void _OnPeerConnected(long peerId)
 		{
 			if (!IsServer)
 			{
-				if (peer_id == 1)
+				if (peerId == 1)
 					DebugPrint("Connected to server");
 				else
 					DebugPrint("Peer connected to server");
 				return;
 			}
 
-			DebugPrint($"Peer {peer_id} joined");
+			DebugPrint($"Peer {peerId} joined");
 
 			foreach (var node in GetTree().GetNodesInGroup("global_interest"))
 			{
 				if (node is NetworkNode3D)
-					((NetworkNode3D)node).interest[peer_id] = true;
+					((NetworkNode3D)node).interest[peerId] = true;
 			}
-			NetworkStateManager.Instance.RegisterPlayer(peer_id);
+			NetworkStateManager.Instance.RegisterPlayer(peerId);
+
+			if (IsServer) {
+				EmitSignal("PlayerConnected", peerId);
+			}
 		}
 
-		public void _OnPeerDisconnected(long peer_id)
+		public void _OnPeerDisconnected(long peerId)
 		{
-			DebugPrint($"Peer disconnected peer_id: {peer_id}");
+			DebugPrint($"Peer disconnected peerId: {peerId}");
 		}
 
 		public Array<NetworkNode3D> GetAllNetworkNodes(Node node)
