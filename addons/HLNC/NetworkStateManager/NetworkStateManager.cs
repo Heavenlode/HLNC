@@ -14,6 +14,7 @@ namespace HLNC
 		// For example, 0 0 0 0 (... etc ...) 0 1 0 1 would mean that the first and third nodes are in use
 		private Dictionary<PeerId, long> availablePeerNodes = new Dictionary<PeerId, long>();
 		private Dictionary<PeerId, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = new Dictionary<PeerId, Dictionary<NetworkId, byte>>();
+		private Dictionary<PeerId, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = new Dictionary<PeerId, Dictionary<byte, NetworkId>>();
 		// Track the last tick number that we received an acknowledgement for each player
 		public Dictionary<PeerId, SYNC_STATE> PeerSyncState = new Dictionary<PeerId, SYNC_STATE>();
 		public Tick CurrentTick => NetworkRunner.Instance.CurrentTick;
@@ -39,6 +40,19 @@ namespace HLNC
 				return 0;
 			}
 			return globalNodeToLocalNodeMap[peer][node.NetworkId];
+		}
+
+		public NetworkNode3D GetPeerNode(PeerId peer, byte networkId)
+		{
+			if (!localNodeToGlobalNodeMap.ContainsKey(peer))
+			{
+				return null;
+			}
+			if (!localNodeToGlobalNodeMap[peer].ContainsKey(networkId))
+			{
+				return null;
+			}
+			return NetworkRunner.Instance.NetworkNodes[localNodeToGlobalNodeMap[peer][networkId]];
 		}
 
 		public void DeregisterPeerNode(NetworkNode3D node, PeerId? peer = null) {
@@ -76,6 +90,7 @@ namespace HLNC
 					if ((availablePeerNodes[peer.Value] & ((long)1 << localNodeId)) == 0)
 					{
 						globalNodeToLocalNodeMap[peer.Value][node.NetworkId] = localNodeId;
+						localNodeToGlobalNodeMap[peer.Value][localNodeId] = node.NetworkId;
 						availablePeerNodes[peer.Value] |= (long)1 << localNodeId;
 						return localNodeId;
 					}
@@ -120,6 +135,7 @@ namespace HLNC
 		{
 			PeerSyncState[peerId] = SYNC_STATE.INITIAL;
 			globalNodeToLocalNodeMap[peerId] = new Dictionary<NetworkId, byte>();
+			localNodeToGlobalNodeMap[peerId] = new Dictionary<byte, NetworkId>();
 			availablePeerNodes[peerId] = 0;
 		}
 
@@ -207,7 +223,7 @@ namespace HLNC
 
 			foreach (var serializer in seralizers)
 			{
-				var localNodeId = serializer.Key;
+				var localNodeId = serializer.Key + 1;
 				NetworkNode3D node;
 				NetworkRunner.Instance.NetworkNodes.TryGetValue(localNodeId, out node);
 				if (node == null) {
@@ -256,6 +272,26 @@ namespace HLNC
 			// GD.Print("INCOMING DATA: " + BitConverter.ToString(HLBytes.Decompress(stateBytes)));
 			NetworkRunner.Instance.CurrentTick = incomingTick;
 			ImportState(new HLBuffer(HLBytes.Decompress(stateBytes)));
+			foreach (var net_id in NetworkRunner.Instance.NetworkNodes.Keys)
+			{
+				var node = NetworkRunner.Instance.NetworkNodes[net_id];
+				if (node == null)
+					continue;
+				if (node.IsQueuedForDeletion())
+				{
+					NetworkRunner.Instance.NetworkNodes.Remove(net_id);
+					continue;
+				}
+				node._NetworkProcess(CurrentTick);
+				foreach (var networkChild in node.NetworkChildren)
+				{
+					if (networkChild == null || networkChild.IsQueuedForDeletion())
+					{
+						continue;
+					}
+					networkChild._NetworkProcess(CurrentTick);
+				}
+			}
 			RpcId(1, "TickAcknowledge", incomingTick);
 		}
 

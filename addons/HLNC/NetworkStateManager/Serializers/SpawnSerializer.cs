@@ -31,6 +31,7 @@ namespace HLNC.StateSerializers
 			}
 
 			var classId = HLBytes.UnpackInt8(buffer);
+			var networkId = node.NetworkId;
 
 			// Deregister and delete the node, because it is simply a "Placeholder" that doesn't really exist
 			networkState.DeregisterPeerNode(nodeOut);
@@ -41,7 +42,7 @@ namespace HLNC.StateSerializers
 			nodeOut = (NetworkNode3D)newNode;
 
 			// Contextually we already know the NetworkId
-			nodeOut.NetworkId = node.NetworkId;
+			nodeOut.NetworkId = networkId;
 
 			networkState.TryRegisterPeerNode(nodeOut);
 			nodeOut.DynamicSpawn = true;

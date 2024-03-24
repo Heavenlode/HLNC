@@ -13,9 +13,9 @@ Simple yet powerful netcode for Godot!
     - [Setup steps](#setup-steps)
       - [Help](#help)
   - [Examples](#examples)
+  - [Documentation](#documentation)
   - [What is this?](#what-is-this)
   - [Why?](#why)
-  - [Documentation](#documentation)
   - [How to contribute](#how-to-contribute)
 
 ## Sample
@@ -87,16 +87,21 @@ namespace MyGame
 3. Enable the HLNC plugin in Godot
 
 #### Help
-A better tutorial and demo projects are coming soon. In the meantime, feel free to [open a ticket](https://github.com/Heavenlode/HLNC/issues/new) with any questions or concerns.
+Better documentation and demo projects are coming soon. In the meantime, feel free to [open a ticket](https://github.com/Heavenlode/HLNC/issues/new) with any questions or concerns.
 
 ## Examples
 * [Bouncing Balls](https://github.com/Heavenlode/HLNC-Demo-BouncingBalls/tree/main)
+* [Movable Players](https://github.com/Heavenlode/HLNC-Demo-MovablePlayers)
+
+## Documentation
+
+Coming soon
 
 ## What is this?
 
 HLNC is a library for developing online multiplayer games with Godot. It is a tick-aligned system, respects input authority, and all state is managed by the server.
 
-This library is still in BETA, therefore it is not quite production-ready and is subject to changes. That being said, the majority of the largest backwards-incompatible changes should be complete now.
+This library is still in BETA, therefore it is not quite production-ready and is subject to changes as we approach stability.
 
 HLNC is an acronym for Heavenlode Netcode. The library originated from the author's own online game "Heavenlode" (not yet public).
 
@@ -113,10 +118,6 @@ Godot provides its own Multiplayer API which includes RPCs and synchronizers. Ho
 For example, UDP packets should stay under ~1500 bytes to mitigate packet-splitting and other network instability issues. It isn't clear how Godot addresses this--if at all. HLNC makes it easy for developers to keep their data well within these configurable limits.
 
 Also, Godot encourages utilizing RPCs. The author feels that using RPCs for game networking is clunky, error-prone, and unreliable at scale. HLNC uses a tick-based system wherein the game state is serialized and transferred over the wire using user-friendly abstractions which avoid RPCs.
-
-## Documentation
-
-Coming soon
 
 ## How to contribute
 

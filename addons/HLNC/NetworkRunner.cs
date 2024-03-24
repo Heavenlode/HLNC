@@ -1,13 +1,9 @@
-global using VariableId = System.Int32;
 global using NetworkId = System.Int64;
 global using PeerId = System.Int64;
 global using Tick = System.Int32;
 
 using Godot;
 using Godot.Collections;
-using System.Linq;
-using System;
-using System.Diagnostics;
 
 namespace HLNC
 {
@@ -35,8 +31,8 @@ namespace HLNC
 		{
 			get { return MultiplayerInstance.GetUniqueId(); }
 		}
-
-		public readonly Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<int, Variant>> InputStore = new Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<int, Variant>>();
+		private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = new Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>>();
+		public Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
 		private static NetworkRunner _instance;
 		public static NetworkRunner Instance => _instance;
@@ -174,7 +170,7 @@ namespace HLNC
 
 		public void ServerProcessTick()
 		{
-			var peers = NetworkRunner.Instance.MultiplayerInstance.GetPeers();
+			var peers = Instance.MultiplayerInstance.GetPeers();
 			foreach (var net_id in NetworkNodes.Keys)
 			{
 				var node = NetworkNodes[net_id];
@@ -290,24 +286,31 @@ namespace HLNC
 		}
 
 		[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable, TransferChannel = 1)]
-		public void TransferInput(int tick, Godot.Collections.Dictionary<int, Variant> incoming_input)
+		public void TransferInput(int tick, byte networkId, Godot.Collections.Dictionary<int, Variant> incomingInput)
 		{
 			var sender = MultiplayerInstance.GetRemoteSenderId();
+			var node = NetworkStateManager.Instance.GetPeerNode(sender, networkId);
 
-			if (!InputStore.ContainsKey(sender))
-				InputStore[sender] = new Godot.Collections.Dictionary<int, Variant>() { };
-
-			foreach (var key in incoming_input.Keys)
+			if (node == null)
 			{
-				var incoming = incoming_input[key];
-
-				if (incoming.VariantType == Variant.Type.Vector2 || incoming.VariantType == Variant.Type.Vector3)
-				{
-					incoming = ((Vector3)incoming).Normalized();
-				}
-
-				InputStore[sender][key] = incoming;
+				return;
 			}
+
+			if (sender != node.InputAuthority) {
+				return;
+			}
+
+			if (!inputStore.ContainsKey(sender))
+			{
+				inputStore[sender] = new Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>();
+			}
+
+			if (!inputStore[sender].ContainsKey(networkId))
+			{
+				inputStore[sender][networkId] = new Godot.Collections.Dictionary<int, Variant>();
+			}
+
+			inputStore[sender][networkId] = incomingInput;
 		}
 	}
 }

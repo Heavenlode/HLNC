@@ -3,6 +3,7 @@ using HLNC.StateSerializers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace HLNC
 {
@@ -88,14 +89,31 @@ namespace HLNC
 
         public virtual void _NetworkProcess(int _tick)
         {
-  
+            if (NetworkRunner.Instance.IsServer)
+                return;
+            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler) {
+                INetworkInputHandler inputHandler = (INetworkInputHandler)this;
+                if (inputHandler.InputBuffer.Count > 0)
+                {
+                    NetworkRunner.Instance.RpcId(1, "TransferInput", NetworkRunner.Instance.CurrentTick, (byte)NetworkId, inputHandler.InputBuffer);
+                    inputHandler.InputBuffer.Clear();
+                }
+            }
         }
 
-        public object GetInput()
+        public Godot.Collections.Dictionary<int, Variant> GetInput()
         {
-            if (!NetworkRunner.Instance.InputStore.ContainsKey(InputAuthority) || !IsCurrentOwner)
+            if (!IsCurrentOwner) return null;
+
+            byte netId = NetworkRunner.Instance.LocalPlayerId == InputAuthority ? (byte)NetworkId : NetworkStateManager.Instance.GetPeerNodeId(InputAuthority, this);
+            if (!NetworkRunner.Instance.InputStore.ContainsKey(InputAuthority))
                 return null;
-            return NetworkRunner.Instance.InputStore[InputAuthority];
+            if (!NetworkRunner.Instance.InputStore[InputAuthority].ContainsKey(netId))
+                return null;
+
+            var inputs = NetworkRunner.Instance.InputStore[InputAuthority][netId];
+            NetworkRunner.Instance.InputStore[InputAuthority].Remove(netId);
+            return inputs;
         }
 
         public override void _PhysicsProcess(double delta)
