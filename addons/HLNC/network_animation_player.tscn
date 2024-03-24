@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cxlc0sqpfjixc"]
 
-[ext_resource type="Script" path="res://addons/HLNC/NetworkAnimationPlayer.gd" id="1_1cxhq"]
+[ext_resource type="Script" path="res://addons/HLNC/NetworkAnimationPlayer.cs" id="1_1cxhq"]
 
 [node name="NetworkAnimationPlayer" type="Node3D"]
 script = ExtResource("1_1cxhq")
