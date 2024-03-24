@@ -50,7 +50,7 @@ namespace HLNC
 		}
 
 
-		public NetworkDebug network_debug;
+		// public NetworkDebug network_debug;
 
 		Dictionary<string, string> arguments = new Dictionary<string, string>();
 
