@@ -12,6 +12,7 @@ Simple yet powerful netcode for Godot!
     - [Pre-setup notes](#pre-setup-notes)
     - [Setup steps](#setup-steps)
       - [Help](#help)
+  - [Examples](#examples)
   - [What is this?](#what-is-this)
   - [Why?](#why)
   - [Documentation](#documentation)
@@ -54,10 +55,10 @@ namespace MyGame
 * Tick-aligned system
 * Single state authority (Dedicated-server model)
 * Input authority (cheat prevention)
-* Interest management
 * Data Interpolation
 
 ### Coming soon
+* Interest management
 * Rollback / Lag compensation (blocked by [Godot #2821](https://github.com/godotengine/godot-proposals/issues/2821))
 
 ## Getting started
@@ -88,11 +89,14 @@ namespace MyGame
 #### Help
 A better tutorial and demo projects are coming soon. In the meantime, feel free to [open a ticket](https://github.com/Heavenlode/HLNC/issues/new) with any questions or concerns.
 
+## Examples
+* [Bouncing Balls](https://github.com/Heavenlode/HLNC-Demo-BouncingBalls/tree/main)
+
 ## What is this?
 
 HLNC is a library for developing online multiplayer games with Godot. It is a tick-aligned system, respects input authority, and all state is managed by the server.
 
-This library is still in BETA, therefore it is not quite production-ready and is subject to changes. That being said, the majority of the backwards-incompatible changes should be done now, and we are unlikely to see major API changes going into the stable V1.
+This library is still in BETA, therefore it is not quite production-ready and is subject to changes. That being said, the majority of the largest backwards-incompatible changes should be complete now.
 
 HLNC is an acronym for Heavenlode Netcode. The library originated from the author's own online game "Heavenlode" (not yet public).
 
