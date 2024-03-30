@@ -82,9 +82,17 @@ namespace HLNC.StateSerializers
 		{
 			var propNode = node.GetNode(prop.NodePath);
 			Variant oldVal = propNode.Get(prop.Name);
+			var friendlyPropName = prop.Name;
+			if (friendlyPropName.StartsWith("network_"))
+			{
+				friendlyPropName = friendlyPropName.Substring(8);
+			}
 			if (propNode.HasMethod("OnNetworkChange" + prop.Name))
 			{
 				propNode.Call("OnNetworkChange" + prop.Name, tick, oldVal, value);
+			} else if (propNode.HasMethod("_on_network_change_" + friendlyPropName))
+			{
+				propNode.Call("_on_network_change_" + friendlyPropName, tick, oldVal, value);
 			}
 
 			lerpableChangeQueue[prop.Name] = new LerpableChangeQueue
