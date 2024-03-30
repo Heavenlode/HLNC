@@ -322,7 +322,7 @@ namespace HLNC
 			}
 			else if (type == Variant.Type.Int)
 			{
-				return UnpackInt32(buffer);
+				return UnpackInt64(buffer);
 			}
 			else if (type == Variant.Type.Bool)
 			{
