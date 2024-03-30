@@ -33,9 +33,12 @@ namespace HLNC.StateSerializers
 			var classId = HLBytes.UnpackInt8(buffer);
 			var networkId = node.NetworkId;
 
+			// GD.Print("IMPORTING SPAWN: " + classId);
 			// Deregister and delete the node, because it is simply a "Placeholder" that doesn't really exist
 			networkState.DeregisterPeerNode(nodeOut);
 			node.QueueFree();
+
+			// GD.Print("IMPORTING SPAWN: " + NetworkScenesRegister.SCENES_MAP[classId]);
 			
 			// Replace the node with the desired scene
 			var newNode = NetworkScenesRegister.SCENES_MAP[classId].Instantiate();
@@ -82,6 +85,7 @@ namespace HLNC.StateSerializers
 				return buffer;
 			}
 
+			// GD.Print("EXPORTING SPAWN: " + node.SceneFilePath + " ID: " + NetworkScenesRegister.SCENES_PACK[node.SceneFilePath]);
 			HLBytes.Pack(buffer, NetworkScenesRegister.SCENES_PACK[node.SceneFilePath]);
 
 			// Other data such as position and rotation are not packed as part of the Spawn data

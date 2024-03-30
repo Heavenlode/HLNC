@@ -26,6 +26,7 @@ namespace HLNC
 		public int pointer;
 		public bool pointerReachedEnd => pointer >= bytes.Length;
 		public const int CONSISTENCY_BUFFER_SIZE_LIMIT = 256;
+		public byte[] RemainingBytes => bytes[pointer..];
 
 		public HLBuffer(byte[] bytes = null)
 		{

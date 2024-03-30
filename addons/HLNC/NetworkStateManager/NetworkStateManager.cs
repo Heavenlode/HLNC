@@ -218,6 +218,7 @@ namespace HLNC
 					continue;
 				}
 				var serializersRun = HLBytes.UnpackInt8(stateBytes);
+				// GD.Print("Node " + i + " has serializers: " + serializersRun);
 				seralizers[i] = serializersRun;
 			}
 
@@ -240,6 +241,8 @@ namespace HLNC
 					}
 					var serializerInstance = node.Serializers[serializerIdx];
 					NetworkNode3D nodeOut;
+					// GD.Print("Running serializer" + serializerIdx + " for node " + localNodeId);
+					// GD.Print("With payload: " + BitConverter.ToString(stateBytes.RemainingBytes));
 					serializerInstance.Import(this, stateBytes, out nodeOut);
 					if (node != nodeOut) {
 						// The node has been replaced.

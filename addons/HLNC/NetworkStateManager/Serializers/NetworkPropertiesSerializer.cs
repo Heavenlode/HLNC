@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,13 +15,7 @@ namespace HLNC.StateSerializers
 		private const int MAX_NETWORK_PROPERTIES = 64;
 		private NetworkNode3D node;
 
-		private struct CollectedNetworkProperty
-		{
-			public NetworkNode3D Node;
-			public string Name;
-			public Variant.Type Type;
-		}
-
+		private Dictionary<byte, Variant> cachedPropertyChanges = new Dictionary<byte, Variant>();
 		private struct LerpableChangeQueue
 		{
 			public CollectedNetworkProperty Prop;
@@ -31,8 +26,6 @@ namespace HLNC.StateSerializers
 
 		private Dictionary<string, LerpableChangeQueue> lerpableChangeQueue = new Dictionary<string, LerpableChangeQueue>();
 
-		private List<CollectedNetworkProperty> networkProperties = new List<CollectedNetworkProperty>();
-		private Dictionary<string, byte> propertyIndices = new Dictionary<string, byte>();
 		private Dictionary<byte, bool> propertyUpdated = new Dictionary<byte, bool>();
 		public NetworkPropertiesSerializer(NetworkNode3D node)
 		{
@@ -46,85 +39,50 @@ namespace HLNC.StateSerializers
 
 			node.Ready += () =>
 			{
-				var propertyId = -1;
-				var nodes = new List<Node>() { node };
-				while (nodes.Count > 0)
+				if (NetworkRunner.Instance.IsServer)
 				{
-					var child = nodes[0];
-					nodes.RemoveAt(0);
-					nodes.AddRange(child.GetChildren());
-					if (child is not NetworkNode3D)
+					// GD.Print("Registering properties for " + node.SceneFilePath);
+					foreach (var nodeProperties in NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath])
 					{
-						continue;
-					}
-
-					// Reflect on the child and collect all properties with the NetworkProperty attribute
-					foreach (PropertyInfo property in child.GetType().GetProperties())
-					{
-						foreach (Attribute attr in property.GetCustomAttributes(true))
-						{
-							if (attr is not NetworkProperty)
-							{
-								continue;
-							}
-
-							propertyId += 1;
-							if (propertyId >= MAX_NETWORK_PROPERTIES)
-							{
-								GD.PrintErr("NetworkPropertiesSerializer: Too many network properties on " + node.Name + ". The maximum is " + MAX_NETWORK_PROPERTIES + ". Properties beyond the maximum will not be serialized.");
-								return;
-							}
-							Variant.Type type = Variant.Type.Nil;
-							if (property.PropertyType == typeof(int))
-							{
-								type = Variant.Type.Int;
-							}
-							else if (property.PropertyType == typeof(float))
-							{
-								type = Variant.Type.Float;
-							}
-							else if (property.PropertyType == typeof(string))
-							{
-								type = Variant.Type.String;
-							}
-							else if (property.PropertyType == typeof(Vector3))
-							{
-								type = Variant.Type.Vector3;
-							}
-							else if (property.PropertyType == typeof(Quaternion))
-							{
-								type = Variant.Type.Quaternion;
-							}
-							else if (property.PropertyType == typeof(bool))
-							{
-								type = Variant.Type.Bool;
-							}
-							else
-							{
-								GD.PrintErr("NetworkPropertiesSerializer: Unsupported property type " + property.PropertyType + " on " + node.Name + "." + property.Name + ". Only int, float, string, Vector3, Quat, Color, and bool are supported.");
-								return;
-							}
-							networkProperties.Add(new CollectedNetworkProperty
-							{
-								Node = (NetworkNode3D)child,
-								Name = property.Name,
-								Type = type
-							});
-							propertyIndices[property.Name] = (byte)propertyId;
-						}
-					}
-
-					if (NetworkRunner.Instance.IsServer)
-					{
+						var nodePath = nodeProperties.Key;
+						var child = node.GetNode(nodePath);
 						((INotifyPropertyChanged)child).PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
-						{
-							if (propertyIndices.TryGetValue(e.PropertyName, out byte propIndex))
 							{
-								propertyUpdated[propIndex] = true;
-							}
-						};
+								if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(e.PropertyName, out var property))
+								{
+									propertyUpdated[property.Index] = true;
+								}
+							};
 					}
 				}
+				else
+				{
+					// As a client, apply all the cached changes
+					foreach (var propIndex in cachedPropertyChanges.Keys)
+					{
+						var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][propIndex];
+						ImportProperty(prop, NetworkRunner.Instance.CurrentTick, cachedPropertyChanges[propIndex]);
+					}
+				}
+			};
+
+		}
+
+		public void ImportProperty(CollectedNetworkProperty prop, Tick tick, Variant value)
+		{
+			var propNode = node.GetNode(prop.NodePath);
+			Variant oldVal = propNode.Get(prop.Name);
+			if (propNode.HasMethod("OnNetworkChange" + prop.Name))
+			{
+				propNode.Call("OnNetworkChange" + prop.Name, tick, oldVal, value);
+			}
+
+			lerpableChangeQueue[prop.Name] = new LerpableChangeQueue
+			{
+				Prop = prop,
+				From = oldVal,
+				To = value,
+				Weight = 0.0f
 			};
 		}
 
@@ -139,21 +97,17 @@ namespace HLNC.StateSerializers
 				{
 					continue;
 				}
-				var prop = networkProperties[i];
+				var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][(byte)i];
 				var varVal = HLBytes.UnpackVariant(buffer, prop.Type);
-				Variant oldVal = prop.Node.Get(prop.Name);
-				if (prop.Node.HasMethod("OnNetworkChange" + prop.Name))
+				if (node.IsNodeReady())
 				{
-					prop.Node.Call("OnNetworkChange" + prop.Name, networkState.CurrentTick, oldVal, varVal.Value);
+					ImportProperty(prop, networkState.CurrentTick, varVal.Value);
+				}
+				else
+				{
+					cachedPropertyChanges[(byte)i] = varVal.Value;
 				}
 
-				lerpableChangeQueue[prop.Name] = new LerpableChangeQueue
-				{
-					Prop = prop,
-					From = oldVal,
-					To = varVal.Value,
-					Weight = 0.0f
-				};
 			}
 
 			return;
@@ -176,9 +130,6 @@ namespace HLNC.StateSerializers
 			// First, we find any newly updated properties
 			foreach (var propIndex in propertyUpdated.Keys)
 			{
-				var prop = networkProperties[propIndex];
-				// GD.Print("Property updated: " + prop.Name + " on " + prop.Node.Name + " to " + prop.Node.Get(prop.Name));
-				var varVal = prop.Node.Get(prop.Name);
 				propertiesUpdated |= (long)1 << propIndex;
 				propertyUpdated[propIndex] = false;
 			}
@@ -211,8 +162,9 @@ namespace HLNC.StateSerializers
 					continue;
 				}
 
-				var prop = networkProperties[i];
-				var varVal = prop.Node.Get(prop.Name);
+				var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][(byte)i];
+				var propNode = node.GetNode(prop.NodePath);
+				var varVal = propNode.Get(prop.Name);
 				HLBytes.Pack(buffer, varVal);
 			}
 
@@ -250,19 +202,23 @@ namespace HLNC.StateSerializers
 			foreach (var propName in lerpableChangeQueue.Keys.ToList())
 			{
 				var toLerp = lerpableChangeQueue[propName];
+				var lerpNode = node.GetNode(toLerp.Prop.NodePath);
 				if (toLerp.Weight < 1.0)
 				{
 					toLerp.Weight = Math.Min(toLerp.Weight + (delta * 10), 1.0);
 					if (toLerp.Prop.Type == Variant.Type.Quaternion)
 					{
 						var next_value = ((Quaternion)toLerp.From).Normalized().Slerp(((Quaternion)toLerp.To).Normalized(), (float)toLerp.Weight);
-						toLerp.Prop.Node.Set(toLerp.Prop.Name, next_value);
-					} else if (toLerp.Prop.Type == Variant.Type.Vector3)
+						lerpNode.Set(toLerp.Prop.Name, next_value);
+					}
+					else if (toLerp.Prop.Type == Variant.Type.Vector3)
 					{
 						var next_value = Lerp((Vector3)toLerp.From, (Vector3)toLerp.To, (float)toLerp.Weight);
-						toLerp.Prop.Node.Set(toLerp.Prop.Name, next_value);
-					} else {
-						toLerp.Prop.Node.Set(toLerp.Prop.Name, toLerp.To);
+						lerpNode.Set(toLerp.Prop.Name, next_value);
+					}
+					else
+					{
+						lerpNode.Set(toLerp.Prop.Name, toLerp.To);
 						lerpableChangeQueue.Remove(propName);
 					}
 
