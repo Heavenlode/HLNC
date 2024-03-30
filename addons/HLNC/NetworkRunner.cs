@@ -135,7 +135,7 @@ namespace HLNC
 		public int frame_counter = 0;
 		public const int FRAMES_PER_SECOND = 60;
 		public const int FRAMES_PER_TICK = 2;
-		public const int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+		public static int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
 		public const int MTU = 1400;
 
 		public int CurrentTick = 0;

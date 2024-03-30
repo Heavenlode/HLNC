@@ -16,7 +16,7 @@ namespace HLNC.StateSerializers
 		private NetworkNode3D node;
 
 		private Dictionary<byte, Variant> cachedPropertyChanges = new Dictionary<byte, Variant>();
-		private struct LerpableChangeQueue
+		public struct LerpableChangeQueue
 		{
 			public CollectedNetworkProperty Prop;
 			public Variant From;
@@ -223,21 +223,31 @@ namespace HLNC.StateSerializers
 				var lerpNode = node.GetNode(toLerp.Prop.NodePath);
 				if (toLerp.Weight < 1.0)
 				{
-					toLerp.Weight = Math.Min(toLerp.Weight + (delta * 10), 1.0);
-					if (toLerp.Prop.Type == Variant.Type.Quaternion)
+					double result = -1;
+					if (lerpNode.HasMethod("NetworkLerp" + toLerp.Prop.Name))
 					{
-						var next_value = ((Quaternion)toLerp.From).Normalized().Slerp(((Quaternion)toLerp.To).Normalized(), (float)toLerp.Weight);
-						lerpNode.Set(toLerp.Prop.Name, next_value);
+						result = (double)lerpNode.Call("NetworkLerp" + toLerp.Prop.Name, toLerp.From, toLerp.To, toLerp.Weight);
+						if (result >= 0) {
+							toLerp.Weight = result;
+						}
 					}
-					else if (toLerp.Prop.Type == Variant.Type.Vector3)
-					{
-						var next_value = Lerp((Vector3)toLerp.From, (Vector3)toLerp.To, (float)toLerp.Weight);
-						lerpNode.Set(toLerp.Prop.Name, next_value);
-					}
-					else
-					{
-						lerpNode.Set(toLerp.Prop.Name, toLerp.To);
-						lerpableChangeQueue.Remove(propName);
+					if (result == -1) {
+						toLerp.Weight = Math.Min(toLerp.Weight + (delta * 10), 1.0);
+						if (toLerp.Prop.Type == Variant.Type.Quaternion)
+						{
+							var next_value = ((Quaternion)toLerp.From).Normalized().Slerp(((Quaternion)toLerp.To).Normalized(), (float)toLerp.Weight);
+							lerpNode.Set(toLerp.Prop.Name, next_value);
+						}
+						else if (toLerp.Prop.Type == Variant.Type.Vector3)
+						{
+							var next_value = Lerp((Vector3)toLerp.From, (Vector3)toLerp.To, (float)toLerp.Weight);
+							lerpNode.Set(toLerp.Prop.Name, next_value);
+						}
+						else
+						{
+							lerpNode.Set(toLerp.Prop.Name, toLerp.To);
+							lerpableChangeQueue.Remove(propName);
+						}
 					}
 
 					if ((float)toLerp.Weight >= 1.0)

@@ -132,7 +132,7 @@ namespace HLNC
 												}
 											}
 										} else {
-											GD.Print("Registering properties for " + child.GetPath());
+											// GD.Print("Registering properties for " + child.GetPath());
 											var props = child.GetPropertyList();
 											foreach (var prop in props) {
 												if (prop.TryGetValue("name", out var name) && prop.TryGetValue("type", out var type)) {
