@@ -10,22 +10,26 @@ namespace HLNC
 
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
-        public List<NetworkNode3D> NetworkChildren = new List<NetworkNode3D>();
-        private bool networkScene = false;
-        public bool NetworkScene => networkScene;
+        public List<Node> NetworkChildren = new List<Node>();
         public bool DynamicSpawn = false;
 
         // Cannot have more than 8 serializers
         public List<IStateSerailizer> Serializers { get; }
 
+        [Signal]
+        public delegate void NetworkPropertyChangedEventHandler(string nodePath, StringName propertyName);
+
         public NetworkNode3D()
         {
             // First, determine if the Node class has the NetworkScene attribute.
-            networkScene = GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0;
+            if (GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0) {
+                SetMeta("is_network_scene", true);
+            }
             Serializers = new List<IStateSerailizer> {
                 new SpawnSerializer(this),
                 new NetworkPropertiesSerializer(this),
             };
+            SetMeta("is_network_node", true);
         }
         public NetworkId NetworkId = -1;
         public PeerId InputAuthority = -1;
@@ -66,23 +70,40 @@ namespace HLNC
         public override void _Ready()
         {
             base._Ready();
-
+            if (NetworkRunner.Instance.IsServer) {
+                var parentScene = this as Node;
+                while (parentScene != null)
+                {
+                    if (parentScene.HasMeta("is_network_scene"))
+                    {
+                        break;
+                    }
+                    parentScene = parentScene.GetParent();
+                }
+                if (parentScene == null) {
+                    GD.PrintErr("FAILED TO FIND PARENT SCENE FOR " + GetPath());
+                }
+                PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
+                {
+                    EmitSignal("NetworkPropertyChanged", parentScene.GetPathTo(this), e.PropertyName);
+                };
+            }
+            var children = GetChildren();
+            while (children.Count > 0)
+            {
+                var child = children[0];
+                children.RemoveAt(0);
+                children.AddRange(child.GetChildren());
+                if (child.HasMeta("is_network_node"))
+                {
+                    NetworkChildren.Add(child);
+                }
+            }
             if (DynamicSpawn)
                 return;
 
-            if (NetworkScene)
+            if (HasMeta("is_network_scene"))
             {
-                var children = GetChildren();
-                while (children.Count > 0)
-                {
-                    var child = children[0];
-                    children.RemoveAt(0);
-                    children.AddRange(child.GetChildren());
-                    if (child is NetworkNode3D)
-                    {
-                        NetworkChildren.Add((NetworkNode3D)child);
-                    }
-                }
                 NetworkRunner.Instance.RegisterStaticSpawn(this);
             }
         }
@@ -91,7 +112,8 @@ namespace HLNC
         {
             if (NetworkRunner.Instance.IsServer)
                 return;
-            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler) {
+            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
+            {
                 INetworkInputHandler inputHandler = (INetworkInputHandler)this;
                 if (inputHandler.InputBuffer.Count > 0)
                 {
@@ -120,7 +142,7 @@ namespace HLNC
         {
             if (IsQueuedForDeletion())
                 return;
-            if (NetworkScene)
+            if (HasMeta("is_network_scene"))
             {
                 for (var i = 0; i < Serializers.Count; i++)
                 {

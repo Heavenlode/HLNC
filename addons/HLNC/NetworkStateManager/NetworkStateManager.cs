@@ -286,13 +286,18 @@ namespace HLNC
 					continue;
 				}
 				node._NetworkProcess(CurrentTick);
+				
 				foreach (var networkChild in node.NetworkChildren)
 				{
 					if (networkChild == null || networkChild.IsQueuedForDeletion())
 					{
 						continue;
 					}
-					networkChild._NetworkProcess(CurrentTick);
+					if (networkChild.HasMethod("_NetworkProcess")) {
+						networkChild.Call("_NetworkProcess", CurrentTick);
+					} else if (networkChild.HasMethod("_network_process")) {
+						networkChild.Call("_network_process", CurrentTick);
+					}
 				}
 			}
 			RpcId(1, "TickAcknowledge", incomingTick);

@@ -60,71 +60,111 @@ namespace HLNC
 										var child = nodes[0];
 										nodes.RemoveAt(0);
 										nodes.AddRange(child.GetChildren());
-										if (child is not NetworkNode3D)
+
+										if (!child.HasMeta("is_network_node"))
 										{
 											continue;
 										}
-										// GD.Print("Registering properties for " + child.GetPath());
 
-										// Reflect on the child and collect all properties with the NetworkProperty attribute
-										foreach (PropertyInfo property in child.GetType().GetProperties())
+										if (child is NetworkNode3D)
 										{
-											foreach (Attribute attr in property.GetCustomAttributes(true))
-											{
-												if (attr is not NetworkProperty)
-												{
-													continue;
-												}
+											// GD.Print("Registering properties for " + child.GetPath());
 
-												propertyId += 1;
-												if (propertyId >= MAX_NETWORK_PROPERTIES)
+											// Reflect on the child and collect all properties with the NetworkProperty attribute
+											foreach (PropertyInfo property in child.GetType().GetProperties())
+											{
+												foreach (Attribute attr in property.GetCustomAttributes(true))
 												{
-													GD.PrintErr("NetworkPropertiesSerializer: Too many network properties on " + node.Name + ". The maximum is " + MAX_NETWORK_PROPERTIES + ". Properties beyond the maximum will not be serialized.");
-													return;
+													if (attr is not NetworkProperty)
+													{
+														continue;
+													}
+
+													propertyId += 1;
+													if (propertyId >= MAX_NETWORK_PROPERTIES)
+													{
+														GD.PrintErr("NetworkPropertiesSerializer: Too many network properties on " + node.Name + ". The maximum is " + MAX_NETWORK_PROPERTIES + ". Properties beyond the maximum will not be serialized.");
+														return;
+													}
+													Variant.Type type = Variant.Type.Nil;
+													if (property.PropertyType == typeof(int))
+													{
+														type = Variant.Type.Int;
+													}
+													else if (property.PropertyType == typeof(float))
+													{
+														type = Variant.Type.Float;
+													}
+													else if (property.PropertyType == typeof(string))
+													{
+														type = Variant.Type.String;
+													}
+													else if (property.PropertyType == typeof(Vector3))
+													{
+														type = Variant.Type.Vector3;
+													}
+													else if (property.PropertyType == typeof(Quaternion))
+													{
+														type = Variant.Type.Quaternion;
+													}
+													else if (property.PropertyType == typeof(bool))
+													{
+														type = Variant.Type.Bool;
+													}
+													else
+													{
+														GD.PrintErr("NetworkPropertiesSerializer: Unsupported property type " + property.PropertyType + " on " + node.Name + "." + property.Name + ". Only int, float, string, Vector3, Quat, Color, and bool are supported.");
+														return;
+													}
+													var relativeChildPath = node.GetPathTo(child);
+													var collectedProperty = new CollectedNetworkProperty
+													{
+														NodePath = relativeChildPath,
+														Name = property.Name,
+														Type = type,
+														Index = (byte)propertyId,
+													};
+													PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, new Dictionary<string, CollectedNetworkProperty>());
+													PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd(property.Name, collectedProperty);
+													PROPERTY_LOOKUP.TryAdd(scenePath, new Dictionary<byte, CollectedNetworkProperty>());;
+													PROPERTY_LOOKUP[scenePath].TryAdd((byte)propertyId, collectedProperty);
+													// GD.Print("Registered property: " + relativeChildPath + "." + property.Name + "for scene " + scenePath);
 												}
-												Variant.Type type = Variant.Type.Nil;
-												if (property.PropertyType == typeof(int))
-												{
-													type = Variant.Type.Int;
+											}
+										} else {
+											GD.Print("Registering properties for " + child.GetPath());
+											var props = child.GetPropertyList();
+											foreach (var prop in props) {
+												if (prop.TryGetValue("name", out var name) && prop.TryGetValue("type", out var type)) {
+													if (name.VariantType != Variant.Type.String || type.VariantType != Variant.Type.Int)
+													{
+														GD.PrintErr("NetworkPropertiesSerializer: Invalid property definition on " + node.Name + ". Only string names and int types are supported.");
+														return;
+													} 
+													if (!((string)name).StartsWith("network_"))
+													{
+														continue;
+													}
+													propertyId += 1;
+													if (propertyId >= MAX_NETWORK_PROPERTIES)
+													{
+														GD.PrintErr("NetworkPropertiesSerializer: Too many network properties on " + node.Name + ". The maximum is " + MAX_NETWORK_PROPERTIES + ". Properties beyond the maximum will not be serialized.");
+														return;
+													}
+													var relativeChildPath = node.GetPathTo(child);
+													var collectedProperty = new CollectedNetworkProperty
+													{
+														NodePath = relativeChildPath,
+														Name = (string)name,
+														Type = (Variant.Type)(int)type,
+														Index = (byte)propertyId,
+													};
+													// GD.Print("Registered property: " + relativeChildPath + "." + name + " of type " + type + " for scene " + scenePath);
+													PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, new Dictionary<string, CollectedNetworkProperty>());
+													PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd((string)name, collectedProperty);
+													PROPERTY_LOOKUP.TryAdd(scenePath, new Dictionary<byte, CollectedNetworkProperty>());;
+													PROPERTY_LOOKUP[scenePath].TryAdd((byte)propertyId, collectedProperty);
 												}
-												else if (property.PropertyType == typeof(float))
-												{
-													type = Variant.Type.Float;
-												}
-												else if (property.PropertyType == typeof(string))
-												{
-													type = Variant.Type.String;
-												}
-												else if (property.PropertyType == typeof(Vector3))
-												{
-													type = Variant.Type.Vector3;
-												}
-												else if (property.PropertyType == typeof(Quaternion))
-												{
-													type = Variant.Type.Quaternion;
-												}
-												else if (property.PropertyType == typeof(bool))
-												{
-													type = Variant.Type.Bool;
-												}
-												else
-												{
-													GD.PrintErr("NetworkPropertiesSerializer: Unsupported property type " + property.PropertyType + " on " + node.Name + "." + property.Name + ". Only int, float, string, Vector3, Quat, Color, and bool are supported.");
-													return;
-												}
-												var relativeChildPath = node.GetPathTo(child);
-												var collectedProperty = new CollectedNetworkProperty
-												{
-													NodePath = relativeChildPath,
-													Name = property.Name,
-													Type = type,
-													Index = (byte)propertyId,
-												};
-												PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, new Dictionary<string, CollectedNetworkProperty>());
-												PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd(property.Name, collectedProperty);
-												PROPERTY_LOOKUP.TryAdd(scenePath, new Dictionary<byte, CollectedNetworkProperty>());;
-												PROPERTY_LOOKUP[scenePath].TryAdd((byte)propertyId, collectedProperty);
-												// GD.Print("Registered property: " + relativeChildPath + "." + property.Name + "for scene " + scenePath);
 											}
 										}
 									}

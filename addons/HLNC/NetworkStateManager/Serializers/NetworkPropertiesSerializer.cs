@@ -32,7 +32,7 @@ namespace HLNC.StateSerializers
 			this.node = node;
 
 			// First, determine if the Node class has the NetworkScene attribute
-			if (!node.NetworkScene)
+			if (!node.HasMeta("is_network_scene"))
 			{
 				return;
 			}
@@ -46,13 +46,23 @@ namespace HLNC.StateSerializers
 					{
 						var nodePath = nodeProperties.Key;
 						var child = node.GetNode(nodePath);
-						((INotifyPropertyChanged)child).PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
+						if (child.HasSignal("NetworkPropertyChanged"))
+						{
+							child.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
 							{
-								if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(e.PropertyName, out var property))
+								if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(propertyName, out var property))
 								{
 									propertyUpdated[property.Index] = true;
 								}
-							};
+							}));
+						}
+						// ((INotifyPropertyChanged)child).PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
+						// 	{
+						// 		if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(e.PropertyName, out var property))
+						// 		{
+						// 			propertyUpdated[property.Index] = true;
+						// 		}
+						// 	};
 					}
 				}
 				else

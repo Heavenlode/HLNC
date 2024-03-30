@@ -184,7 +184,11 @@ namespace HLNC
 				node._NetworkProcess(CurrentTick);
 				foreach (var networkChild in node.NetworkChildren)
 				{
-					networkChild._NetworkProcess(CurrentTick);
+					if (networkChild.HasMethod("_NetworkProcess")) {
+						networkChild.Call("_NetworkProcess", CurrentTick);
+					} else if (networkChild.HasMethod("_network_process")) {
+						networkChild.Call("_network_process", CurrentTick);
+					}
 				}
 			}
 
