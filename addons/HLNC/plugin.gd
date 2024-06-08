@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 const AUTOLOAD_RUNNER = "NetworkRunner"
-const AUTOLOAD_STATE_MANAGER = "NetworkStateManager"
+const AUTOLOAD_STATE_MANAGER = "NetworkPeerManager"
 const AUTOLOAD_SCENES_REGISTER = "NetworkScenesRegister"
 # const MainPanel = preload("res://addons/HLNC/editor_plugin/main_screen.tscn")
 
@@ -29,8 +29,8 @@ func _enter_tree():
 # 		editor_file_system.reimport_files(["res://addons/HLNC/generated/registered_nodes.cs"])
 # 		editor_file_system.scan()
 	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/NetworkRunner.cs")
-	add_autoload_singleton(AUTOLOAD_STATE_MANAGER, "res://addons/HLNC/NetworkStateManager/NetworkStateManager.cs")
-	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/NetworkStateManager/NetworkScenesRegister.cs")
+	add_autoload_singleton(AUTOLOAD_STATE_MANAGER, "res://addons/HLNC/NetworkPeerManager/NetworkPeerManager.cs")
+	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/NetworkPeerManager/NetworkScenesRegister.cs")
 # 	main_panel_instance = MainPanel.instantiate()
 # 	# Add the main panel to the editor's main viewport.
 # 	get_editor_interface().get_editor_main_screen().add_child(main_panel_instance)

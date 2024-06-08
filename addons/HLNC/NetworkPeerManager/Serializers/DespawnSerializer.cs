@@ -5,6 +5,10 @@ namespace HLNC.StateSerializers
 {
 	public class DespawnSerializer : IStateSerailizer
 	{
+		private struct Data
+		{
+		
+		}
 
 		private Dictionary<PeerId, bool> interestCache = new Dictionary<PeerId, bool>();
 		private NetworkNode3D node;
@@ -14,9 +18,15 @@ namespace HLNC.StateSerializers
 			this.node = node;
 		}
 
+		private Data deserialize(HLBuffer data)
+		{
+			return new Data();
+		}
+
 		public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
 		{
 			nodeOut = node;
+			var data = deserialize(buffer);
 			return;
 		}
 

@@ -183,6 +183,19 @@ namespace HLNC
 			buffer.pointer += 1;
 		}
 
+		public static void Pack(HLBuffer buffer, int varVal, bool pack_type = false)
+		{
+			if (pack_type)
+			{
+				throw new Exception("Cannot pack_type int. Only long allowed becaused Godot Variant.Int is long.");
+			}
+
+			Array.Resize(ref buffer.bytes, buffer.bytes.Length + 4);
+			byte[] floatBytes = BitConverter.GetBytes(varVal);
+			Array.Copy(floatBytes, 0, buffer.bytes, buffer.pointer, 4);
+			buffer.pointer += 4;
+		}
+
 		public static void Pack(HLBuffer buffer, long varVal, bool pack_type = false)
 		{
 			if (pack_type)
@@ -391,6 +404,12 @@ namespace HLNC
 			Array.Copy(buffer.bytes, buffer.pointer, bytes, 0, 4);
 			buffer.pointer += 4;
 			return BitConverter.ToSingle(bytes, 0);
+		}
+
+		// Alias for UnpackInt8
+		public static byte UnpackByte(HLBuffer buffer)
+		{
+			return UnpackInt8(buffer);
 		}
 		public static byte UnpackInt8(HLBuffer buffer)
 		{

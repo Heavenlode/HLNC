@@ -10,8 +10,14 @@ using Godot;
 
 namespace HLNC.StateSerializers
 {
+
 	public class NetworkPropertiesSerializer : IStateSerailizer
 	{
+		private struct Data
+		{
+			public long propertiesUpdated;
+			public Dictionary<byte, Variant> properties;
+		}
 		private const int MAX_NETWORK_PROPERTIES = 64;
 		private NetworkNode3D node;
 
@@ -32,6 +38,7 @@ namespace HLNC.StateSerializers
 			this.node = node;
 
 			// First, determine if the Node class has the NetworkScene attribute
+			// This is because only a network scene will serialize network node properties recursively
 			if (!node.HasMeta("is_network_scene"))
 			{
 				return;
@@ -41,29 +48,13 @@ namespace HLNC.StateSerializers
 			{
 				if (NetworkRunner.Instance.IsServer)
 				{
-					// GD.Print("Registering properties for " + node.SceneFilePath);
-					foreach (var nodeProperties in NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath])
+					node.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
 					{
-						var nodePath = nodeProperties.Key;
-						var child = node.GetNode(nodePath);
-						if (child.HasSignal("NetworkPropertyChanged"))
+						if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(propertyName, out var property))
 						{
-							child.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
-							{
-								if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(propertyName, out var property))
-								{
-									propertyUpdated[property.Index] = true;
-								}
-							}));
+							propertyUpdated[property.Index] = true;
 						}
-						// ((INotifyPropertyChanged)child).PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
-						// 	{
-						// 		if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(e.PropertyName, out var property))
-						// 		{
-						// 			propertyUpdated[property.Index] = true;
-						// 		}
-						// 	};
-					}
+					}));
 				}
 				else
 				{
@@ -90,7 +81,8 @@ namespace HLNC.StateSerializers
 			if (propNode.HasMethod("OnNetworkChange" + prop.Name))
 			{
 				propNode.Call("OnNetworkChange" + prop.Name, tick, oldVal, value);
-			} else if (propNode.HasMethod("_on_network_change_" + friendlyPropName))
+			}
+			else if (propNode.HasMethod("_on_network_change_" + friendlyPropName))
 			{
 				propNode.Call("_on_network_change_" + friendlyPropName, tick, oldVal, value);
 			}
@@ -104,28 +96,42 @@ namespace HLNC.StateSerializers
 			};
 		}
 
-		public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
-		{
-			nodeOut = node;
 
-			var propertiesUpdated = HLBytes.UnpackInt64(buffer);
+		private Data deserialize(HLBuffer buffer)
+		{
+			var data = new Data
+			{
+				propertiesUpdated = HLBytes.UnpackInt64(buffer),
+				properties = new Dictionary<byte, Variant>()
+			};
 			for (var i = 0; i < MAX_NETWORK_PROPERTIES; i++)
 			{
-				if ((propertiesUpdated & ((long)1 << i)) == 0)
+				if ((data.propertiesUpdated & ((long)1 << i)) == 0)
 				{
 					continue;
 				}
 				var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][(byte)i];
 				var varVal = HLBytes.UnpackVariant(buffer, prop.Type);
+				data.properties[(byte)i] = varVal.Value;
+			}
+			return data;
+		}
+
+		public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
+		{
+			nodeOut = node;
+			var data = deserialize(buffer);
+			foreach (var propIndex in data.properties.Keys)
+			{
 				if (node.IsNodeReady())
 				{
-					ImportProperty(prop, networkState.CurrentTick, varVal.Value);
+					var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][propIndex];
+					ImportProperty(prop, networkState.CurrentTick, data.properties[propIndex]);
 				}
 				else
 				{
-					cachedPropertyChanges[(byte)i] = varVal.Value;
+					cachedPropertyChanges[propIndex] = data.properties[propIndex];
 				}
-
 			}
 
 			return;
@@ -137,6 +143,11 @@ namespace HLNC.StateSerializers
 		public HLBuffer Export(IGlobalNetworkState networkState, PeerId peerId)
 		{
 			var buffer = new HLBuffer();
+
+			if (!node.SpawnAware.ContainsKey(peerId)) {
+				// The target client is not aware of this node yet. Don't send updates.
+				return buffer;
+			}
 
 			if (!peerBufferCache.ContainsKey(peerId))
 			{
@@ -227,11 +238,13 @@ namespace HLNC.StateSerializers
 					if (lerpNode.HasMethod("NetworkLerp" + toLerp.Prop.Name))
 					{
 						result = (double)lerpNode.Call("NetworkLerp" + toLerp.Prop.Name, toLerp.From, toLerp.To, toLerp.Weight);
-						if (result >= 0) {
+						if (result >= 0)
+						{
 							toLerp.Weight = result;
 						}
 					}
-					if (result == -1) {
+					if (result == -1)
+					{
 						toLerp.Weight = Math.Min(toLerp.Weight + (delta * 10), 1.0);
 						if (toLerp.Prop.Type == Variant.Type.Quaternion)
 						{

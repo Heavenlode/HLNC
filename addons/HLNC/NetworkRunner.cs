@@ -22,6 +22,8 @@ namespace HLNC
 		private bool _netStarted = false;
 		public bool NetStarted => _netStarted;
 
+		public NetworkNode3D CurrentScene;
+
 		// public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
 
 		public int NetworkId_counter = 0;
@@ -72,7 +74,7 @@ namespace HLNC
 			}
 		}
 
-		public void RegisterStaticSpawn(NetworkNode3D node)
+		public void RegisterSpawn(NetworkNode3D node)
 		{
 			if (IsServer) {
 				NetworkId_counter += 1;
@@ -85,7 +87,10 @@ namespace HLNC
 				return;
 			}
 
-			node.QueueFree();
+			if (!node.DynamicSpawn) {
+				node.QueueFree();
+			}
+			
 		}
 
 		public void StartServer()
@@ -192,7 +197,7 @@ namespace HLNC
 				}
 			}
 
-			var exportedState = NetworkStateManager.Instance.ExportState(peers, CurrentTick);
+			var exportedState = NetworkPeerManager.Instance.ExportState(peers, CurrentTick);
 			foreach (var peerId in MultiplayerInstance.GetPeers())
 			{
 				if (peerId == 1)
@@ -214,7 +219,7 @@ namespace HLNC
 					{
 						DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
 					}
-					NetworkStateManager.Instance.RpcId(peerId, "Tick", CurrentTick, compressed_payload);
+					NetworkPeerManager.Instance.RpcId(peerId, "Tick", CurrentTick, compressed_payload);
 				}
 			}
 		}
@@ -260,10 +265,37 @@ namespace HLNC
 				if (node is NetworkNode3D)
 					((NetworkNode3D)node).interest[peerId] = true;
 			}
-			NetworkStateManager.Instance.RegisterPlayer(peerId);
+			NetworkPeerManager.Instance.RegisterPlayer(peerId);
 
 			if (IsServer) {
 				EmitSignal("PlayerConnected", peerId);
+			}
+		}
+
+		public void ChangeScene(PackedScene scene)
+		{
+			// This allows us to change scenes without using Godot's built-in scene changer
+			// We do this because Godot's scene changer doesn't work well with networked scenes
+			if (!IsServer) return;
+			var node = (NetworkNode3D)scene.Instantiate();
+			if (CurrentScene != null)
+			{
+				CurrentScene.QueueFree();
+			}
+			node.DynamicSpawn = true;
+			GetTree().CurrentScene.AddChild(node);
+			CurrentScene = node;
+		}
+
+		public void Spawn(NetworkNode3D node, NetworkNode3D parent = null, string nodePath = ".") {
+			if (!IsServer) return;
+
+			node.DynamicSpawn = true;
+			node.NetworkParent = parent;
+			if (parent == null) {
+				CurrentScene.GetNode(nodePath).AddChild(node);
+			} else {
+				parent.GetNode(nodePath).AddChild(node);
 			}
 		}
 
@@ -293,7 +325,7 @@ namespace HLNC
 		public void TransferInput(int tick, byte networkId, Godot.Collections.Dictionary<int, Variant> incomingInput)
 		{
 			var sender = MultiplayerInstance.GetRemoteSenderId();
-			var node = NetworkStateManager.Instance.GetPeerNode(sender, networkId);
+			var node = NetworkPeerManager.Instance.GetPeerNode(sender, networkId);
 
 			if (node == null)
 			{
