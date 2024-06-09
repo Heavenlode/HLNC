@@ -3,81 +3,81 @@ using System.Threading.Tasks;
 
 namespace HLNC.StateSerializers
 {
-	public class DespawnSerializer : IStateSerailizer
-	{
-		private struct Data
-		{
-		
-		}
+    public class DespawnSerializer : IStateSerailizer
+    {
+        private struct Data
+        {
 
-		private Dictionary<PeerId, bool> interestCache = new Dictionary<PeerId, bool>();
-		private NetworkNode3D node;
+        }
 
-		public DespawnSerializer(NetworkNode3D node)
-		{
-			this.node = node;
-		}
+        private Dictionary<PeerId, bool> interestCache = new Dictionary<PeerId, bool>();
+        private NetworkNode3D node;
 
-		private Data deserialize(HLBuffer data)
-		{
-			return new Data();
-		}
+        public DespawnSerializer(NetworkNode3D node)
+        {
+            this.node = node;
+        }
 
-		public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
-		{
-			nodeOut = node;
-			var data = deserialize(buffer);
-			return;
-		}
+        private Data deserialize(HLBuffer data)
+        {
+            return new Data();
+        }
 
-		public void Cleanup() {}
+        public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
+        {
+            nodeOut = node;
+            var data = deserialize(buffer);
+            return;
+        }
 
-		public HLBuffer Export(IGlobalNetworkState networkState, PeerId peerId)
-		{
-			var buffer = new HLBuffer();
-			// Dictionary<PeerId, HLBuffer> despawnsBuffer = new Dictionary<PeerId, HLBuffer>();
-			// foreach (int peer_id in NetworkRunner.Instance.MultiplayerInstance.GetPeers())
-			// {
-			// 	despawnsBuffer[peer_id] = new HLBuffer();
-			// }
-			// foreach (int peer_id in DespawnBuffers.Keys)
-			// {
-			// 	if (!despawnsBuffer.ContainsKey(peer_id))
-			// 		continue;
+        public void Cleanup() { }
 
-			// 	List<int> despawn_ids = new List<int>();
-			// 	foreach (int tick_number in DespawnBuffers[peer_id].Keys)
-			// 	{
-			// 		foreach (int network_id in DespawnBuffers[peer_id][tick_number])
-			// 		{
-			// 			despawn_ids.Add(network_id);
-			// 		}
-			// 	}
-			// 	HLBytes.Pack(despawnsBuffer[peer_id], despawn_ids.ToArray());
-			// }
+        public HLBuffer Export(IGlobalNetworkState networkState, PeerId peerId)
+        {
+            var buffer = new HLBuffer();
+            // Dictionary<PeerId, HLBuffer> despawnsBuffer = new Dictionary<PeerId, HLBuffer>();
+            // foreach (int peer_id in NetworkRunner.Instance.MultiplayerInstance.GetPeers())
+            // {
+            // 	despawnsBuffer[peer_id] = new HLBuffer();
+            // }
+            // foreach (int peer_id in DespawnBuffers.Keys)
+            // {
+            // 	if (!despawnsBuffer.ContainsKey(peer_id))
+            // 		continue;
 
-			// return despawnsBuffer;
-			return buffer;
-		}
+            // 	List<int> despawn_ids = new List<int>();
+            // 	foreach (int tick_number in DespawnBuffers[peer_id].Keys)
+            // 	{
+            // 		foreach (int network_id in DespawnBuffers[peer_id][tick_number])
+            // 		{
+            // 			despawn_ids.Add(network_id);
+            // 		}
+            // 	}
+            // 	HLBytes.Pack(despawnsBuffer[peer_id], despawn_ids.ToArray());
+            // }
 
-		public void Acknowledge(IGlobalNetworkState networkState, PeerId peer, Tick tick)
-		{
-			// if (!DespawnBuffers.ContainsKey(peer))
-			// 	return;
-			// if (!DespawnBuffers[peer].ContainsKey(tick))
-			// 	return;
-			// foreach (int network_id in DespawnBuffers[peer][tick])
-			// {
-			// 	if (NetworkRunner.Instance.NetworkNodes.ContainsKey(network_id))
-			// 	{
-			// 		NetworkRunner.Instance.NetworkNodes[network_id].QueueFree();
-			// 	}
-			// }
-			// DespawnBuffers[peer].Remove(tick);
-		}
-		public void PhysicsProcess(double delta)
-		{
-		}
-	}
+            // return despawnsBuffer;
+            return buffer;
+        }
+
+        public void Acknowledge(IGlobalNetworkState networkState, PeerId peer, Tick tick)
+        {
+            // if (!DespawnBuffers.ContainsKey(peer))
+            // 	return;
+            // if (!DespawnBuffers[peer].ContainsKey(tick))
+            // 	return;
+            // foreach (int network_id in DespawnBuffers[peer][tick])
+            // {
+            // 	if (NetworkRunner.Instance.NetworkNodes.ContainsKey(network_id))
+            // 	{
+            // 		NetworkRunner.Instance.NetworkNodes[network_id].QueueFree();
+            // 	}
+            // }
+            // DespawnBuffers[peer].Remove(tick);
+        }
+        public void PhysicsProcess(double delta)
+        {
+        }
+    }
 
 }

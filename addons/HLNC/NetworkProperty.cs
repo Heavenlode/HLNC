@@ -3,7 +3,6 @@ using Godot;
 
 namespace HLNC
 {
-
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class NetworkProperty : Attribute
     {
