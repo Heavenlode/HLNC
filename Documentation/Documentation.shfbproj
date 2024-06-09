@@ -33,7 +33,7 @@
     <HelpFileFormat>Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>
     <PresentationStyle>Default2022</PresentationStyle>
-    <CleanIntermediates>True</CleanIntermediates>
+    <CleanIntermediates>False</CleanIntermediates>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <IndentHtml>False</IndentHtml>
@@ -42,6 +42,17 @@
     <DocumentationSources>
       <DocumentationSource sourceFile="..\HLNC.csproj" xmlns="" />
     </DocumentationSources>
+    <PlugInConfigurations>
+      <PlugInConfig id="XPath Reflection File Filter" enabled="True">
+        <configuration>
+  <expressions>
+    <expression>/reflection/apis/api/elements/element[contains(@api,"PropertyName")]</expression>
+    <expression>/reflection/apis/api/elements/element[contains(@api,"SignalName")]</expression>
+    <expression>/reflection/apis/api/elements/element[contains(@api,"MethodName")]</expression>
+  </expressions>
+</configuration>
+      </PlugInConfig>
+    </PlugInConfigurations>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shfbBuild product="Sandcastle Help File Builder and Tools" version="2024.2.18.0" projectFile="C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Documentation.shfbproj" started="6/9/2024 9:27:30 AM">
+<shfbBuild product="Sandcastle Help File Builder and Tools" version="2024.2.18.0" projectFile="C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Documentation.shfbproj" started="6/9/2024 10:21:57 AM">
 <buildStep step="Initializing">
 The Sandcastle tools are located in &#39;C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder&#39;
 Locating components in the following folder(s):
@@ -9,8 +9,14 @@ Locating components in the following folder(s):
 Using framework reflection data for &#39;.NET Framework 4.7.2&#39; located in &#39;C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Data\.NETFramework&#39;
 Using presentation style &#39;Default2022&#39; located in &#39;C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Components\Default2022&#39;
 Loading and initializing plug-ins...
+XPath Reflection File Filter Version 2024.2.18.0
+Copyright &#169; 2006-2024, Eric Woodruff, All Rights Reserved
+Based on code submitted by Eyal Post
 Website Table of Contents Generator Version 2024.2.18.0
 Copyright &#169; 2006-2024, Eric Woodruff, All Rights Reserved
+</buildStep>
+<buildStep step="ClearWorkFolder">
+Clearing working folder...
 -------------------------------
 Clearing any prior web/markdown output...
 </buildStep>
@@ -190,18 +196,18 @@ SHFB: Warning BE0062: No documentation source XML comments files found.  The hel
 </buildStep>
 <buildStep step="GenerateSharedContent">
 Generating shared content files (en-US, English (United States))...
-    Last step completed in 00:00:00.0040
+    Last step completed in 00:00:00.0010
 </buildStep>
 <buildStep step="GenerateApiFilter">
 Generating API filter for MRefBuilder...
-    Last step completed in 00:00:00.0015
+    Last step completed in 00:00:00.0000
 </buildStep>
 <buildStep step="GenerateReflectionInfo">
 Generating reflection information...
-[C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe - GenerateRefInfo-d76ec58d-bc10-4fc1-bbae-c81d8efe7779.proj]
-Build started 6/9/2024 9:27:31 AM.
+[C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe - GenerateRefInfo-d7e74e02-2d54-4c53-adbc-cfb82c6989a7.proj]
+Build started 6/9/2024 10:21:58 AM.
 
-Project &quot;C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\GenerateRefInfo-d76ec58d-bc10-4fc1-bbae-c81d8efe7779.proj&quot; on node 1 (default targets).
+Project &quot;C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\GenerateRefInfo-d7e74e02-2d54-4c53-adbc-cfb82c6989a7.proj&quot; on node 1 (default targets).
 PrepareForBuild:
   Creating directory &quot;obj\Debug\&quot;.
 GenerateRefInfo:
@@ -212,30 +218,37 @@ GenerateRefInfo:
   Wrote information on 4 namespaces, 38 types, and 236 members
   Merging duplicate type and member information
   Merged 0 duplicate type(s) and 0 duplicate member(s)
-Done Building Project &quot;C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\GenerateRefInfo-d76ec58d-bc10-4fc1-bbae-c81d8efe7779.proj&quot; (default targets).
-    Last step completed in 00:00:01.6466
+Done Building Project &quot;C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\GenerateRefInfo-d7e74e02-2d54-4c53-adbc-cfb82c6989a7.proj&quot; (default targets).
+    Last step completed in 00:00:01.5242
 </buildStep>
 <buildStep step="ApplyDocumentModel">
 Applying document model to reflection output...
-    Last step completed in 00:00:00.0662
+<plugIn name="XPath Reflection File Filter" behavior="Before" priority="1100">
+Removing items matching &#39;/reflection/apis/api/elements/element[contains(@api,&quot;PropertyName&quot;)]&#39;
+    Removed 47 items
+Removing items matching &#39;/reflection/apis/api/elements/element[contains(@api,&quot;SignalName&quot;)]&#39;
+    Removed 14 items
+Removing items matching &#39;/reflection/apis/api/elements/element[contains(@api,&quot;MethodName&quot;)]&#39;
+    Removed 48 items
+</plugIn>    Last step completed in 00:00:00.0678
 </buildStep>
 <buildStep step="AddApiTopicFilenames">
 Adding topic filenames to API members...
-    Last step completed in 00:00:00.0265
+    Last step completed in 00:00:00.0251
 </buildStep>
 <buildStep step="GenerateApiTopicManifest">
 Generating API topic manifest...
-    Last step completed in 00:00:00.0180
+    Last step completed in 00:00:00.0152
 </buildStep>
 <buildStep step="GenerateNamespaceSummaries">
 Generating namespace summary information...
-    Last step completed in 00:00:00.5720
+    Last step completed in 00:00:00.4271
 </buildStep>
 <buildStep step="GenerateInheritedDocumentation">
 Generating inherited documentation...
 [C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe - GenerateInheritedDocs.proj]
 
-    Last step completed in 00:00:02.4886
+    Last step completed in 00:00:02.1042
 </buildStep>
 <buildStep step="CopyConceptualContent">
 Copying conceptual content...
@@ -249,19 +262,19 @@ Generating conceptual topic files
     C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Content\VersionHistory\VersionHistory.aml -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\ddueXml\6edb384e-a23c-485a-a4ea-62610ccaf3ef.xml
     Parsing topic file &#39;C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Content\VersionHistory\v1.0.0.0.aml&#39;
     C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Content\VersionHistory\v1.0.0.0.aml -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\ddueXml\52ed7cb7-e256-4505-b8ea-d2c32440499f.xml
-    Last step completed in 00:00:00.0250
+    Last step completed in 00:00:00.0153
 </buildStep>
 <buildStep step="CreateConceptualTopicConfigs">
 Creating conceptual topic configuration files...
     Companion files
     _ContentMetadata_.xml
     Merging topic IDs into reference topic manifest file
-    Last step completed in 00:00:00.0080
+    Last step completed in 00:00:00.0040
 </buildStep>
 <buildStep step="CopyAdditionalContent">
 Copying additional content files...
 C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\icons\Help.png -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\Output\Website\icons\Help.png
-    Last step completed in 00:00:00.0030
+    Last step completed in 00:00:00.0021
 </buildStep>
 <buildStep step="MergeTablesOfContents">
 Merging conceptual and additional tables of contents...
@@ -270,15 +283,15 @@ Merging conceptual and additional tables of contents...
 <buildStep step="GenerateIntermediateTableOfContents">
 Generating intermediate table of contents file for API content...
 Generating conceptual content intermediate TOC file...
-    Last step completed in 00:00:00.0763
+    Last step completed in 00:00:00.0216
 </buildStep>
 <buildStep step="CreateBuildAssemblerConfigs">
 Creating Sandcastle configuration files...
-    Last step completed in 00:00:00.4886
+    Last step completed in 00:00:00.4125
 </buildStep>
 <buildStep step="CombiningIntermediateTocFiles">
 Combining conceptual and API intermediate TOC files...
-    Last step completed in 00:00:00.0084
+    Last step completed in 00:00:00.0020
 </buildStep>
 <buildStep step="MergeCustomConfigs">
 Merging custom build component configurations
@@ -286,7 +299,7 @@ C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\BuildAs
   Updating reference topic configurations.
   Updating conceptual topic configurations.
     Removing unused ExampleComponent.
-    Last step completed in 00:00:00.0131
+    Last step completed in 00:00:00.0034
 </buildStep>
 <buildStep step="BuildTopics">
 Building help topics...
@@ -12722,7 +12735,7 @@ SHFB: Warning BE0066: ShowMissingComponent: [M:HLNC.Utilities.TickTimer.CreateFr
 SHFB: Warning BE0066: ShowMissingComponent: [M:HLNC.Utilities.TickTimer.IsDone(System.Int32)] Missing &lt;summary&gt; documentation
 SHFB: Warning BE0066: ShowMissingComponent: [M:HLNC.Utilities.TickTimer.IsDone(System.Int32)] Missing &lt;returns&gt; documentation
 SHFB: Warning BE0066: ShowMissingComponent: [M:HLNC.Utilities.TickTimer.IsDone(System.Int32)] Missing &lt;param name=&quot;currentTick&quot;/&gt; documentation
-Processed 348 topic(s)
+Processed 336 topic(s)
 12428 warning(s)
 CopyFromIndexComponent: &quot;metadata&quot; in-memory cache entries used: 1 of 15.
 ResolveArtLinksComponent: Copying media files...
@@ -12730,7 +12743,7 @@ CopyFromIndexComponent: &quot;reflection&quot; in-memory cache entries used: 4 o
 CopyFromIndexComponent: &quot;comments&quot; in-memory cache entries used: 3 of 30.
 <plugIn name="Website Table of Contents Generator" behavior="After" priority="1000">
 Generating TOC fragment files
-</plugIn>    Last step completed in 00:00:06.9182
+</plugIn>    Last step completed in 00:00:04.8513
 </buildStep>
 <buildStep step="CopyStandardHelpContent">
 Copying standard help content...
@@ -12766,26 +12779,22 @@ C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Components\Defaul
 C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Components\Default2022\RootWebsiteContent\SearchHelp.inc.php -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\Output\Website\SearchHelp.inc.php
 C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Components\Default2022\RootWebsiteContent\SearchHelp.php -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\Output\Website\SearchHelp.php
 C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Components\Default2022\RootWebsiteContent\Web.Config -&gt; C:\Users\hello\OneDrive\Documents\GitHub\HLNC\Documentation\Help\Working\Output\Website\Web.Config
-    Last step completed in 00:00:00.0793
+    Last step completed in 00:00:00.0845
 </buildStep>
 <buildStep step="GenerateFullTextIndex">
 Generating full-text index for the website...
 
-    Last step completed in 00:00:00.2737
+    Last step completed in 00:00:00.1344
 </buildStep>
 <buildStep step="CopyingWebsiteFiles">
 Copying website files to output folder...
 
-Copied 489 files for the website content
-    Last step completed in 00:00:00.2912
-</buildStep>
-<buildStep step="CleanIntermediates">
-Removing intermediate files...
-    Last step completed in 00:00:00.0777
+Copied 447 files for the website content
+    Last step completed in 00:00:00.3209
 </buildStep>
 <buildStep step="Completed">
 
-Build completed successfully at 6/9/2024 9:27:44 AM.  Total time: 00:00:13.8244
+Build completed successfully at 6/9/2024 10:22:08 AM.  Total time: 00:00:10.5043
 
 </buildStep>
 </shfbBuild>
