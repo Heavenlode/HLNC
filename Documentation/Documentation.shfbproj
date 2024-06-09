@@ -101,6 +101,14 @@
   <ItemGroup>
     <Content Include="icons\Help.png" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Godot.NET.Sdk">
+      <Version>4.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="GodotSharp">
+      <Version>4.2.2</Version>
+    </PackageReference>
+  </ItemGroup>
   <!-- Import the common build targets during NuGet restore because before the packages are being installed, $(SHFBROOT) is not set yet -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="'$(MSBuildRestoreSessionId)' != ''" />
   <!-- Import the SHFB build targets during build -->
