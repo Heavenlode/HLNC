@@ -12,15 +12,14 @@ namespace HLNC
         On every network tick, all NetworkNode3D nodes in the scene tree automatically have their <see cref="HLNC.NetworkProperty">network properties</see> updated with the latest data from the server.
         Then, the special <see cref="_NetworkProcess(int)">NetworkProcess</see> method is called, which indicates that a network Tick is occurring.
         Network properties can only update on the server side.
-        For a client to update network properties, they must send client inputs to the server via <see cref="HLNC.INetworkInputHandler"/> interface.
+        For a client to update network properties, they must send client inputs to the server via implementing the <see cref="HLNC.INetworkInputHandler"/> interface.
         The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
         </summary>
         <example>
         <code language="cs">
         public partial class Player : NetworkNode3D, INetworkInputHandler
         {
-            private Dictionary<int, Variant> inputBuffer = new Dictionary<int, Variant>();
-            public Dictionary<int, Variant> InputBuffer => inputBuffer;
+            public Dictionary<int, Variant> InputBuffer { get; private set; } = [];
 
             public enum InputType {
                 MOVE = 0,
