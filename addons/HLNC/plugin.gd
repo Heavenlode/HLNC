@@ -30,7 +30,7 @@ func _enter_tree():
 # 		editor_file_system.scan()
 	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/NetworkRunner.cs")
 	add_autoload_singleton(AUTOLOAD_STATE_MANAGER, "res://addons/HLNC/NetworkPeerManager/NetworkPeerManager.cs")
-	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/NetworkPeerManager/NetworkScenesRegister.cs")
+	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/Serialization/NetworkScenesRegister.cs")
 # 	main_panel_instance = MainPanel.instantiate()
 # 	# Add the main panel to the editor's main viewport.
 # 	get_editor_interface().get_editor_main_screen().add_child(main_panel_instance)
