@@ -78,10 +78,35 @@ namespace HLNC
     */
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
+        /// <summary>
+        /// Server-side only. A map of PeerIds that should receive network updates for this node.
+        /// </summary>
         public Dictionary<long, bool> Interest { get; } = [];
+
+        /// <summary>
+        /// The ID of the node tracked across the network.
+        /// This is different on the server side than on the client side.
+        /// </summary>
+        /// <remarks>
+        ///  The server tracks a global NetworkId for each node, as well as a local NetworkId for each peer. The reason for this is that it would cost too much bandwidth to send the full node's NetworkId to each peer.
+        ///  To minimize bandwidth, each client can store up to 64 NetworkIds at a time. The server is then able to talk about all 64 nodes to the client at once by using a single 64 bit integer.
+        ///  In the future, this may be expanded with an additional 64 bit integer to allow up to 4096 network nodes at once.
+        /// </remarks>
         public NetworkId NetworkId { get; internal set; } = -1;
+
+        /// <summary>
+        /// The current peer who can send inputs via this node. On the client side, this is either -1, or their own PeerId. Clients cannot see who is the input authority of other objects.
+        /// </summary>
         public PeerId InputAuthority { get; internal set; } = -1;
+
+        /// <summary>
+        /// A list of serializer objects which manage the server-side exporting of data to the client, and the client-side importing of data received from the server.
+        /// </summary>
         public IStateSerailizer[] Serializers { get; }
+
+        /// <summary>
+        /// A helper function which indicates if the current caller is the input authority. Always true for the server.
+        /// </summary>
         public bool IsCurrentAuthority => NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId;
 
         [Signal]
@@ -113,6 +138,11 @@ namespace HLNC
             ];
         }
 
+        /// <summary>
+        /// Get a network node by the NetworkId.
+        /// </summary>
+        /// <param name="network_id">The NetworkId in question.</param>
+        /// <returns><see cref="NetworkNode3D"/></returns>
         public static NetworkNode3D GetFromNetworkId(NetworkId network_id)
         {
             if (network_id == -1)
@@ -122,6 +152,11 @@ namespace HLNC
             return NetworkRunner.Instance.NetworkNodes[network_id];
         }
 
+        /// <summary>
+        /// Finds the nearest <see cref="NetworkNode3D"/> parent. If the input node is a <see cref="NetworkNode3D"/>, then this function returns that input parameter.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
         public static NetworkNode3D FindFromChild(Node node)
         {
             while (node != null)
@@ -133,6 +168,10 @@ namespace HLNC
             return null;
         }
 
+        /// <summary>
+        /// Get all <see cref="NetworkNode3D"/> children recursively. Does not include <see cref="NetworkScenes"/>.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Node> GetNetworkChildren()
         {
             var children = GetChildren();
@@ -152,6 +191,9 @@ namespace HLNC
             }
         }
 
+        /// <summary>
+        /// De-register the object from the network and dequeue it.
+        /// </summary>
         public void Despawn()
         {
             if (!NetworkRunner.Instance.IsServer)
