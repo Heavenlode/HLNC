@@ -6,9 +6,79 @@ using HLNC.Serialization.Serializers;
 
 namespace HLNC
 {
+    /**
+        <summary>
+        <see cref="Godot.Node3D">Node3D</see>, extended with HLNC networking capabilities. This is the most basic networked 3D object.
+        On every network tick, all NetworkNode3D nodes in the scene tree automatically have their <see cref="HLNC.NetworkProperty">network properties</see> updated with the latest data from the server.
+        Then, the special <see cref="_NetworkProcess(int)">NetworkProcess</see> method is called, which indicates that a network Tick is occurring.
+        Network properties can only update on the server side.
+        For a client to update network properties, they must send client inputs to the server via <see cref="HLNC.INetworkInputHandler"/> interface.
+        The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
+        </summary>
+        <example>
+        <code language="cs">
+        public partial class Player : NetworkNode3D, INetworkInputHandler
+        {
+            private Dictionary<int, Variant> inputBuffer = new Dictionary<int, Variant>();
+            public Dictionary<int, Variant> InputBuffer => inputBuffer;
+
+            public enum InputType {
+                MOVE = 0,
+            }
+
+            public override void _Process(double delta)
+            {
+                base._Process(delta);
+                if (!IsCurrentOwner || NetworkRunner.Instance.IsServer) return;
+
+                // Using the regular _Process method, we fill the InputBuffer with data which will automagically be transferred
+                // to the server on the next tick
+
+                var moveDirection = new Vector2();
+
+                if (Input.IsActionPressed("player_up")) {
+                    moveDirection.Y -= 1;
+                }
+                if (Input.IsActionPressed("player_down")) {
+                    moveDirection.Y += 1;
+                }
+                if (Input.IsActionPressed("player_left")) {
+                    moveDirection.X -= 1;
+                }
+                if (Input.IsActionPressed("player_right")) {
+                    moveDirection.X += 1;
+                }
+
+                inputBuffer[(int)InputType.MOVE] = moveDirection;
+            }
+
+            public override void _NetworkProcess(int _tick)
+            {
+                base._NetworkProcess(_tick);
+            
+                if (!NetworkRunner.Instance.IsServer) return;
+
+                var input = GetInput();
+                if (input == null) return;
+
+                // Eventually the server receives the client input, at which point it can decide how it should mutate the game state.
+                // This is how we ensure clients aren't able to cheat/hack the system and arbitrarily change values.
+
+                if (input.ContainsKey((int)InputType.MOVE)) {
+                    var moveDirection = ((Vector2)input[(int)InputType.MOVE]).Normalized();
+                    Position = new Vector3(
+                        Mathf.Clamp(Position.X + moveDirection.X, -5, 5),
+                        Position.Y,
+                        Mathf.Clamp(Position.Z + moveDirection.Y, -5, 5)
+                    );
+                }
+            }
+        }
+        </code>
+        </example>
+    */
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
-
         public Dictionary<long, bool> Interest { get; } = [];
         public NetworkId NetworkId { get; internal set; } = -1;
         public PeerId InputAuthority { get; internal set; } = -1;
