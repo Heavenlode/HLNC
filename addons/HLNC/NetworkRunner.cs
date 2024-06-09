@@ -4,6 +4,7 @@ global using Tick = System.Int32;
 
 using Godot;
 using Godot.Collections;
+using HLNC.Serialization;
 
 namespace HLNC
 {

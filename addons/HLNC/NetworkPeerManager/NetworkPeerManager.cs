@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Godot;
+using HLNC.Serialization;
 
 namespace HLNC
 {
-    internal partial class NetworkPeerManager : Node, IGlobalNetworkState
+    internal partial class NetworkPeerManager : Node, IPeerController
     {
         readonly static byte MAX_NETWORK_NODES = 64;
 
@@ -15,7 +16,7 @@ namespace HLNC
         readonly private Dictionary<PeerId, long> availablePeerNodes = [];
         readonly private Dictionary<PeerId, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = [];
         readonly private Dictionary<PeerId, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = [];
-        public Dictionary<PeerId, IGlobalNetworkState.PeerSyncState> PeerSyncState = [];
+        public Dictionary<PeerId, IPeerController.PeerSyncState> PeerSyncState = [];
         public Tick CurrentTick => NetworkRunner.Instance.CurrentTick;
         public PeerId LocalPlayerId => NetworkRunner.Instance.LocalPlayerId;
 
@@ -28,11 +29,11 @@ namespace HLNC
             NetworkRunner.Instance.CurrentScene = node;
         }
 
-        public IGlobalNetworkState.PeerSyncState GetPeerSyncState(PeerId peer)
+        public IPeerController.PeerSyncState GetPeerSyncState(PeerId peer)
         {
             if (!PeerSyncState.ContainsKey(peer))
             {
-                return IGlobalNetworkState.PeerSyncState.INITIAL;
+                return IPeerController.PeerSyncState.INITIAL;
             }
             return PeerSyncState[peer];
         }
@@ -40,16 +41,16 @@ namespace HLNC
         private struct PendingSyncState
         {
             public Tick tick;
-            public IGlobalNetworkState.PeerSyncState state;
+            public IPeerController.PeerSyncState state;
         }
 
         readonly private Dictionary<PeerId, PendingSyncState> pendingSyncStates = [];
-        public void SetPeerSyncState(PeerId peer, IGlobalNetworkState.PeerSyncState state)
+        public void SetPeerSyncState(PeerId peer, IPeerController.PeerSyncState state)
         {
             PeerSyncState[peer] = state;
         }
 
-        public void QueuePeerSyncState(PeerId peer, IGlobalNetworkState.PeerSyncState state)
+        public void QueuePeerSyncState(PeerId peer, IPeerController.PeerSyncState state)
         {
             pendingSyncStates[peer] = new PendingSyncState
             {
@@ -176,7 +177,7 @@ namespace HLNC
 
         public void RegisterPlayer(long peerId)
         {
-            PeerSyncState[peerId] = IGlobalNetworkState.PeerSyncState.INITIAL;
+            PeerSyncState[peerId] = IPeerController.PeerSyncState.INITIAL;
             globalNodeToLocalNodeMap[peerId] = [];
             localNodeToGlobalNodeMap[peerId] = [];
             availablePeerNodes[peerId] = 0;
