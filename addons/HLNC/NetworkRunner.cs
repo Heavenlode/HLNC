@@ -13,7 +13,7 @@ namespace HLNC
         [Export] public int Port = 8888;
         [Export] public int MaxPeers = 5;
 
-        public ENetMultiplayerPeer NetPeer = new ENetMultiplayerPeer();
+        public ENetMultiplayerPeer NetPeer = new();
         public MultiplayerApi MultiplayerInstance;
 
         private bool _isServer = false;
@@ -27,13 +27,13 @@ namespace HLNC
         // public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
 
         public int NetworkId_counter = 0;
-        public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = new System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D>();
-        public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = new System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>>();
+        public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = [];
+        public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = [];
         public long LocalPlayerId
         {
             get { return MultiplayerInstance.GetUniqueId(); }
         }
-        private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = new Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>>();
+        private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
         public Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
         private static NetworkRunner _instance;
@@ -54,13 +54,13 @@ namespace HLNC
 
         // public NetworkDebug network_debug;
 
-        System.Collections.Generic.Dictionary<string, string> arguments = new System.Collections.Generic.Dictionary<string, string>();
+        System.Collections.Generic.Dictionary<string, string> arguments = [];
 
-        public void _ready()
+        public override void _Ready()
         {
             foreach (var argument in OS.GetCmdlineArgs())
             {
-                if (argument.Contains("="))
+                if (argument.Contains('='))
                 {
                     var keyValuePair = argument.Split("=");
                     arguments[keyValuePair[0].TrimStart('-')] = keyValuePair[1];
@@ -147,10 +147,10 @@ namespace HLNC
 
         public int CurrentTick = 0;
 
-        public System.Collections.Generic.Dictionary<object, object> network_properties_cache = new System.Collections.Generic.Dictionary<object, object>();
+        public System.Collections.Generic.Dictionary<object, object> network_properties_cache = [];
 
-        public Array<Variant> debug_data_sizes = new Array<Variant>();
-        public System.Collections.Generic.Dictionary<object, object> debug_player_ping = new System.Collections.Generic.Dictionary<object, object>();
+        public Array<Variant> debug_data_sizes = [];
+        public System.Collections.Generic.Dictionary<object, object> debug_player_ping = [];
 
         public void ProcessDebugData()
         {
@@ -202,7 +202,7 @@ namespace HLNC
                 }
             }
 
-            var exportedState = NetworkPeerManager.Instance.ExportState(peers, CurrentTick);
+            var exportedState = NetworkPeerManager.Instance.ExportState(peers);
             foreach (var peerId in MultiplayerInstance.GetPeers())
             {
                 if (peerId == 1)
@@ -267,8 +267,8 @@ namespace HLNC
 
             foreach (var node in GetTree().GetNodesInGroup("global_interest"))
             {
-                if (node is NetworkNode3D)
-                    ((NetworkNode3D)node).interest[peerId] = true;
+                if (node is NetworkNode3D networkNode)
+                    networkNode.Interest[peerId] = true;
             }
             NetworkPeerManager.Instance.RegisterPlayer(peerId);
 
@@ -284,10 +284,7 @@ namespace HLNC
             // We do this because Godot's scene changer doesn't work well with networked scenes
             if (!IsServer) return;
             var node = (NetworkNode3D)scene.Instantiate();
-            if (CurrentScene != null)
-            {
-                CurrentScene.QueueFree();
-            }
+            CurrentScene?.QueueFree();
             node.DynamicSpawn = true;
             GetTree().CurrentScene.AddChild(node);
             CurrentScene = node;
@@ -316,9 +313,9 @@ namespace HLNC
 
         public Array<NetworkNode3D> GetAllNetworkNodes(Node node)
         {
-            Array<NetworkNode3D> nodes = new Array<NetworkNode3D>();
-            if (node is NetworkNode3D)
-                nodes.Add((NetworkNode3D)node);
+            Array<NetworkNode3D> nodes = [];
+            if (node is NetworkNode3D networkNode)
+                nodes.Add(networkNode);
             foreach (Node N in node.GetChildren())
             {
                 Array<NetworkNode3D> childNodes = GetAllNetworkNodes(N);
@@ -349,12 +346,12 @@ namespace HLNC
 
             if (!inputStore.ContainsKey(sender))
             {
-                inputStore[sender] = new Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>();
+                inputStore[sender] = [];
             }
 
             if (!inputStore[sender].ContainsKey(networkId))
             {
-                inputStore[sender][networkId] = new Godot.Collections.Dictionary<int, Variant>();
+                inputStore[sender][networkId] = [];
             }
 
             inputStore[sender][networkId] = incomingInput;

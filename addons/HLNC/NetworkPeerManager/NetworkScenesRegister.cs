@@ -18,21 +18,21 @@ namespace HLNC
     {
         private const int MAX_NETWORK_PROPERTIES = 64;
 
-        public static Dictionary<byte, PackedScene> SCENES_MAP = new Dictionary<byte, PackedScene>() { };
-        public static Dictionary<string, byte> SCENES_PACK = new Dictionary<string, byte>() { };
+        internal static Dictionary<byte, PackedScene> SCENES_MAP = [];
+        internal static Dictionary<string, byte> SCENES_PACK = [];
 
         // This statically tracks every node path for every networked scene
         // For example, NODE_PATHS[0] indicates the node paths for the 0th scene
         // NODE_PATHS[0][0] Indicates the node path for the 0th node in the 0th scene, in other words the "root" of that scene
         // NODE_PATHS[0][1] Indicates the node path for the 1st node in the 0th scene, in other words the first child of the root
         // And so on
-        public static Dictionary<byte, Dictionary<int, string>> NODE_PATHS_MAP = new Dictionary<byte, Dictionary<int, string>>() { };
-        public static Dictionary<byte, Dictionary<string, int>> NODE_PATHS_PACK = new Dictionary<byte, Dictionary<string, int>>() { };
+        internal static Dictionary<byte, Dictionary<int, string>> NODE_PATHS_MAP = [];
+        internal static Dictionary<byte, Dictionary<string, int>> NODE_PATHS_PACK = [];
 
-        public static Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetworkProperty>>> PROPERTIES_MAP = new Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetworkProperty>>>() { };
-        public static Dictionary<string, Dictionary<byte, CollectedNetworkProperty>> PROPERTY_LOOKUP = new Dictionary<string, Dictionary<byte, CollectedNetworkProperty>>() { };
+        internal static Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetworkProperty>>> PROPERTIES_MAP = [];
+        internal static Dictionary<string, Dictionary<byte, CollectedNetworkProperty>> PROPERTY_LOOKUP = [];
 
-        public delegate void LoadCompleteEventHandler();
+        internal delegate void LoadCompleteEventHandler();
 
         // public static GetPropertyById
         public NetworkScenesRegister()
@@ -54,9 +54,9 @@ namespace HLNC
                             SCENES_PACK.TryAdd(scenePath, id);
                             if (SCENES_MAP.TryAdd(id, GD.Load<PackedScene>(scenePath)))
                             {
-                                PROPERTIES_MAP.TryAdd(scenePath, new Dictionary<string, Dictionary<string, CollectedNetworkProperty>>());
-                                NODE_PATHS_MAP.TryAdd(id, new Dictionary<int, string>());
-                                NODE_PATHS_PACK.TryAdd(id, new Dictionary<string, int>());
+                                PROPERTIES_MAP.TryAdd(scenePath, []);
+                                NODE_PATHS_MAP.TryAdd(id, []);
+                                NODE_PATHS_PACK.TryAdd(id, []);
                                 var node = SCENES_MAP[id].Instantiate() as NetworkNode3D;
                                 node.ProcessMode = ProcessModeEnum.Disabled;
                                 if (node == null)
@@ -150,9 +150,9 @@ namespace HLNC
                                                     Type = propType,
                                                     Index = (byte)propertyId,
                                                 };
-                                                PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, new Dictionary<string, CollectedNetworkProperty>());
+                                                PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, []);
                                                 PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd(property.Name, collectedProperty);
-                                                PROPERTY_LOOKUP.TryAdd(scenePath, new Dictionary<byte, CollectedNetworkProperty>()); ;
+                                                PROPERTY_LOOKUP.TryAdd(scenePath, []); ;
                                                 PROPERTY_LOOKUP[scenePath].TryAdd((byte)propertyId, collectedProperty);
                                                 // GD.Print("Registered property: " + relativeChildPath + "." + property.Name + "for scene " + scenePath);
                                             }
@@ -193,9 +193,9 @@ namespace HLNC
                                                     Index = (byte)propertyId,
                                                 };
                                                 // GD.Print("Registered property: " + relativeChildPath + "." + name + " of type " + type + " for scene " + scenePath);
-                                                PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, new Dictionary<string, CollectedNetworkProperty>());
+                                                PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, []);
                                                 PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd((string)name, collectedProperty);
-                                                PROPERTY_LOOKUP.TryAdd(scenePath, new Dictionary<byte, CollectedNetworkProperty>()); ;
+                                                PROPERTY_LOOKUP.TryAdd(scenePath, []); ;
                                                 PROPERTY_LOOKUP[scenePath].TryAdd((byte)propertyId, collectedProperty);
                                             }
                                         }

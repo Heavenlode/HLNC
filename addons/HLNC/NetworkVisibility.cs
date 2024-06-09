@@ -6,7 +6,7 @@ namespace HLNC
     public partial class NetworkVisibility : Node3D
     {
         [Export]
-        public Array<Node> nodes = new Array<Node>();
+        public Array<Node> nodes = [];
 
         public override void _EnterTree()
         {

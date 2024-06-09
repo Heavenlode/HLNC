@@ -19,18 +19,12 @@ namespace HLNC
     }
 
 
-    public class HLBuffer
+    public class HLBuffer(byte[] bytes = null)
     {
-        public byte[] bytes;
-        public int pointer;
-        public bool pointerReachedEnd => pointer >= bytes.Length;
+        public byte[] bytes = bytes ?? [];
+        public int pointer = 0;
+        public bool IsPointerEnd => pointer >= bytes.Length;
         public const int CONSISTENCY_BUFFER_SIZE_LIMIT = 256;
         public byte[] RemainingBytes => bytes[pointer..];
-
-        public HLBuffer(byte[] bytes = null)
-        {
-            this.bytes = bytes ?? new byte[0];
-            pointer = 0;
-        }
     }
 }

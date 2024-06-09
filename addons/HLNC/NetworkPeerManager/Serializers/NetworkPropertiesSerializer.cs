@@ -10,7 +10,7 @@ using Godot;
 
 namespace HLNC.StateSerializers
 {
-    public class NetworkPropertiesSerializer : IStateSerailizer
+    internal class NetworkPropertiesSerializer : IStateSerailizer
     {
         private struct Data
         {
@@ -20,7 +20,7 @@ namespace HLNC.StateSerializers
         private const int MAX_NETWORK_PROPERTIES = 64;
         private NetworkNode3D node;
 
-        private Dictionary<byte, Variant> cachedPropertyChanges = new Dictionary<byte, Variant>();
+        private Dictionary<byte, Variant> cachedPropertyChanges = [];
         public struct LerpableChangeQueue
         {
             public CollectedNetworkProperty Prop;
@@ -29,9 +29,9 @@ namespace HLNC.StateSerializers
             public double Weight;
         }
 
-        private Dictionary<string, LerpableChangeQueue> lerpableChangeQueue = new Dictionary<string, LerpableChangeQueue>();
+        private Dictionary<string, LerpableChangeQueue> lerpableChangeQueue = [];
 
-        private Dictionary<byte, bool> propertyUpdated = new Dictionary<byte, bool>();
+        private Dictionary<byte, bool> propertyUpdated = [];
         public NetworkPropertiesSerializer(NetworkNode3D node)
         {
             this.node = node;
@@ -75,7 +75,7 @@ namespace HLNC.StateSerializers
             var friendlyPropName = prop.Name;
             if (friendlyPropName.StartsWith("network_"))
             {
-                friendlyPropName = friendlyPropName.Substring(8);
+                friendlyPropName = friendlyPropName[8..];
             }
             if (propNode.HasMethod("OnNetworkChange" + prop.Name))
             {
@@ -96,12 +96,12 @@ namespace HLNC.StateSerializers
         }
 
 
-        private Data deserialize(HLBuffer buffer)
+        private Data Deserialize(HLBuffer buffer)
         {
             var data = new Data
             {
                 propertiesUpdated = HLBytes.UnpackInt64(buffer),
-                properties = new Dictionary<byte, Variant>()
+                properties = []
             };
             for (var i = 0; i < MAX_NETWORK_PROPERTIES; i++)
             {
@@ -119,7 +119,7 @@ namespace HLNC.StateSerializers
         public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
         {
             nodeOut = node;
-            var data = deserialize(buffer);
+            var data = Deserialize(buffer);
             foreach (var propIndex in data.properties.Keys)
             {
                 if (node.IsNodeReady())
@@ -136,7 +136,7 @@ namespace HLNC.StateSerializers
             return;
         }
 
-        private Dictionary<PeerId, Dictionary<Tick, long>> peerBufferCache = new Dictionary<PeerId, Dictionary<Tick, long>>();
+        private Dictionary<PeerId, Dictionary<Tick, long>> peerBufferCache = [];
         // This should instead be a map of variable values that we can resend until acknowledgement
 
         public HLBuffer Export(IGlobalNetworkState networkState, PeerId peerId)
@@ -151,7 +151,7 @@ namespace HLNC.StateSerializers
 
             if (!peerBufferCache.ContainsKey(peerId))
             {
-                peerBufferCache[peerId] = new Dictionary<Tick, long>();
+                peerBufferCache[peerId] = [];
             }
 
             long propertiesUpdated = 0;

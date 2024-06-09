@@ -6,30 +6,24 @@ using Godot;
 
 namespace HLNC
 {
-    public partial class NetworkPeerManager : Node, IGlobalNetworkState
+    internal partial class NetworkPeerManager : Node, IGlobalNetworkState
     {
-        static byte MAX_NETWORK_NODES = 64;
+        readonly static byte MAX_NETWORK_NODES = 64;
 
         // A bit list of all nodes in use by each peer
         // For example, 0 0 0 0 (... etc ...) 0 1 0 1 would mean that the first and third nodes are in use
-        private Dictionary<PeerId, long> availablePeerNodes = new Dictionary<PeerId, long>();
-        private Dictionary<PeerId, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = new Dictionary<PeerId, Dictionary<NetworkId, byte>>();
-        private Dictionary<PeerId, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = new Dictionary<PeerId, Dictionary<byte, NetworkId>>();
-        public Dictionary<PeerId, IGlobalNetworkState.PeerSyncState> PeerSyncState = new Dictionary<PeerId, IGlobalNetworkState.PeerSyncState>();
+        readonly private Dictionary<PeerId, long> availablePeerNodes = [];
+        readonly private Dictionary<PeerId, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = [];
+        readonly private Dictionary<PeerId, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = [];
+        public Dictionary<PeerId, IGlobalNetworkState.PeerSyncState> PeerSyncState = [];
         public Tick CurrentTick => NetworkRunner.Instance.CurrentTick;
         public PeerId LocalPlayerId => NetworkRunner.Instance.LocalPlayerId;
 
-        // DO NOT CALL THIS METHOD
-        // Instead, call ChangeScene from NetworkRunner
-        // This is an internal method that is utilized by the SpawnSerializer
         public void ChangeScene(NetworkNode3D node)
         {
             if (NetworkRunner.Instance.IsServer) return;
 
-            if (NetworkRunner.Instance.CurrentScene != null)
-            {
-                NetworkRunner.Instance.CurrentScene.QueueFree();
-            }
+            NetworkRunner.Instance.CurrentScene?.QueueFree();
             GetTree().CurrentScene.AddChild(node);
             NetworkRunner.Instance.CurrentScene = node;
         }
@@ -48,8 +42,8 @@ namespace HLNC
             public Tick tick;
             public IGlobalNetworkState.PeerSyncState state;
         }
-        private Dictionary<PeerId, PendingSyncState> pendingSyncStates = new Dictionary<PeerId, PendingSyncState>();
 
+        readonly private Dictionary<PeerId, PendingSyncState> pendingSyncStates = [];
         public void SetPeerSyncState(PeerId peer, IGlobalNetworkState.PeerSyncState state)
         {
             PeerSyncState[peer] = state;
@@ -183,14 +177,14 @@ namespace HLNC
         public void RegisterPlayer(long peerId)
         {
             PeerSyncState[peerId] = IGlobalNetworkState.PeerSyncState.INITIAL;
-            globalNodeToLocalNodeMap[peerId] = new Dictionary<NetworkId, byte>();
-            localNodeToGlobalNodeMap[peerId] = new Dictionary<byte, NetworkId>();
+            globalNodeToLocalNodeMap[peerId] = [];
+            localNodeToGlobalNodeMap[peerId] = [];
             availablePeerNodes[peerId] = 0;
         }
 
-        public Dictionary<PeerId, HLBuffer> ExportState(int[] peers, Tick currentTick)
+        public Dictionary<PeerId, HLBuffer> ExportState(int[] peers)
         {
-            Dictionary<PeerId, HLBuffer> peerBuffers = new Dictionary<PeerId, HLBuffer>();
+            Dictionary<PeerId, HLBuffer> peerBuffers = [];
             foreach (PeerId peerId in peers)
             {
                 long updatedNodes = 0;
@@ -269,15 +263,11 @@ namespace HLNC
             foreach (var nodeIdSerializerList in nodeIdToSerializerList)
             {
                 var localNodeId = nodeIdSerializerList.Key;
-                NetworkNode3D node;
-                NetworkRunner.Instance.NetworkNodes.TryGetValue(localNodeId, out node);
-                if (node == null)
-                {
-                    node = new NetworkNode3D
+                NetworkRunner.Instance.NetworkNodes.TryGetValue(localNodeId, out NetworkNode3D node);
+                node ??= new NetworkNode3D
                     {
                         NetworkId = localNodeId
                     };
-                }
                 for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
                 {
                     if ((nodeIdSerializerList.Value & ((long)1 << serializerIdx)) == 0)
@@ -285,8 +275,7 @@ namespace HLNC
                         continue;
                     }
                     var serializerInstance = node.Serializers[serializerIdx];
-                    NetworkNode3D nodeOut;
-                    serializerInstance.Import(this, stateBytes, out nodeOut);
+                    serializerInstance.Import(this, stateBytes, out NetworkNode3D nodeOut);
                     if (node != nodeOut)
                     {
                         node = nodeOut;

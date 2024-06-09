@@ -9,10 +9,10 @@ namespace HLNC
 {
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
-        public Dictionary<PeerId, bool> SpawnAware = new Dictionary<PeerId, bool>();
-        public List<Node> NetworkChildren = new List<Node>();
-        public NetworkNode3D NetworkParent = null;
-        public bool DynamicSpawn = false;
+        internal Dictionary<PeerId, bool> SpawnAware = [];
+        internal List<Node> NetworkChildren = [];
+        internal NetworkNode3D NetworkParent = null;
+        internal bool DynamicSpawn = false;
 
         // Cannot have more than 8 serializers
         public IStateSerailizer[] Serializers { get; }
@@ -34,20 +34,21 @@ namespace HLNC
             }
 
 
-            Serializers = new IStateSerailizer[]{
+            Serializers = [
                 new SpawnSerializer(this),
                 new NetworkPropertiesSerializer(this),
-            };
+            ];
         }
-        public NetworkId NetworkId = -1;
-        public PeerId InputAuthority = -1;
-        public byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[SceneFilePath];
+        public NetworkId NetworkId { get; internal set; } = -1;
+        public PeerId InputAuthority { get; internal set; } = -1;
+        internal byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[SceneFilePath];
 
         public bool IsCurrentOwner
         {
             get { return NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId; }
         }
-        public Dictionary<long, bool> interest = new Dictionary<long, bool>();
+
+        public Dictionary<long, bool> Interest = [];
 
         public static NetworkNode3D GetFromNetworkId(NetworkId network_id)
         {
@@ -62,8 +63,8 @@ namespace HLNC
         {
             while (node != null)
             {
-                if (node is NetworkNode3D)
-                    return (NetworkNode3D)node;
+                if (node is NetworkNode3D networkNode)
+                    return networkNode;
                 node = node.GetParent();
             }
             return null;

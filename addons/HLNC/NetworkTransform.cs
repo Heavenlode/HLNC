@@ -30,10 +30,7 @@ namespace HLNC
         public override void _Ready()
         {
             base._Ready();
-            if (TargetNode == null)
-            {
-                TargetNode = GetParent3D();
-            }
+            TargetNode ??= GetParent3D();
             NetPosition = TargetNode.GlobalPosition;
             NetRotation = TargetNode.GlobalRotation;
         }

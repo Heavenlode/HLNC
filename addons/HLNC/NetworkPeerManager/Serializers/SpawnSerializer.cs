@@ -4,7 +4,7 @@ using Godot;
 
 namespace HLNC.StateSerializers
 {
-    public class SpawnSerializer : IStateSerailizer
+    internal class SpawnSerializer(NetworkNode3D node) : IStateSerailizer
     {
         private struct Data
         {
@@ -16,14 +16,10 @@ namespace HLNC.StateSerializers
             public byte hasInputAuthority;
         }
 
-        private NetworkNode3D node;
-        private Dictionary<PeerId, Tick> setupTicks = new Dictionary<PeerId, Tick>();
-        public SpawnSerializer(NetworkNode3D node)
-        {
-            this.node = node;
-        }
+        private NetworkNode3D node = node;
+        private Dictionary<PeerId, Tick> setupTicks = [];
 
-        private Data deserialize(HLBuffer data)
+        private Data Deserialize(HLBuffer data)
         {
             var spawnData = new Data
             {
@@ -44,7 +40,7 @@ namespace HLNC.StateSerializers
         public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
         {
             nodeOut = node;
-            var data = deserialize(buffer);
+            var data = Deserialize(buffer);
 
             // If the node is already registered, then we don't need to spawn it again
             var result = networkState.TryRegisterPeerNode(nodeOut);
@@ -82,7 +78,7 @@ namespace HLNC.StateSerializers
             {
                 var child = children[0];
                 children.RemoveAt(0);
-                if (child is NetworkNode3D)
+                if (child is NetworkNode3D networkNode)
                 {
                     // Nested network scenes are spawned separately
                     if (child.HasMeta("is_network_scene"))
@@ -90,10 +86,9 @@ namespace HLNC.StateSerializers
                         nodeOut.RemoveChild(child);
                         continue;
                     }
-                    var childNode = (NetworkNode3D)child;
-                    childNode.DynamicSpawn = true;
-                    childNode.InputAuthority = nodeOut.InputAuthority;
-                    children.AddRange(childNode.GetChildren());
+                    networkNode.DynamicSpawn = true;
+                    networkNode.InputAuthority = nodeOut.InputAuthority;
+                    children.AddRange(networkNode.GetChildren());
                 }
             }
 

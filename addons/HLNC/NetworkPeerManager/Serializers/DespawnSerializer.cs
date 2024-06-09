@@ -3,22 +3,16 @@ using System.Threading.Tasks;
 
 namespace HLNC.StateSerializers
 {
-    public class DespawnSerializer : IStateSerailizer
+    internal class DespawnSerializer(NetworkNode3D node) : IStateSerailizer
     {
         private struct Data
         {
 
         }
 
-        private Dictionary<PeerId, bool> interestCache = new Dictionary<PeerId, bool>();
-        private NetworkNode3D node;
+        private NetworkNode3D node = node;
 
-        public DespawnSerializer(NetworkNode3D node)
-        {
-            this.node = node;
-        }
-
-        private Data deserialize(HLBuffer data)
+        private Data Deserialize(HLBuffer data)
         {
             return new Data();
         }
@@ -26,7 +20,7 @@ namespace HLNC.StateSerializers
         public void Import(IGlobalNetworkState networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
         {
             nodeOut = node;
-            var data = deserialize(buffer);
+            var data = Deserialize(buffer);
             return;
         }
 
