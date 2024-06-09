@@ -8,28 +8,82 @@ using HLNC.Serialization;
 
 namespace HLNC
 {
+    /// <summary>
+    /// The primary network manager for server and client.
+    /// </summary>
     public partial class NetworkRunner : Node
     {
+        /// <summary>
+        /// A fully qualified domain (www.example.com) or IP address (192.168.1.1) of the host. Used for client connections.
+        /// </summary>
         [Export] public string ServerAddress = "127.0.0.1";
+
+        /// <summary>
+        /// The port for the server to listen on, and the client to connect to.
+        /// </summary>
         [Export] public int Port = 8888;
+
+        /// <summary>
+        /// The maximum number of allowed connections before the server starts rejecting clients.
+        /// </summary>
         [Export] public int MaxPeers = 5;
 
+        /// <summary>
+        /// Singleton access for C#.
+        /// 
+        /// This allows the class to be added as a Godot Autoload and utilized as a C# singleton.
+        /// In GDScript, access NetworkRunner as a normal singleton without using this field.
+        /// </summary>
         public static NetworkRunner Instance { get; private set; }
+
         public const int FRAMES_PER_SECOND = 60;
         public const int FRAMES_PER_TICK = 2;
+
+        /// <summary>
+        /// Ticks per second. The number of server-side network ticks occur within a second.
+        /// </summary>
         public const int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+
+        /// <summary>
+        /// Maximum transfer unit, in bits. The number of bits the server can send in a single Tick to a client before it truncates serialized data.
+        /// 1400 is generally considered a safe maximum number for all network devices, including mobile.
+        /// </summary>
         public const int MTU = 1400;
+
+        /// <summary>
+        /// The current tick for the server and client.
+        /// </summary>
         public int CurrentTick { get; internal set; }
 
-        public ENetMultiplayerPeer NetPeer = new();
-        public MultiplayerApi MultiplayerInstance;
+        /// <summary>
+        /// Indicates whether this NetworkRunner is a server. If false, it is a client, or the network runner hasn't yet started via <see cref="StartServer()"/> / <see cref="StartClient()"/>.
+        /// </summary>
         public bool IsServer { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the network connection has been established. Network is started via <see cref="StartServer()"/> or <see cref="StartClient()"/>. Once started, <see cref="NetworkNode3D._NetworkProcess(Tick)"/> will begin running per tick.
+        /// </summary>
         public bool NetStarted { get; private set; }
+
+        /// <summary>
+        /// The nodes registered with the network. For the server, this is every NetworkNode within the entire root scene tree. For the client, this is every NetworkNode that they are aware of.
+        /// </summary>
         public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = [];
+
+        /// <summary>
+        /// The current root Network Scene. The server automatically keeps clients synchronized with this.
+        /// </summary>
         public NetworkNode3D CurrentScene { get; internal set; }
+
+        /// <summary>
+        /// The current client ID.
+        /// </summary>
         public long LocalPlayerId => MultiplayerInstance.GetUniqueId();
 
         private int networkIdCounter = 0;
+
+        internal ENetMultiplayerPeer NetPeer = new();
+        internal MultiplayerApi MultiplayerInstance;
         internal Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore { get; private set; }
         
         public override void _EnterTree()
@@ -44,8 +98,6 @@ namespace HLNC
         {
             GD.Print($"{(IsServer ? "Server" : "Client")}: {msg}");
         }
-
-        // public NetworkDebug network_debug;
 
         System.Collections.Generic.Dictionary<string, string> arguments = [];
 
@@ -67,7 +119,7 @@ namespace HLNC
             }
         }
 
-        public void RegisterSpawn(NetworkNode3D node)
+        internal void RegisterSpawn(NetworkNode3D node)
         {
             if (IsServer)
             {
@@ -88,6 +140,9 @@ namespace HLNC
 
         }
 
+        /// <summary>
+        /// Start the server and begin listening for client connections. Upon success, <see cref="NetStarted"/> is set to true and <see cref="NetworkNode3D._NetworkProcess(Tick)"/> begins firing for all network nodes per tick.
+        /// </summary>
         public void StartServer()
         {
             IsServer = true;
@@ -114,6 +169,9 @@ namespace HLNC
             DebugPrint("Started");
         }
 
+        /// <summary>
+        /// Start the client and attempt to connect to the server. Upon success, <see cref="NetStarted"/> is set to true and <see cref="NetworkNode3D._NetworkProcess(Tick)"/> begins firing for all network nodes per tick received from the server.
+        /// </summary>
         public void StartClient()
         {
             GetTree().MultiplayerPoll = false;
@@ -174,10 +232,6 @@ namespace HLNC
                     // GD.Print("SENT STATE for peer " + peerId + " : " + BitConverter.ToString(exportedState[peerId].bytes));
                     var compressed_payload = HLBytes.Compress(exportedState[peerId].bytes);
                     var size = exportedState[peerId].bytes.Length;
-                    // if (network_debug != null)
-                    // {
-                    // 	debug_data_sizes.Add(compressed_payload.Length);
-                    // }
                     if (size > MTU)
                     {
                         DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
