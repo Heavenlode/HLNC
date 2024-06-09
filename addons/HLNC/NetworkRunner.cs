@@ -14,44 +14,36 @@ namespace HLNC
         [Export] public int Port = 8888;
         [Export] public int MaxPeers = 5;
 
+        public static NetworkRunner Instance { get; private set; }
+        public const int FRAMES_PER_SECOND = 60;
+        public const int FRAMES_PER_TICK = 2;
+        public const int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+        public const int MTU = 1400;
+        public int CurrentTick { get; internal set; }
+
         public ENetMultiplayerPeer NetPeer = new();
         public MultiplayerApi MultiplayerInstance;
-
-        private bool _isServer = false;
-        public bool IsServer => _isServer;
-
-        private bool _netStarted = false;
-        public bool NetStarted => _netStarted;
-
-        public NetworkNode3D CurrentScene;
-
-        // public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
-
-        public int NetworkId_counter = 0;
+        public bool IsServer { get; private set; }
+        public bool NetStarted { get; private set; }
         public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = [];
-        public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = [];
-        public long LocalPlayerId
-        {
-            get { return MultiplayerInstance.GetUniqueId(); }
-        }
-        private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
-        public Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
+        public NetworkNode3D CurrentScene { get; internal set; }
+        public long LocalPlayerId => MultiplayerInstance.GetUniqueId();
 
-        private static NetworkRunner _instance;
-        public static NetworkRunner Instance => _instance;
+        private int networkIdCounter = 0;
+        internal Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore { get; private set; }
+        
         public override void _EnterTree()
         {
-            if (_instance != null)
+            if (Instance != null)
             {
                 QueueFree();
             }
-            _instance = this;
+            Instance = this;
         }
-        public void DebugPrint(string msg)
+        internal void DebugPrint(string msg)
         {
             GD.Print($"{(IsServer ? "Server" : "Client")}: {msg}");
         }
-
 
         // public NetworkDebug network_debug;
 
@@ -79,13 +71,13 @@ namespace HLNC
         {
             if (IsServer)
             {
-                NetworkId_counter += 1;
-                while (NetworkNodes.ContainsKey(NetworkId_counter))
+                networkIdCounter += 1;
+                while (NetworkNodes.ContainsKey(networkIdCounter))
                 {
-                    NetworkId_counter += 1;
+                    networkIdCounter += 1;
                 }
-                NetworkNodes[NetworkId_counter] = node;
-                node.NetworkId = NetworkId_counter;
+                NetworkNodes[networkIdCounter] = node;
+                node.NetworkId = networkIdCounter;
                 return;
             }
 
@@ -98,7 +90,7 @@ namespace HLNC
 
         public void StartServer()
         {
-            _isServer = true;
+            IsServer = true;
             DebugPrint("Starting Server");
             GetTree().MultiplayerPoll = false;
             var custom_port = Port;
@@ -118,7 +110,7 @@ namespace HLNC
             MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
             GetTree().SetMultiplayer(MultiplayerInstance, "/root");
             MultiplayerInstance.MultiplayerPeer = NetPeer;
-            _netStarted = true;
+            NetStarted = true;
             DebugPrint("Started");
         }
 
@@ -136,47 +128,12 @@ namespace HLNC
             MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
             GetTree().SetMultiplayer(MultiplayerInstance, "/root");
             MultiplayerInstance.MultiplayerPeer = NetPeer;
-            _netStarted = true;
+            NetStarted = true;
             DebugPrint("Started");
         }
 
-        public int frame_counter = 0;
-        public const int FRAMES_PER_SECOND = 60;
-        public const int FRAMES_PER_TICK = 2;
-        public static int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
-        public const int MTU = 1400;
-
-        public int CurrentTick = 0;
-
-        public System.Collections.Generic.Dictionary<object, object> network_properties_cache = [];
-
-        public Array<Variant> debug_data_sizes = [];
-        public System.Collections.Generic.Dictionary<object, object> debug_player_ping = [];
-
-        public void ProcessDebugData()
-        {
-            // if (network_debug == null)
-            // 	return;
-            // if (debug_data_sizes.Count >= TPS)
-            // {
-            // 	var bytes_per_second = debug_data_sizes.Sum();
-            // 	var largest_tick_value = debug_data_sizes.Max();
-            // 	network_debug.log(new Array<object> { NetworkDebug.Message.BYTES_PER_SECOND, bytes_per_second, largest_tick_value });
-            // 	debug_data_sizes.Clear();
-            // }
-            // foreach (var peerId in debug_player_ping.Keys)
-            // {
-            // 	var ping = debug_player_ping[peerId];
-            // 	if (ping.Count >= TPS)
-            // 	{
-            // 		var avg_ping = ping.Sum() / TPS;
-            // 		network_debug.log(new Array<object> { NetworkDebug.Message.PING, peerId, avg_ping });
-            // 		debug_player_ping[peerId].Clear();
-            // 	}
-            // }
-        }
-
-        public void ServerProcessTick()
+        private int frame_counter = 0;
+        internal void ServerProcessTick()
         {
             var peers = Instance.MultiplayerInstance.GetPeers();
             foreach (var net_id in NetworkNodes.Keys)
@@ -246,7 +203,6 @@ namespace HLNC
                 frame_counter = 0;
                 CurrentTick += 1;
                 ServerProcessTick();
-                ProcessDebugData();
             }
         }
 
@@ -279,10 +235,13 @@ namespace HLNC
             }
         }
 
+        public void _OnPeerDisconnected(long peerId)
+        {
+            DebugPrint($"Peer disconnected peerId: {peerId}");
+        }
+
         public void ChangeScene(PackedScene scene)
         {
-            // This allows us to change scenes without using Godot's built-in scene changer
-            // We do this because Godot's scene changer doesn't work well with networked scenes
             if (!IsServer) return;
             var node = (NetworkNode3D)scene.Instantiate();
             CurrentScene?.QueueFree();
@@ -307,28 +266,6 @@ namespace HLNC
             }
         }
 
-        public void _OnPeerDisconnected(long peerId)
-        {
-            DebugPrint($"Peer disconnected peerId: {peerId}");
-        }
-
-        public Array<NetworkNode3D> GetAllNetworkNodes(Node node)
-        {
-            Array<NetworkNode3D> nodes = [];
-            if (node is NetworkNode3D networkNode)
-                nodes.Add(networkNode);
-            foreach (Node N in node.GetChildren())
-            {
-                Array<NetworkNode3D> childNodes = GetAllNetworkNodes(N);
-                foreach (NetworkNode3D childNode in childNodes)
-                {
-                    if (childNode is NetworkNode3D)
-                        nodes.Add(childNode);
-                }
-            }
-            return nodes;
-        }
-
         [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable, TransferChannel = 1)]
         public void TransferInput(int tick, byte networkId, Godot.Collections.Dictionary<int, Variant> incomingInput)
         {
@@ -345,17 +282,17 @@ namespace HLNC
                 return;
             }
 
-            if (!inputStore.ContainsKey(sender))
+            if (!InputStore.ContainsKey(sender))
             {
-                inputStore[sender] = [];
+                InputStore[sender] = [];
             }
 
-            if (!inputStore[sender].ContainsKey(networkId))
+            if (!InputStore[sender].ContainsKey(networkId))
             {
-                inputStore[sender][networkId] = [];
+                InputStore[sender][networkId] = [];
             }
 
-            inputStore[sender][networkId] = incomingInput;
+            InputStore[sender][networkId] = incomingInput;
         }
     }
 }

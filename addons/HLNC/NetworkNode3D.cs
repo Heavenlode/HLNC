@@ -8,16 +8,21 @@ namespace HLNC
 {
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
+
+        public Dictionary<long, bool> Interest { get; } = [];
+        public NetworkId NetworkId { get; internal set; } = -1;
+        public PeerId InputAuthority { get; internal set; } = -1;
+        public IStateSerailizer[] Serializers { get; }
+        public bool IsCurrentAuthority => NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId;
+
+        [Signal]
+        public delegate void NetworkPropertyChangedEventHandler(string nodePath, StringName propertyName);
+
         internal Dictionary<PeerId, bool> SpawnAware = [];
         internal List<Node> NetworkChildren = [];
         internal NetworkNode3D NetworkParent = null;
         internal bool DynamicSpawn = false;
-
-        // Cannot have more than 8 serializers
-        public IStateSerailizer[] Serializers { get; }
-
-        [Signal]
-        public delegate void NetworkPropertyChangedEventHandler(string nodePath, StringName propertyName);
+        internal byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[SceneFilePath];
 
         public NetworkNode3D()
         {
@@ -38,16 +43,6 @@ namespace HLNC
                 new NetworkPropertiesSerializer(this),
             ];
         }
-        public NetworkId NetworkId { get; internal set; } = -1;
-        public PeerId InputAuthority { get; internal set; } = -1;
-        internal byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[SceneFilePath];
-
-        public bool IsCurrentOwner
-        {
-            get { return NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId; }
-        }
-
-        public Dictionary<long, bool> Interest = [];
 
         public static NetworkNode3D GetFromNetworkId(NetworkId network_id)
         {
@@ -164,7 +159,7 @@ namespace HLNC
             if (NetworkRunner.Instance.IsServer)
                 return;
 
-            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
+            if (IsCurrentAuthority && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
             {
                 INetworkInputHandler inputHandler = (INetworkInputHandler)this;
                 if (inputHandler.InputBuffer.Count > 0)
@@ -177,7 +172,7 @@ namespace HLNC
 
         public Godot.Collections.Dictionary<int, Variant> GetInput()
         {
-            if (!IsCurrentOwner) return null;
+            if (!IsCurrentAuthority) return null;
 
             byte netId = NetworkRunner.Instance.LocalPlayerId == InputAuthority ? (byte)NetworkId : NetworkPeerManager.Instance.GetPeerNodeId(InputAuthority, this);
             if (!NetworkRunner.Instance.InputStore.ContainsKey(InputAuthority))
