@@ -6,8 +6,16 @@ using Godot;
 
 namespace HLNC.Serialization
 {
+    /// <summary>
+    /// Converts variables and <see cref="Godot.Variant">Godot variants</see> into binary and vice-versa. <see cref="HLBuffer"/> is the medium of storage.
+    /// </summary>
     public class HLBytes
     {
+        /// <summary>
+        /// GZip bytes for smaller network packages.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public static byte[] Compress(byte[] data)
         {
             using (var compressedStream = new MemoryStream())
@@ -20,6 +28,11 @@ namespace HLNC.Serialization
             }
         }
 
+        /// <summary>
+        /// Unzip GZipped bytes.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public static byte[] Decompress(byte[] data)
         {
             using (var compressedStream = new MemoryStream(data))
