@@ -66,7 +66,6 @@ namespace MyGame
 ### Pre-setup notes
 
 * Requires Godot.NET (this is a C# library)
-* Depends on a 3rd party library called [Fody (MIT Licensed)](https://github.com/Fody/Home)
 
 ### Setup steps
 
