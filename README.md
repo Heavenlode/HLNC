@@ -71,18 +71,15 @@ namespace MyGame
 ### Setup steps
 
 1. Add HLNC to your "addons"
-2. Add [Fody](https://github.com/Fody/Fody) and [Fody.PropertyChanged](https://github.com/Fody/PropertyChanged) to your `.csproj` dependencies
+2. Import HLNC in your `.csproj`. For example:
 ```xml
-<ItemGroup>
-    <PackageReference Include="Fody" Version="6.8.0">
-    <PrivateAssets>all</PrivateAssets>
-    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="PropertyChanged.Fody" Version="4.1.0">
-    <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>compile; runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-</ItemGroup>
+<Project Sdk="Godot.NET.Sdk/4.3.0-beta.1">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="addons\HLNC\HLNC.props" />
+</Project>
 ```
 3. Enable the HLNC plugin in Godot
 
