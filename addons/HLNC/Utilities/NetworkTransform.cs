@@ -26,12 +26,15 @@ namespace HLNC.Utilities
             _isTeleporting = true;
         }
 
-        public override void _Ready()
+        public override void _NetworkReady()
         {
             base._Ready();
             TargetNode ??= GetParent3D();
-            NetPosition = TargetNode.GlobalPosition;
-            NetRotation = TargetNode.GlobalRotation;
+            if (GetMeta("import_from_json", false).AsBool())
+            {
+                TargetNode.Position = NetPosition;
+                TargetNode.Rotation = NetRotation;
+            }
         }
 
         public Node3D GetParent3D()
@@ -68,8 +71,8 @@ namespace HLNC.Utilities
             {
                 return;
             }
-            NetPosition = TargetNode.GlobalPosition;
-            NetRotation = TargetNode.GlobalRotation;
+            NetPosition = TargetNode.Position;
+            NetRotation = TargetNode.Rotation;
             if (IsTeleporting)
             {
                 if (teleportExported)
@@ -103,13 +106,13 @@ namespace HLNC.Utilities
             {
                 return;
             }
-            TargetNode.GlobalPosition = NetPosition;
-            TargetNode.GlobalRotation = NetRotation;
+            TargetNode.Position = NetPosition;
+            TargetNode.Rotation = NetRotation;
         }
 
         public void Teleport(Vector3 incoming_position)
         {
-            TargetNode.GlobalPosition = incoming_position;
+            TargetNode.Position = incoming_position;
             IsTeleporting = true;
         }
     }

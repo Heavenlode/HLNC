@@ -4,21 +4,21 @@ using HLNC.Serialization;
 
 namespace HLNC.Serialization.Serializers
 {
-    internal class DespawnSerializer(NetworkNode3D node) : IStateSerailizer
+    internal class DespawnSerializer(NetworkNodeWrapper node) : IStateSerailizer
     {
         private struct Data
         {
 
         }
 
-        private NetworkNode3D node = node;
+        private NetworkNodeWrapper node = node;
 
         private Data Deserialize(HLBuffer data)
         {
             return new Data();
         }
 
-        public void Import(IPeerController networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
+        public void Import(IPeerStateController peerStateController, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
         {
             nodeOut = node;
             var data = Deserialize(buffer);
@@ -27,7 +27,7 @@ namespace HLNC.Serialization.Serializers
 
         public void Cleanup() { }
 
-        public HLBuffer Export(IPeerController networkState, PeerId peerId)
+        public HLBuffer Export(IPeerStateController peerStateController, PeerId peerId)
         {
             var buffer = new HLBuffer();
             // Dictionary<PeerId, HLBuffer> despawnsBuffer = new Dictionary<PeerId, HLBuffer>();
@@ -55,7 +55,7 @@ namespace HLNC.Serialization.Serializers
             return buffer;
         }
 
-        public void Acknowledge(IPeerController networkState, PeerId peer, Tick tick)
+        public void Acknowledge(IPeerStateController peerStateController, PeerId peer, Tick tick)
         {
             // if (!DespawnBuffers.ContainsKey(peer))
             // 	return;

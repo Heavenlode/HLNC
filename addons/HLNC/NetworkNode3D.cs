@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
+using Newtonsoft.Json.Linq;
 
 namespace HLNC
 {
@@ -15,114 +18,209 @@ namespace HLNC
         For a client to update network properties, they must send client inputs to the server via implementing the <see cref="HLNC.INetworkInputHandler"/> interface.
         The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
         </summary>
-        <example>
-        <code language="cs">
-        public partial class Player : NetworkNode3D, INetworkInputHandler
-        {
-            public Dictionary<int, Variant> InputBuffer { get; private set; } = [];
-
-            public enum InputType {
-                MOVE = 0,
-            }
-
-            public override void _Process(double delta)
-            {
-                base._Process(delta);
-                if (!IsCurrentOwner || NetworkRunner.Instance.IsServer) return;
-
-                // Using the regular _Process method, we fill the InputBuffer with data which will automagically be transferred
-                // to the server on the next tick
-
-                var moveDirection = new Vector2();
-
-                if (Input.IsActionPressed("player_up")) {
-                    moveDirection.Y -= 1;
-                }
-                if (Input.IsActionPressed("player_down")) {
-                    moveDirection.Y += 1;
-                }
-                if (Input.IsActionPressed("player_left")) {
-                    moveDirection.X -= 1;
-                }
-                if (Input.IsActionPressed("player_right")) {
-                    moveDirection.X += 1;
-                }
-
-                inputBuffer[(int)InputType.MOVE] = moveDirection;
-            }
-
-            public override void _NetworkProcess(int _tick)
-            {
-                base._NetworkProcess(_tick);
-            
-                if (!NetworkRunner.Instance.IsServer) return;
-
-                var input = GetInput();
-                if (input == null) return;
-
-                // Eventually the server receives the client input, at which point it can decide how it should mutate the game state.
-                // This is how we ensure clients aren't able to cheat/hack the system and arbitrarily change values.
-
-                if (input.ContainsKey((int)InputType.MOVE)) {
-                    var moveDirection = ((Vector2)input[(int)InputType.MOVE]).Normalized();
-                    Position = new Vector3(
-                        Mathf.Clamp(Position.X + moveDirection.X, -5, 5),
-                        Position.Y,
-                        Mathf.Clamp(Position.Z + moveDirection.Y, -5, 5)
-                    );
-                }
-            }
-        }
-        </code>
-        </example>
     */
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
-        /// <summary>
-        /// Server-side only. A map of PeerIds that should receive network updates for this node.
-        /// </summary>
-        public Dictionary<long, bool> Interest { get; } = [];
+        private static PackedScene NetworkNode3DBlankScene = GD.Load<PackedScene>("res://addons/HLNC/network_node_3d.tscn");
+        public static NetworkNode3D Instantiate() {
+            return NetworkNode3DBlankScene.Instantiate() as NetworkNode3D;
+        }
+        public bool IsNetworkScene => GetMeta("is_network_scene", false).AsBool();
 
-        /// <summary>
-        /// The ID of the node tracked across the network.
-        /// This is different on the server side than on the client side.
-        /// </summary>
-        /// <remarks>
-        ///  The server tracks a global NetworkId for each node, as well as a local NetworkId for each peer. The reason for this is that it would cost too much bandwidth to send the full node's NetworkId to each peer.
-        ///  To minimize bandwidth, each client can store up to 64 NetworkIds at a time. The server is then able to talk about all 64 nodes to the client at once by using a single 64 bit integer.
-        ///  In the future, this may be expanded with an additional 64 bit integer to allow up to 4096 network nodes at once.
-        /// </remarks>
-        public NetworkId NetworkId { get; internal set; } = -1;
+        internal List<NetworkNodeWrapper> NetworkSceneChildren = [];
 
-        /// <summary>
-        /// The current peer who can send inputs via this node. On the client side, this is either -1, or their own PeerId. Clients cannot see who is the input authority of other objects.
-        /// </summary>
-        public PeerId InputAuthority { get; internal set; } = -1;
+        public override void _ExitTree()
+        {
+            base._ExitTree();
+            if (NetworkParent != null && NetworkParent.Node is NetworkNode3D _networkNodeParent)
+            {
+                _networkNodeParent.NetworkSceneChildren.Remove(
+                    _networkNodeParent.NetworkSceneChildren.Find((NetworkNodeWrapper child) => child.Node == this)
+                );
+            }
+        }
 
-        /// <summary>
-        /// A list of serializer objects which manage the server-side exporting of data to the client, and the client-side importing of data received from the server.
-        /// </summary>
-        public IStateSerailizer[] Serializers { get; }
+        public bool IsNetworkReady { get; internal set; } = false;
 
-        /// <summary>
-        /// A helper function which indicates if the current caller is the input authority. Always true for the server.
-        /// </summary>
-        public bool IsCurrentAuthority => NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId;
+        private NetworkNodeWrapper _networkParent = null;
+        internal NetworkNodeWrapper NetworkParent
+        {
+            get => _networkParent;
+            set
+            {
+                {
+                    if (IsNetworkScene && _networkParent != null && _networkParent.Node is NetworkNode3D _networkNodeParent) {
+                        _networkNodeParent.NetworkSceneChildren.Remove(
+                            _networkNodeParent.NetworkSceneChildren.Find((NetworkNodeWrapper child) => child.Node == this)
+                        );
+                    }
+                }
+                _networkParent = value;
+                {
+                    if (IsNetworkScene && value != null && value.Node is NetworkNode3D _networkNodeParent) {
+                        _networkNodeParent.NetworkSceneChildren.Add(new NetworkNodeWrapper(this));
+                    }
+                }
+            }
+        }
+        public bool DynamicSpawn { get; internal set; } = false;
+
+        // Cannot have more than 8 serializers
+        public IStateSerailizer[] Serializers { get; private set; }
+
+        public JObject ToJSON(bool recurse = true)
+        {
+            if (!IsNetworkScene)
+            {
+                throw new System.Exception("Only scenes can be converted to JSON.");
+            }
+
+            var result = new JObject();
+            result["data"] = new JObject();
+            if (IsNetworkScene) {
+                result["scenePack"] = NetworkScenesRegister.SCENES_PACK[SceneFilePath];
+            }
+            // We retain this for debugging purposes.
+            result["nodeName"] = Name.ToString();
+
+            if (NetworkScenesRegister.PROPERTIES_MAP.TryGetValue(SceneFilePath, out var childSceneStaticNetworkNodes))
+            {
+                foreach (var staticNetworkNodePathAndProps in childSceneStaticNetworkNodes)
+                {
+                    var nodePath = staticNetworkNodePathAndProps.Key;
+                    var nodeProps = staticNetworkNodePathAndProps.Value;
+                    result["data"][nodePath] = new JObject();
+                    var nodeData = result["data"][nodePath] as JObject;
+                    foreach (var property in nodeProps)
+                    {
+                        var prop = GetNode(nodePath).Get(property.Value.Name);
+                        if (prop.VariantType == Variant.Type.String)
+                        {
+                            nodeData[property.Value.Name] = prop.ToString();
+                        }
+                        else if (prop.VariantType == Variant.Type.Float)
+                        {
+                            nodeData[property.Value.Name] = prop.AsDouble();
+                        }
+                        else if (prop.VariantType == Variant.Type.Int)
+                        {
+                            nodeData[property.Value.Name] = prop.AsInt64();
+                        }
+                        else if (prop.VariantType == Variant.Type.Bool)
+                        {
+                            nodeData[property.Value.Name] = prop.AsBool();
+                        }
+                        else if (prop.VariantType == Variant.Type.Vector2)
+                        {
+                            var vec = prop.As<Vector2>();
+                            nodeData[property.Value.Name] = new JArray(vec.X, vec.Y);
+                        }
+                        else if (prop.VariantType == Variant.Type.Vector3)
+                        {
+                            var vec = prop.As<Vector3>();
+                            nodeData[property.Value.Name] = new JArray(vec.X, vec.Y, vec.Z);
+                        }
+                    }
+
+                    if (!nodeData.HasValues) {
+                        (result["data"] as JObject).Remove(nodePath);
+                    }
+                }
+            }
+
+            if (recurse)
+            {
+                result["children"] = new JObject();
+                foreach (var child in NetworkSceneChildren)
+                {
+                    if (child.Node is NetworkNode3D networkChild)
+                    {
+                        string pathTo = GetPathTo(networkChild.GetParent());
+                        if (!(result["children"] as JObject).ContainsKey(pathTo))
+                        {
+                            result["children"][pathTo] = new JArray();
+                        }
+                        (result["children"][pathTo] as JArray).Add(networkChild.ToJSON());
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public static async Task<NetworkNode3D> FromJSON(JObject data)
+        {
+            NetworkNode3D node;
+            if (data.ContainsKey("scenePack")) {
+                node = NetworkScenesRegister.SCENES_MAP[(byte)data["scenePack"]].Instantiate<NetworkNode3D>();
+            } else {
+                node = Instantiate();
+            }
+            var tcs = new TaskCompletionSource<bool>();
+            node.Ready += () => {
+                foreach (var child in node.GetNetworkChildren(NetworkChildrenSearchToggle.INCLUDE_SCENES)) {
+                    if (child.Node.GetMeta("is_network_scene", false).AsBool()) {
+                        child.Node.QueueFree();
+                    } else {
+                        child.Node.SetMeta("import_from_json", true);
+                    }
+                }
+                node.SetMeta("import_from_json", true);
+                tcs.SetResult(true);
+            };
+            NetworkRunner.Instance.AddChild(node);
+            await tcs.Task;
+            NetworkRunner.Instance.RemoveChild(node);
+            foreach (var networkNodePathAndProps in data["data"] as JObject) {
+                var nodePath = networkNodePathAndProps.Key;
+                var nodeProps = networkNodePathAndProps.Value as JObject;
+                var targetNode = node.GetNodeOrNull(nodePath);
+                if (targetNode == null) {
+                    GD.PrintErr("Node not found for: ", nodePath);
+                    continue;
+                }
+                foreach (var prop in nodeProps) {
+                    var variantType = targetNode.Get(prop.Key).VariantType;
+                    if (variantType == Variant.Type.String) {
+                        targetNode.Set(prop.Key, prop.Value.ToString());
+                    } else if (variantType == Variant.Type.Float) {
+                        targetNode.Set(prop.Key, (float)prop.Value);
+                    } else if (variantType == Variant.Type.Int) {
+                        targetNode.Set(prop.Key, (int)prop.Value);
+                    } else if (variantType == Variant.Type.Bool) {
+                        targetNode.Set(prop.Key, (bool)prop.Value);
+                    } else if (variantType == Variant.Type.Vector2) {
+                        var vec = prop.Value as JArray;
+                        targetNode.Set(prop.Key, new Vector2((float)vec[0], (float)vec[1]));
+                    } else if (variantType == Variant.Type.Vector3) {
+                        var vec = prop.Value as JArray;
+                        targetNode.Set(prop.Key, new Vector3((float)vec[0], (float)vec[1], (float)vec[2]));
+                    }
+                }
+            }
+            if (data.ContainsKey("children")) {
+                foreach (var child in data["children"] as JObject) { 
+                    var nodePath = child.Key;
+                    var children = child.Value as JArray;
+                    foreach (var childData in children) {
+                        var childNode = await FromJSON(childData as JObject);
+                        var parent = node.GetNodeOrNull(nodePath);
+                        if (parent == null) {
+                            GD.PrintErr("Parent node not found for: ", nodePath);
+                            continue;
+                        }
+                        parent.AddChild(childNode);
+                    }
+                }
+            }
+            return node;
+        }
 
         [Signal]
         public delegate void NetworkPropertyChangedEventHandler(string nodePath, StringName propertyName);
 
-        internal Dictionary<PeerId, bool> SpawnAware = [];
-        internal List<Node> NetworkChildren = [];
-        internal NetworkNode3D NetworkParent = null;
-        internal bool DynamicSpawn = false;
-        internal byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[SceneFilePath];
-
-        public NetworkNode3D()
-        {
-            // First, determine if the Node class has the NetworkScene attribute.
-            if (GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0)
-            {
+        public NetworkNode3D() {
+            if (GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0) {
                 SetMeta("is_network_scene", true);
             }
             SetMeta("is_network_node", true);
@@ -130,33 +228,21 @@ namespace HLNC
             {
                 return;
             }
-
-
             Serializers = [
-                new SpawnSerializer(this),
-                new NetworkPropertiesSerializer(this),
+                new SpawnSerializer(new NetworkNodeWrapper(this)),
+                new NetworkPropertiesSerializer(new NetworkNodeWrapper(this)),
             ];
         }
+        public NetworkId NetworkId { get; internal set; } = -1;
+        public PeerId InputAuthority { get; internal set; } = -1;
 
-        /// <summary>
-        /// Get a network node by the NetworkId.
-        /// </summary>
-        /// <param name="network_id">The NetworkId in question.</param>
-        /// <returns><see cref="NetworkNode3D"/></returns>
-        public static NetworkNode3D GetFromNetworkId(NetworkId network_id)
+        public bool IsCurrentOwner
         {
-            if (network_id == -1)
-                return null;
-            if (!NetworkRunner.Instance.NetworkNodes.ContainsKey(network_id))
-                return null;
-            return NetworkRunner.Instance.NetworkNodes[network_id];
+            get { return NetworkRunner.Instance.IsServer || InputAuthority == NetworkRunner.Instance.LocalPlayerId; }
         }
 
-        /// <summary>
-        /// Finds the nearest <see cref="NetworkNode3D"/> parent. If the input node is a <see cref="NetworkNode3D"/>, then this function returns that input parameter.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        public Dictionary<long, bool> Interest = [];
+
         public static NetworkNode3D FindFromChild(Node node)
         {
             while (node != null)
@@ -168,32 +254,35 @@ namespace HLNC
             return null;
         }
 
-        /// <summary>
-        /// Get all <see cref="NetworkNode3D"/> children recursively. Does not include <see cref="NetworkScenes"/>.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Node> GetNetworkChildren()
+        public enum NetworkChildrenSearchToggle { INCLUDE_SCENES, EXCLUDE_SCENES, ONLY_SCENES }
+        public IEnumerable<NetworkNodeWrapper> GetNetworkChildren(NetworkChildrenSearchToggle searchToggle = NetworkChildrenSearchToggle.EXCLUDE_SCENES)
         {
             var children = GetChildren();
             while (children.Count > 0)
             {
                 var child = children[0];
                 children.RemoveAt(0);
-                if (child.HasMeta("is_network_scene"))
+                var isNetworkScene = child.GetMeta("is_network_scene", false).AsBool();
+                if (isNetworkScene && searchToggle == NetworkChildrenSearchToggle.EXCLUDE_SCENES)
                 {
                     continue;
                 }
                 children.AddRange(child.GetChildren());
-                if (child.HasMeta("is_network_node"))
+                if (!child.GetMeta("is_network_node", false).AsBool())
                 {
-                    yield return child;
+                    continue;
+                }
+                if (!isNetworkScene && searchToggle == NetworkChildrenSearchToggle.ONLY_SCENES)
+                {
+                    continue;
+                }
+                if (searchToggle == NetworkChildrenSearchToggle.INCLUDE_SCENES || isNetworkScene)
+                {
+                    yield return new NetworkNodeWrapper(child);
                 }
             }
         }
 
-        /// <summary>
-        /// De-register the object from the network and dequeue it.
-        /// </summary>
         public void Despawn()
         {
             if (!NetworkRunner.Instance.IsServer)
@@ -201,64 +290,76 @@ namespace HLNC
             // NetworkRunner.Instance.Despawn(this);
         }
 
-        public override void _Ready()
+        public void _NetworkPrepare()
         {
-            base._Ready();
             if (Engine.IsEditorHint())
             {
                 return;
             }
 
-            if (!HasMeta("is_network_scene"))
+            if (IsNetworkScene)
             {
-                return;
-            }
-
-            NetworkRunner.Instance.RegisterSpawn(this);
-
-            if (!DynamicSpawn)
-            {
+                NetworkRunner.Instance.RegisterSpawn(new NetworkNodeWrapper(this));
                 if (!NetworkRunner.Instance.IsServer)
                 {
-                    // Clients do not setup static scenes, only the server does
-                    // The server will spawn this on the client later
+                    // Clients dequeue network scenes and prepare them later via serializers triggered by the server.
                     return;
                 }
-
-                // The network parent is defined on spawn for the client
-                var parentScene = GetParent();
-                while (parentScene != null)
+                if (!DynamicSpawn)
                 {
-                    if (parentScene.HasMeta("is_network_scene"))
+                    // The network parent is defined on spawn for the client
+                    var parentScene = GetParent();
+                    while (parentScene != null)
                     {
-                        break;
+                        if (parentScene.GetMeta("is_network_scene", false).AsBool())
+                        {
+                            break;
+                        }
+                        parentScene = parentScene.GetParent();
                     }
-                    parentScene = parentScene.GetParent();
-                }
-                NetworkParent = (NetworkNode3D)parentScene;
-                if (parentScene == null && !HasMeta("is_network_scene"))
-                {
-                    GD.PrintErr("NetworkNode3D has no associated network scene: " + GetPath());
-                }
-
-                if (parentScene == null && this != NetworkRunner.Instance.CurrentScene)
-                {
-                    GD.PrintErr("Scene not associated with parent. Only one root scene allowed at a time: " + GetPath());
-                }
-            }
-
-            foreach (var child in GetNetworkChildren())
-            {
-                NetworkChildren.Add(child);
-                if (NetworkRunner.Instance.IsServer && child is NetworkNode3D)
-                {
-                    var networkChild = (NetworkNode3D)child;
-                    networkChild.PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
+                    if (parentScene == null && !GetMeta("is_network_scene", false).AsBool())
                     {
-                        EmitSignal("NetworkPropertyChanged", GetPathTo(networkChild), e.PropertyName);
-                    };
+                        throw new System.Exception("NetworkNode3D has no associated network scene: " + GetPath());
+                    }
+                    if (parentScene == null && this != NetworkRunner.Instance.CurrentScene.Node)
+                    {
+                        throw new System.Exception("Scene not associated with parent. Only one root scene allowed at a time: " + GetPath());
+                    }
+                    if (parentScene != null) {
+                        NetworkParent = new NetworkNodeWrapper(parentScene);
+                    }
+                }
+
+                if (NetworkRunner.Instance.IsServer)
+                {
+                    if (NetworkScenesRegister.PROPERTIES_MAP.TryGetValue(SceneFilePath, out var childDict))
+                    {
+                        foreach (var childPath in childDict.Keys)
+                        {
+                            var networkChild = GetNodeOrNull<NetworkNode3D>(childPath);
+                            if (networkChild == null)
+                            {
+                                continue;
+                            }
+                            networkChild.PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
+                            {
+                                if (!childDict[childPath].ContainsKey(e.PropertyName))
+                                {
+                                    return;
+                                }
+                                EmitSignal("NetworkPropertyChanged", childPath, e.PropertyName);
+                            };
+                        }
+                    }
                 }
             }
+
+            _NetworkReady();
+        }
+
+        public virtual void _NetworkReady()
+        {
+            IsNetworkReady = true;
         }
 
         public virtual void _NetworkProcess(int _tick)
@@ -270,7 +371,7 @@ namespace HLNC
             if (NetworkRunner.Instance.IsServer)
                 return;
 
-            if (IsCurrentAuthority && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
+            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
             {
                 INetworkInputHandler inputHandler = (INetworkInputHandler)this;
                 if (inputHandler.InputBuffer.Count > 0)
@@ -283,9 +384,9 @@ namespace HLNC
 
         public Godot.Collections.Dictionary<int, Variant> GetInput()
         {
-            if (!IsCurrentAuthority) return null;
+            if (!IsCurrentOwner) return null;
 
-            byte netId = NetworkRunner.Instance.LocalPlayerId == InputAuthority ? (byte)NetworkId : NetworkPeerManager.Instance.GetPeerNodeId(InputAuthority, this);
+            byte netId = NetworkRunner.Instance.LocalPlayerId == InputAuthority ? (byte)NetworkId : NetworkPeerManager.Instance.GetPeerNodeId(InputAuthority, new NetworkNodeWrapper(this));
             if (!NetworkRunner.Instance.InputStore.ContainsKey(InputAuthority))
                 return null;
             if (!NetworkRunner.Instance.InputStore[InputAuthority].ContainsKey(netId))
@@ -304,7 +405,7 @@ namespace HLNC
             }
             if (IsQueuedForDeletion())
                 return;
-            if (HasMeta("is_network_scene"))
+            if (IsNetworkScene)
             {
                 for (var i = 0; i < Serializers.Length; i++)
                 {

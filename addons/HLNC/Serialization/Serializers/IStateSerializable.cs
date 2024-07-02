@@ -34,6 +34,9 @@ namespace HLNC.Serialization.Serializers
         /// </summary>
         /// <param name="delta"></param>
         public void PhysicsProcess(double delta);
+        public void Import(IPeerStateController networkState, HLBuffer data, out NetworkNodeWrapper nodeOut);
+        public HLBuffer Export(IPeerStateController networkState, PeerId peer);
+        public void Acknowledge(IPeerStateController networkState, PeerId peer, Tick tick);
         public void Cleanup();
     }
     public interface IStateSerializable

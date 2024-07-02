@@ -18,7 +18,14 @@ namespace HLNC.Serialization
     {
         private const int MAX_NETWORK_PROPERTIES = 64;
 
+        /// <summary>
+        /// Map of scene IDs to scene paths
+        /// </summary>
         internal static Dictionary<byte, PackedScene> SCENES_MAP = [];
+
+        /// <summary>
+        /// Map of scene paths to scene IDs
+        /// </summary>
         internal static Dictionary<string, byte> SCENES_PACK = [];
 
         // This statically tracks every node path for every networked scene
@@ -27,8 +34,15 @@ namespace HLNC.Serialization
         // NODE_PATHS[0][1] Indicates the node path for the 1st node in the 0th scene, in other words the first child of the root
         // And so on
         internal static Dictionary<byte, Dictionary<int, string>> NODE_PATHS_MAP = [];
+        
         internal static Dictionary<byte, Dictionary<string, int>> NODE_PATHS_PACK = [];
 
+        internal static Dictionary<string, HashSet<string>> STATIC_NETWORK_NODE_PATHS = [];
+
+        /// <summary>
+        /// A Dictionary of ScenePath to NodePath to PropertyName to CollectedNetworkProperty.
+        /// It includes all child Network Nodes within the Scene including itself, but not nested network scenes.
+        /// </summary>
         internal static Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetworkProperty>>> PROPERTIES_MAP = [];
         internal static Dictionary<string, Dictionary<byte, CollectedNetworkProperty>> PROPERTY_LOOKUP = [];
 
@@ -52,6 +66,7 @@ namespace HLNC.Serialization
 
                             // Register the scenes to be instantiated across the network
                             SCENES_PACK.TryAdd(scenePath, id);
+                            // SCENE_PATH_TO_NAME.TryAdd(scenePath, type.Name);
                             if (SCENES_MAP.TryAdd(id, GD.Load<PackedScene>(scenePath)))
                             {
                                 PROPERTIES_MAP.TryAdd(scenePath, []);
@@ -74,8 +89,8 @@ namespace HLNC.Serialization
                                     var child = nodes[0];
                                     nodes.RemoveAt(0);
 
-                                    if (child.HasMeta("is_network_scene") && child != node)
-                                    {
+                                    if (child.GetMeta("is_network_scene", false).AsBool() && child != node)
+                                    { 
                                         // NetworkScenes manage their own properties, so we skip nested ones.
                                         continue;
                                     }
@@ -86,15 +101,18 @@ namespace HLNC.Serialization
                                     NODE_PATHS_PACK[id].TryAdd(nodePath, nodePathId);
                                     nodePathId += 1;
 
-                                    if (!child.HasMeta("is_network_node"))
+                                    if (!child.GetMeta("is_network_node", false).AsBool())
                                     {
                                         // Don't watch properties of nodes that aren't NetworkNodes
                                         continue;
                                     }
+                                    STATIC_NETWORK_NODE_PATHS.TryAdd(scenePath, []);
+                                    STATIC_NETWORK_NODE_PATHS[scenePath].Add(nodePath);
+                                    
 
                                     if (child is NetworkNode3D)
                                     {
-                                        // GD.Print("Registering properties for " + child.GetPath());
+                                        // GD.Print("Registering properties for " + child.Name, " : ", child.GetType());
 
                                         // Reflect on the child and collect all properties with the NetworkProperty attribute
                                         foreach (PropertyInfo property in child.GetType().GetProperties())
@@ -174,10 +192,12 @@ namespace HLNC.Serialization
                                                     GD.PrintErr("NetworkPropertiesSerializer: Invalid property definition on " + node.Name + ". Only string names and int types are supported.");
                                                     return;
                                                 }
-                                                if (!((string)name).StartsWith("network_"))
+                                                if (!name.AsString().StartsWith("network_"))
                                                 {
                                                     continue;
                                                 }
+                                                if (name.AsString() == "network_id") continue;
+
                                                 propertyId += 1;
                                                 if (propertyId >= MAX_NETWORK_PROPERTIES)
                                                 {

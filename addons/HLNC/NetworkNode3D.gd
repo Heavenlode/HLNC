@@ -1,13 +1,14 @@
-class_name GDNetworkNode3D extends Node3D
+class_name NetworkNode3D extends Node3D
 
 signal NetworkPropertyChanged(node_path: String, property_name: String)
 
 var parent_scene = null
+var dynamic_spawn: bool = false
 
 func _init():
 	set_meta("is_network_node", true)
 
-func _ready():
+func _network_prepare():
 	parent_scene = self
 	while parent_scene != null:
 		if parent_scene.has_meta("is_network_scene"):

@@ -1,8 +1,11 @@
 global using NetworkId = System.Int64;
 global using PeerId = System.Int64;
 global using Tick = System.Int32;
-
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
+using Godot.Collections;
 using HLNC.Serialization;
 
 namespace HLNC
@@ -27,73 +30,46 @@ namespace HLNC
         /// </summary>
         [Export] public int MaxPeers = 5;
 
-        /// <summary>
-        /// Singleton access for C#.
-        /// 
-        /// This allows the class to be added as a Godot Autoload and utilized as a C# singleton.
-        /// In GDScript, access NetworkRunner as a normal singleton without using this field.
-        /// </summary>
-        public static NetworkRunner Instance { get; private set; }
+        public string ZoneInstanceId => arguments.ContainsKey("zoneInstanceId") ? arguments["zoneInstanceId"] : "0";
 
-        public const int FRAMES_PER_SECOND = 60;
-        public const int FRAMES_PER_TICK = 2;
+        public ENetMultiplayerPeer NetPeer = new();
+        public MultiplayerApi MultiplayerInstance;
 
-        /// <summary>
-        /// Ticks per second. The number of server-side network ticks occur within a second.
-        /// </summary>
-        public const int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+        private bool _isServer = false;
+        public bool IsServer => _isServer;
 
-        /// <summary>
-        /// Maximum transfer unit, in bits. The number of bits the server can send in a single Tick to a client before it truncates serialized data.
-        /// 1400 is generally considered a safe maximum number for all network devices, including mobile.
-        /// </summary>
-        public const int MTU = 1400;
-
-        /// <summary>
-        /// The current tick for the server and client.
-        /// </summary>
-        public int CurrentTick { get; internal set; }
-
-        /// <summary>
-        /// Indicates whether this NetworkRunner is a server. If false, it is a client, or the network runner hasn't yet started via <see cref="StartServer()"/> / <see cref="StartClient()"/>.
-        /// </summary>
-        public bool IsServer { get; private set; }
+        private bool _netStarted = false;
 
         /// <summary>
         /// Indicates whether the network connection has been established. Network is started via <see cref="StartServer()"/> or <see cref="StartClient()"/>. Once started, <see cref="NetworkNode3D._NetworkProcess(Tick)"/> will begin running per tick.
         /// </summary>
-        public bool NetStarted { get; private set; }
+        public bool NetStarted => _netStarted;
 
-        /// <summary>
-        /// The nodes registered with the network. For the server, this is every NetworkNode within the entire root scene tree. For the client, this is every NetworkNode that they are aware of.
-        /// </summary>
-        public System.Collections.Generic.Dictionary<NetworkId, NetworkNode3D> NetworkNodes = [];
+        public NetworkNodeWrapper CurrentScene = new NetworkNodeWrapper(null);
 
-        /// <summary>
-        /// The current root Network Scene. The server automatically keeps clients synchronized with this.
-        /// </summary>
-        public NetworkNode3D CurrentScene { get; internal set; }
+        // public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
 
-        /// <summary>
-        /// The current client ID.
-        /// </summary>
-        public long LocalPlayerId => MultiplayerInstance.GetUniqueId();
+        public int NetworkId_counter = 0;
+        public System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
+        public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = [];
+        public long LocalPlayerId
+        {
+            get { return MultiplayerInstance.GetUniqueId(); }
+        }
+        private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
+        public Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
-        private int networkIdCounter = 0;
-
-        internal ENetMultiplayerPeer NetPeer = new();
-        internal MultiplayerApi MultiplayerInstance;
-        internal Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore { get; private set; }
-        
+        private static NetworkRunner _instance;
+        public static NetworkRunner Instance => _instance;
         public override void _EnterTree()
         {
-            if (Instance != null)
+            if (_instance != null)
             {
                 QueueFree();
             }
-            Instance = this;
+            _instance = this;
         }
-        internal void DebugPrint(string msg)
+        public void DebugPrint(string msg)
         {
             GD.Print($"{(IsServer ? "Server" : "Client")}: {msg}");
         }
@@ -118,33 +94,30 @@ namespace HLNC
             }
         }
 
-        internal void RegisterSpawn(NetworkNode3D node)
+        public void RegisterSpawn(NetworkNodeWrapper wrapper)
         {
             if (IsServer)
             {
-                networkIdCounter += 1;
-                while (NetworkNodes.ContainsKey(networkIdCounter))
+                NetworkId_counter += 1;
+                while (NetworkScenes.ContainsKey(NetworkId_counter))
                 {
-                    networkIdCounter += 1;
+                    NetworkId_counter += 1;
                 }
-                NetworkNodes[networkIdCounter] = node;
-                node.NetworkId = networkIdCounter;
+                NetworkScenes[NetworkId_counter] = wrapper;
+                wrapper.NetworkId = NetworkId_counter;
                 return;
             }
 
-            if (!node.DynamicSpawn)
+            if (!wrapper.DynamicSpawn)
             {
-                node.QueueFree();
+                wrapper.Node.QueueFree();
             }
 
         }
 
-        /// <summary>
-        /// Start the server and begin listening for client connections. Upon success, <see cref="NetStarted"/> is set to true and <see cref="NetworkNode3D._NetworkProcess(Tick)"/> begins firing for all network nodes per tick.
-        /// </summary>
         public void StartServer()
         {
-            IsServer = true;
+            _isServer = true;
             DebugPrint("Starting Server");
             GetTree().MultiplayerPoll = false;
             var custom_port = Port;
@@ -164,13 +137,10 @@ namespace HLNC
             MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
             GetTree().SetMultiplayer(MultiplayerInstance, "/root");
             MultiplayerInstance.MultiplayerPeer = NetPeer;
-            NetStarted = true;
+            _netStarted = true;
             DebugPrint("Started");
         }
 
-        /// <summary>
-        /// Start the client and attempt to connect to the server. Upon success, <see cref="NetStarted"/> is set to true and <see cref="NetworkNode3D._NetworkProcess(Tick)"/> begins firing for all network nodes per tick received from the server.
-        /// </summary>
         public void StartClient()
         {
             GetTree().MultiplayerPoll = false;
@@ -185,35 +155,53 @@ namespace HLNC
             MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
             GetTree().SetMultiplayer(MultiplayerInstance, "/root");
             MultiplayerInstance.MultiplayerPeer = NetPeer;
-            NetStarted = true;
+            _netStarted = true;
             DebugPrint("Started");
         }
 
-        private int frame_counter = 0;
-        internal void ServerProcessTick()
+        public int frame_counter = 0;
+        public const int FRAMES_PER_SECOND = 60;
+        public const int FRAMES_PER_TICK = 2;
+
+        /// <summary>
+        /// Ticks per second. The number of server-side network ticks occur within a second.
+        /// </summary>
+        public static int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+
+        /// <summary>
+        /// Maximum transfer unit, in bits. The number of bits the server can send in a single Tick to a client before it truncates serialized data.
+        /// 1400 is generally considered a safe maximum number for all network devices, including mobile.
+        /// </summary>
+        public const int MTU = 1400;
+
+        public int CurrentTick = 0;
+
+        public System.Collections.Generic.Dictionary<object, object> network_properties_cache = [];
+
+        public Array<Variant> debug_data_sizes = [];
+        public System.Collections.Generic.Dictionary<object, object> debug_player_ping = [];
+
+        [Signal]
+        public delegate void OnAfterNetworkTickEventHandler(Tick tick);
+
+        public void ServerProcessTick()
         {
             var peers = Instance.MultiplayerInstance.GetPeers();
-            foreach (var net_id in NetworkNodes.Keys)
+            foreach (var net_id in NetworkScenes.Keys)
             {
-                var node = NetworkNodes[net_id];
-                if (node == null)
+                var networkNode = NetworkScenes[net_id];
+                if (networkNode == null)
                     continue;
-                if (node.IsQueuedForDeletion())
+
+                if (!IsInstanceValid(networkNode.Node) || networkNode.Node.IsQueuedForDeletion())
                 {
-                    NetworkNodes.Remove(net_id);
+                    NetworkScenes.Remove(net_id);
                     continue;
                 }
-                node._NetworkProcess(CurrentTick);
-                foreach (var networkChild in node.NetworkChildren)
+                networkNode._NetworkProcess(CurrentTick);
+                foreach (var networkChild in networkNode.StaticNetworkChildren)
                 {
-                    if (networkChild.HasMethod("_NetworkProcess"))
-                    {
-                        networkChild.Call("_NetworkProcess", CurrentTick);
-                    }
-                    else if (networkChild.HasMethod("_network_process"))
-                    {
-                        networkChild.Call("_network_process", CurrentTick);
-                    }
+                    networkChild._NetworkProcess(CurrentTick);
                 }
             }
 
@@ -231,6 +219,10 @@ namespace HLNC
                     // GD.Print("SENT STATE for peer " + peerId + " : " + BitConverter.ToString(exportedState[peerId].bytes));
                     var compressed_payload = HLBytes.Compress(exportedState[peerId].bytes);
                     var size = exportedState[peerId].bytes.Length;
+                    // if (network_debug != null)
+                    // {
+                    // 	debug_data_sizes.Add(compressed_payload.Length);
+                    // }
                     if (size > MTU)
                     {
                         DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
@@ -256,6 +248,7 @@ namespace HLNC
                 frame_counter = 0;
                 CurrentTick += 1;
                 ServerProcessTick();
+                EmitSignal("OnAfterNetworkTick", CurrentTick);
             }
         }
 
@@ -288,19 +281,30 @@ namespace HLNC
             }
         }
 
-        public void _OnPeerDisconnected(long peerId)
+        public void ChangeScenePacked(PackedScene scene)
         {
-            DebugPrint($"Peer disconnected peerId: {peerId}");
+            // This allows us to change scenes without using Godot's built-in scene changer
+            // We do this because Godot's scene changer doesn't work well with networked scenes
+            if (!IsServer) return;
+            var node = new NetworkNodeWrapper((NetworkNode3D)scene.Instantiate());
+            ChangeSceneInstance(node);
         }
 
-        public void ChangeScene(PackedScene scene)
+        public void ChangeSceneInstance(NetworkNodeWrapper node)
         {
             if (!IsServer) return;
-            var node = (NetworkNode3D)scene.Instantiate();
-            CurrentScene?.QueueFree();
+            if (CurrentScene.Node != null) {
+                CurrentScene.Node.QueueFree();
+            }
             node.DynamicSpawn = true;
-            GetTree().CurrentScene.AddChild(node);
+            // TODO: Support this more generally
+            GetTree().CurrentScene.AddChild(node.Node);
             CurrentScene = node;
+            var networkChildren = (node.Node as NetworkNode3D).GetNetworkChildren(NetworkNode3D.NetworkChildrenSearchToggle.INCLUDE_SCENES).ToList();
+            networkChildren.Reverse();
+            networkChildren.ForEach(child => child._NetworkPrepare());
+            node._NetworkPrepare();
+
         }
 
         public void Spawn(NetworkNode3D node, NetworkNode3D parent = null, string nodePath = ".")
@@ -308,14 +312,46 @@ namespace HLNC
             if (!IsServer) return;
 
             node.DynamicSpawn = true;
-            node.NetworkParent = parent;
+            node.NetworkParent = new NetworkNodeWrapper(null);
             if (parent == null)
             {
-                CurrentScene.GetNode(nodePath).AddChild(node);
+                CurrentScene.Node.GetNode(nodePath).AddChild(node);
             }
             else
             {
                 parent.GetNode(nodePath).AddChild(node);
+            }
+        }
+
+        public NetworkNodeWrapper GetFromNetworkId(NetworkId network_id)
+        {
+            if (network_id == -1)
+                return new NetworkNodeWrapper(null);
+            if (!NetworkScenes.ContainsKey(network_id))
+                return new NetworkNodeWrapper(null);
+            return NetworkScenes[network_id];
+        }
+
+        public void _OnPeerDisconnected(long peerId)
+        {
+            DebugPrint($"Peer disconnected peerId: {peerId}");
+        }
+
+        public IEnumerable<NetworkNode3D> GetAllNetworkNodes(Node node, bool onlyScenes = false)
+        {
+            if (node is NetworkNode3D networkNode)
+            {
+                if (!onlyScenes || networkNode.GetMeta("is_network_scene", false).AsBool())
+                {
+                    yield return networkNode;
+                }
+            }
+            foreach (Node childNode in node.GetChildren())
+            {
+                foreach (var nestedNode in GetAllNetworkNodes(childNode, onlyScenes))
+                {
+                    yield return nestedNode;
+                }
             }
         }
 
@@ -335,17 +371,17 @@ namespace HLNC
                 return;
             }
 
-            if (!InputStore.ContainsKey(sender))
+            if (!inputStore.ContainsKey(sender))
             {
-                InputStore[sender] = [];
+                inputStore[sender] = [];
             }
 
-            if (!InputStore[sender].ContainsKey(networkId))
+            if (!inputStore[sender].ContainsKey(networkId))
             {
-                InputStore[sender][networkId] = [];
+                inputStore[sender][networkId] = [];
             }
 
-            InputStore[sender][networkId] = incomingInput;
+            inputStore[sender][networkId] = incomingInput;
         }
     }
 }

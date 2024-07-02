@@ -13,7 +13,7 @@ namespace HLNC.Serialization.Serializers
             public Dictionary<byte, Variant> properties;
         }
         private const int MAX_NETWORK_PROPERTIES = 64;
-        private NetworkNode3D node;
+        private NetworkNodeWrapper wrapper;
 
         private Dictionary<byte, Variant> cachedPropertyChanges = [];
         public struct LerpableChangeQueue
@@ -27,24 +27,32 @@ namespace HLNC.Serialization.Serializers
         private Dictionary<string, LerpableChangeQueue> lerpableChangeQueue = [];
 
         private Dictionary<byte, bool> propertyUpdated = [];
-        public NetworkPropertiesSerializer(NetworkNode3D node)
+        public NetworkPropertiesSerializer(NetworkNodeWrapper wrapper)
         {
-            this.node = node;
+            this.wrapper = wrapper;
 
             // First, determine if the Node class has the NetworkScene attribute
             // This is because only a network scene will serialize network node properties recursively
-            if (!node.HasMeta("is_network_scene"))
+            if (!wrapper.Node.GetMeta("is_network_scene", false).AsBool())
             {
                 return;
             }
 
-            node.Ready += () =>
+            wrapper.Node.Ready += () =>
             {
                 if (NetworkRunner.Instance.IsServer)
                 {
-                    node.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
+                    wrapper.Node.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
                     {
-                        if (NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath].TryGetValue(propertyName, out var property))
+                        if (!NetworkScenesRegister.PROPERTIES_MAP.TryGetValue(wrapper.Node.SceneFilePath, out var _prop)) {
+                            GD.Print("Failed to load ", wrapper.Node.SceneFilePath);
+                            return;
+                        }
+                        if (!NetworkScenesRegister.PROPERTIES_MAP[wrapper.Node.SceneFilePath].TryGetValue(nodePath, out var _prop2)) {
+                            GD.Print("Failed to process ", wrapper.Node.SceneFilePath, "/", nodePath, "/", propertyName);
+                            return;
+                        }
+                        if (NetworkScenesRegister.PROPERTIES_MAP[wrapper.Node.SceneFilePath][nodePath].TryGetValue(propertyName, out var property))
                         {
                             propertyUpdated[property.Index] = true;
                         }
@@ -55,7 +63,7 @@ namespace HLNC.Serialization.Serializers
                     // As a client, apply all the cached changes
                     foreach (var propIndex in cachedPropertyChanges.Keys)
                     {
-                        var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][propIndex];
+                        var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][propIndex];
                         ImportProperty(prop, NetworkRunner.Instance.CurrentTick, cachedPropertyChanges[propIndex]);
                     }
                 }
@@ -65,7 +73,7 @@ namespace HLNC.Serialization.Serializers
 
         public void ImportProperty(CollectedNetworkProperty prop, Tick tick, Variant value)
         {
-            var propNode = node.GetNode(prop.NodePath);
+            var propNode = wrapper.Node.GetNode(prop.NodePath);
             Variant oldVal = propNode.Get(prop.Name);
             var friendlyPropName = prop.Name;
             if (friendlyPropName.StartsWith("network_"))
@@ -104,23 +112,23 @@ namespace HLNC.Serialization.Serializers
                 {
                     continue;
                 }
-                var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][(byte)i];
+                var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][(byte)i];
                 var varVal = HLBytes.UnpackVariant(buffer, prop.Type);
                 data.properties[(byte)i] = varVal.Value;
             }
             return data;
         }
 
-        public void Import(IPeerController networkState, HLBuffer buffer, out NetworkNode3D nodeOut)
+        public void Import(IPeerStateController peerStateController, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
         {
-            nodeOut = node;
+            nodeOut = wrapper;
             var data = Deserialize(buffer);
             foreach (var propIndex in data.properties.Keys)
             {
-                if (node.IsNodeReady())
+                if (wrapper.Node.IsNodeReady())
                 {
-                    var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][propIndex];
-                    ImportProperty(prop, networkState.CurrentTick, data.properties[propIndex]);
+                    var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][propIndex];
+                    ImportProperty(prop, peerStateController.CurrentTick, data.properties[propIndex]);
                 }
                 else
                 {
@@ -134,11 +142,11 @@ namespace HLNC.Serialization.Serializers
         private Dictionary<PeerId, Dictionary<Tick, long>> peerBufferCache = [];
         // This should instead be a map of variable values that we can resend until acknowledgement
 
-        public HLBuffer Export(IPeerController networkState, PeerId peerId)
+        public HLBuffer Export(IPeerStateController peerStateController, PeerId peerId)
         {
             var buffer = new HLBuffer();
 
-            if (!node.SpawnAware.ContainsKey(peerId))
+            if (!peerStateController.HasSpawnedForClient(wrapper.NetworkId, peerId))
             {
                 // The target client is not aware of this node yet. Don't send updates.
                 return buffer;
@@ -161,7 +169,7 @@ namespace HLNC.Serialization.Serializers
             // Store them in the cache to resend in the future until the client acknowledges having received the update
             if (propertiesUpdated != 0)
             {
-                peerBufferCache[peerId][networkState.CurrentTick] = propertiesUpdated;
+                peerBufferCache[peerId][peerStateController.CurrentTick] = propertiesUpdated;
             }
 
             propertiesUpdated = 0;
@@ -186,8 +194,8 @@ namespace HLNC.Serialization.Serializers
                     continue;
                 }
 
-                var prop = NetworkScenesRegister.PROPERTY_LOOKUP[node.SceneFilePath][(byte)i];
-                var propNode = node.GetNode(prop.NodePath);
+                var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][(byte)i];
+                var propNode = wrapper.Node.GetNode(prop.NodePath);
                 var varVal = propNode.Get(prop.Name);
                 HLBytes.Pack(buffer, varVal);
             }
@@ -200,7 +208,7 @@ namespace HLNC.Serialization.Serializers
             propertyUpdated.Clear();
         }
 
-        public void Acknowledge(IPeerController networkState, PeerId peerId, Tick latestAck)
+        public void Acknowledge(IPeerStateController peerStateController, PeerId peerId, Tick latestAck)
         {
             if (!peerBufferCache.ContainsKey(peerId))
             {
@@ -226,7 +234,7 @@ namespace HLNC.Serialization.Serializers
             foreach (var propName in lerpableChangeQueue.Keys.ToList())
             {
                 var toLerp = lerpableChangeQueue[propName];
-                var lerpNode = node.GetNode(toLerp.Prop.NodePath);
+                var lerpNode = wrapper.Node.GetNode(toLerp.Prop.NodePath);
                 if (toLerp.Weight < 1.0)
                 {
                     double result = -1;

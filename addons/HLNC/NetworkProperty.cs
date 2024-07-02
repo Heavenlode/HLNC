@@ -1,5 +1,4 @@
 using System;
-using Godot;
 
 namespace HLNC
 {
@@ -11,7 +10,7 @@ namespace HLNC
         {
             LinearInterpolation = 1 << 0,
             LossyConsistency = 1 << 1,
-            SyncOnInterest = 1 << 2
+            SyncOnInterest = 1 << 2,
         }
         public NetworkProperty(Flags flags = 0)
         {
