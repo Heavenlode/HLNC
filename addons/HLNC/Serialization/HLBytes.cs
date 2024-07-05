@@ -11,75 +11,41 @@ namespace HLNC.Serialization
     /// </summary>
     public class HLBytes
     {
-        /// <summary>
-        /// GZip bytes for smaller network packages.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static byte[] Compress(byte[] data)
-        {
-            using (var compressedStream = new MemoryStream())
-            {
-                using (var zipStream = new GZipStream(compressedStream, CompressionMode.Compress))
-                {
-                    zipStream.Write(data, 0, data.Length);
-                }
-                return compressedStream.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Unzip GZipped bytes.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static byte[] Decompress(byte[] data)
-        {
-            using (var compressedStream = new MemoryStream(data))
-            using (var uncompressedStream = new MemoryStream())
-            {
-                using (var gZipDecompressor = new GZipStream(compressedStream, CompressionMode.Decompress))
-                {
-                    gZipDecompressor.CopyTo(uncompressedStream);
-                }
-                return uncompressedStream.ToArray();
-            }
-        }
 
         public static void AddRange(ref byte[] array, byte[] toAdd)
         {
             Array.Resize(ref array, array.Length + toAdd.Length);
             Array.Copy(toAdd, 0, array, array.Length - toAdd.Length, toAdd.Length);
         }
-        public static void Pack(HLBuffer buffer, Variant varVal, bool pack_type = false)
+        public static void PackVariant(HLBuffer buffer, Variant varVal, bool packType = false)
         {
             if (varVal.VariantType == Variant.Type.Vector3)
             {
-                Pack(buffer, (Vector3)varVal, pack_type);
+                Pack(buffer, (Vector3)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Vector2)
             {
-                Pack(buffer, (Vector2)varVal, pack_type);
+                Pack(buffer, (Vector2)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Quaternion)
             {
-                Pack(buffer, (Quaternion)varVal, pack_type);
+                Pack(buffer, (Quaternion)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Float)
             {
-                Pack(buffer, (float)varVal, pack_type);
+                Pack(buffer, (float)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Int)
             {
-                Pack(buffer, (long)varVal, pack_type);
+                Pack(buffer, (long)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Bool)
             {
-                Pack(buffer, (bool)varVal, pack_type);
+                Pack(buffer, (bool)varVal, packType);
             }
             else if (varVal.VariantType == Variant.Type.Array)
             {
-                Pack(buffer, (Godot.Collections.Array)varVal, pack_type);
+                PackArray(buffer, (Godot.Collections.Array)varVal, packType);
             }
             else
             {
@@ -87,9 +53,9 @@ namespace HLNC.Serialization
             }
         }
 
-        public static void Pack(HLBuffer buffer, Vector3 varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, Vector3 varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Vector3;
@@ -108,9 +74,9 @@ namespace HLNC.Serialization
             buffer.pointer += 4;
         }
 
-        public static void Pack(HLBuffer buffer, Vector2 varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, Vector2 varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Vector2;
@@ -126,9 +92,9 @@ namespace HLNC.Serialization
             buffer.pointer += 4;
         }
 
-        public static void Pack(HLBuffer buffer, Quaternion varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, Quaternion varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Quaternion;
@@ -150,9 +116,9 @@ namespace HLNC.Serialization
             buffer.pointer += 2;
         }
 
-        public static void Pack(HLBuffer buffer, float varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, float varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Float;
@@ -172,22 +138,22 @@ namespace HLNC.Serialization
             buffer.pointer += 1;
         }
 
-        public static void Pack(HLBuffer buffer, int varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, int varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
-                throw new Exception("Cannot pack_type int. Only long allowed becaused Godot Variant.Int is long.");
+                throw new Exception("Cannot packType int. Only long allowed becaused Godot Variant.Int is long.");
             }
 
             Array.Resize(ref buffer.bytes, buffer.bytes.Length + 4);
-            byte[] floatBytes = BitConverter.GetBytes(varVal);
-            Array.Copy(floatBytes, 0, buffer.bytes, buffer.pointer, 4);
+            byte[] intBytes = BitConverter.GetBytes(varVal);
+            Array.Copy(intBytes, 0, buffer.bytes, buffer.pointer, 4);
             buffer.pointer += 4;
         }
 
-        public static void Pack(HLBuffer buffer, long varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, long varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Int;
@@ -200,9 +166,9 @@ namespace HLNC.Serialization
             buffer.pointer += 8;
         }
 
-        public static void Pack(HLBuffer buffer, bool varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, bool varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Bool;
@@ -214,9 +180,9 @@ namespace HLNC.Serialization
             buffer.pointer += 1;
         }
 
-        public static void Pack(HLBuffer buffer, Godot.Collections.Array varVal, bool pack_type = false)
+        public static void PackArray(HLBuffer buffer, Godot.Collections.Array varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.Array;
@@ -230,27 +196,27 @@ namespace HLNC.Serialization
             {
                 if (val.VariantType == Variant.Type.Vector3)
                 {
-                    Pack(buffer, (Vector3)val, pack_type);
+                    Pack(buffer, (Vector3)val, packType);
                 }
                 else if (val.VariantType == Variant.Type.Vector2)
                 {
-                    Pack(buffer, (Vector2)val, pack_type);
+                    Pack(buffer, (Vector2)val, packType);
                 }
                 else if (val.VariantType == Variant.Type.Quaternion)
                 {
-                    Pack(buffer, (Quaternion)val, pack_type);
+                    Pack(buffer, (Quaternion)val, packType);
                 }
                 else if (val.VariantType == Variant.Type.Float)
                 {
-                    Pack(buffer, (float)val, pack_type);
+                    Pack(buffer, (float)val, packType);
                 }
                 else if (val.VariantType == Variant.Type.Int)
                 {
-                    Pack(buffer, (long)val, pack_type);
+                    Pack(buffer, (long)val, packType);
                 }
                 else if (val.VariantType == Variant.Type.Bool)
                 {
-                    Pack(buffer, (bool)val, pack_type);
+                    Pack(buffer, (bool)val, packType);
                 }
                 else
                 {
@@ -259,9 +225,9 @@ namespace HLNC.Serialization
             }
         }
 
-        public static void Pack(HLBuffer buffer, int[] varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, int[] varVal, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.PackedInt32Array;
@@ -281,13 +247,17 @@ namespace HLNC.Serialization
         }
 
 
-        public static void Pack(HLBuffer buffer, byte[] varVal, bool pack_type = false)
+        public static void Pack(HLBuffer buffer, byte[] varVal, bool packLength = false, bool packType = false)
         {
-            if (pack_type)
+            if (packType)
             {
                 Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
                 buffer.bytes[buffer.pointer] = (byte)Variant.Type.PackedInt32Array;
                 buffer.pointer += 1;
+            }
+            if (packLength)
+            {
+                Pack(buffer, varVal.Length);
             }
             Array.Resize(ref buffer.bytes, buffer.bytes.Length + varVal.Length);
             Array.Copy(varVal, 0, buffer.bytes, buffer.pointer, varVal.Length);

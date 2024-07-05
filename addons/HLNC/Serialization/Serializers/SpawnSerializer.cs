@@ -17,7 +17,7 @@ namespace HLNC.Serialization.Serializers
         }
 
         private NetworkNodeWrapper wrapper = wrapper;
-        private Dictionary<PeerId, Tick> setupTicks = [];
+        private Dictionary<NetPeer, Tick> setupTicks = [];
 
         private Data Deserialize(HLBuffer data)
         {
@@ -66,30 +66,43 @@ namespace HLNC.Serialization.Serializers
             var newNode = NetworkScenesRegister.SCENES_MAP[data.classId].Instantiate();
             nodeOut = new NetworkNodeWrapper(newNode)
             {
-                NetworkParentId = networkParent.NetworkId,
                 NetworkId = networkId,
                 DynamicSpawn = true
             };
+            if (networkParent != null)
+            {
+                nodeOut.NetworkParentId = networkParent.NetworkId;
+            }
             peerStateController.TryRegisterPeerNode(nodeOut);
 
             // Iterate through all child nodes of nodeOut
             // If the child node is a NetworkNodeWrapper, then we set it to dynamic spawn
             // We don't register it as a node in the NetworkRunner because only the parent needs registration
+            NetworkRunner.Instance.AddChild(nodeOut.Node);
             var children = nodeOut.Node.GetChildren().ToList();
+            List<NetworkNodeWrapper> networkChildren = new List<NetworkNodeWrapper>();
             while (children.Count > 0)
             {
-                var child = new NetworkNodeWrapper(children[0]);
+                var child = children[0];
+                var networkChild = new NetworkNodeWrapper(child);
                 children.RemoveAt(0);
-                // Nested network scenes are spawned separately
-                if (child.Node.GetMeta("is_network_scene", false).AsBool())
+                if (networkChild != null && networkChild.Node.GetMeta("is_network_scene", false).AsBool())
                 {
-                    nodeOut.Node.RemoveChild(child.Node);
+                    networkChild.Node.GetParent().RemoveChild(networkChild.Node);
+                    networkChild.Node.QueueFree();
                     continue;
                 }
-                child.DynamicSpawn = true;
-                child.InputAuthority = nodeOut.InputAuthority;
-                children.AddRange(child.Node.GetChildren());
+                children.AddRange(child.GetChildren());
+                if (networkChild == null) {
+                    continue;
+                }
+                // Nested network scenes are spawned separately
+                networkChild.DynamicSpawn = true;
+                networkChild.InputAuthority = nodeOut.InputAuthority;
+                networkChildren.Add(networkChild);
             }
+            networkChildren.Reverse();
+            NetworkRunner.Instance.RemoveChild(nodeOut.Node);
 
             if (data.parentId == 0)
             {
@@ -99,21 +112,27 @@ namespace HLNC.Serialization.Serializers
 
             if (data.hasInputAuthority == 1)
             {
-                nodeOut.InputAuthority = peerStateController.LocalPlayerId;
+                nodeOut.InputAuthority = NetworkRunner.Instance.ENetHost;
             }
 
             var networkSceneId = NetworkScenesRegister.SCENES_PACK[networkParent.Node.SceneFilePath];
             networkParent.Node.GetNode(NetworkScenesRegister.NODE_PATHS_MAP[networkSceneId][data.nodePathId]).AddChild(nodeOut.Node);
             if (nodeOut.Node is Node3D node) {
-                // TODO: Support Node2D
                 node.Position = data.position;
                 node.Rotation = data.rotation;
             }
 
+            GD.Print("Spawned", nodeOut.Node.GetPath());
+            foreach (var child in networkChildren)
+            {
+                child._NetworkPrepare();
+            }
+            nodeOut._NetworkPrepare();
+
             return;
         }
 
-        public HLBuffer Export(IPeerStateController peerStateController, PeerId peerId)
+        public HLBuffer Export(IPeerStateController peerStateController, NetPeer peerId)
         {
             var buffer = new HLBuffer();
             if (peerStateController.HasSpawnedForClient(wrapper.NetworkId, peerId))
@@ -174,7 +193,7 @@ namespace HLNC.Serialization.Serializers
             return buffer;
         }
 
-        public void Acknowledge(IPeerStateController peerStateController, PeerId peer, Tick tick)
+        public void Acknowledge(IPeerStateController peerStateController, NetPeer peer, Tick tick)
         {
             var peerTick = setupTicks.TryGetValue(peer, out var setupTick) ? setupTick : 0;
             if (setupTick == 0)

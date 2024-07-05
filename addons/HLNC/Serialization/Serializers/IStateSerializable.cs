@@ -18,7 +18,7 @@ namespace HLNC.Serialization.Serializers
         /// <param name="networkState"></param>
         /// <param name="data"></param>
         /// <param name="nodeOut"></param>
-        public void Import(IPeerController networkState, HLBuffer data, out NetworkNode3D nodeOut);
+        public void Import(IPeerStateController networkState, HLBuffer data, out NetworkNodeWrapper nodeOut);
 
         /// <summary>
         /// Server-side only. Serialize and send data to the client.
@@ -26,17 +26,9 @@ namespace HLNC.Serialization.Serializers
         /// <param name="networkState"></param>
         /// <param name="peer"></param>
         /// <returns></returns>
-        public HLBuffer Export(IPeerController networkState, PeerId peer);
-        public void Acknowledge(IPeerController networkState, PeerId peer, Tick tick);
-
-        /// <summary>
-        /// Client-side only. Useful for data interpolation.
-        /// </summary>
-        /// <param name="delta"></param>
+        public HLBuffer Export(IPeerStateController networkState, NetPeer peer);
+        public void Acknowledge(IPeerStateController networkState, NetPeer peer, Tick tick);
         public void PhysicsProcess(double delta);
-        public void Import(IPeerStateController networkState, HLBuffer data, out NetworkNodeWrapper nodeOut);
-        public HLBuffer Export(IPeerStateController networkState, PeerId peer);
-        public void Acknowledge(IPeerStateController networkState, PeerId peer, Tick tick);
         public void Cleanup();
     }
     public interface IStateSerializable

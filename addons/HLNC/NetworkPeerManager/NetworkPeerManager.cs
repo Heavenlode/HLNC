@@ -14,15 +14,14 @@ namespace HLNC
 
         // A bit list of all nodes in use by each peer
         // For example, 0 0 0 0 (... etc ...) 0 1 0 1 would mean that the first and third nodes are in use
-        readonly private Dictionary<PeerId, long> availablePeerNodes = [];
-        readonly private Dictionary<PeerId, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = [];
-        readonly private Dictionary<PeerId, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = [];
-        private Dictionary<PeerId, Dictionary<NetworkId, bool>> spawnAware = [];
-        public Dictionary<PeerId, IPeerStateController.PeerSyncState> PeerSyncState = [];
+        readonly private Dictionary<NetPeer, long> availablePeerNodes = [];
+        readonly private Dictionary<NetPeer, Dictionary<NetworkId, byte>> globalNodeToLocalNodeMap = [];
+        readonly private Dictionary<NetPeer, Dictionary<byte, NetworkId>> localNodeToGlobalNodeMap = [];
+        private Dictionary<NetPeer, Dictionary<NetworkId, bool>> spawnAware = [];
+        public Dictionary<NetPeer, IPeerStateController.PeerSyncState> PeerSyncState = [];
         public Tick CurrentTick => NetworkRunner.Instance.CurrentTick;
-        public PeerId LocalPlayerId => NetworkRunner.Instance.LocalPlayerId;
 
-        public bool HasSpawnedForClient(NetworkId networkId, PeerId peer)
+        public bool HasSpawnedForClient(NetworkId networkId, NetPeer peer)
         {
             if (!spawnAware.ContainsKey(peer))
             {
@@ -35,7 +34,7 @@ namespace HLNC
             return spawnAware[peer][networkId];
         }
 
-        public void SetSpawnedForClient(NetworkId networkId, PeerId peer)
+        public void SetSpawnedForClient(NetworkId networkId, NetPeer peer)
         {
             if (!spawnAware.ContainsKey(peer))
             {
@@ -48,12 +47,20 @@ namespace HLNC
         {
             if (NetworkRunner.Instance.IsServer) return;
 
-            NetworkRunner.Instance.CurrentScene?.Node.QueueFree();
+            if (NetworkRunner.Instance.CurrentScene != null) {
+                NetworkRunner.Instance.CurrentScene.Node.QueueFree();
+            }
+            GD.Print("Changing scene to " + node.Node.Name);
+            // TODO: Support this more generally
             GetTree().CurrentScene.AddChild(node.Node);
             NetworkRunner.Instance.CurrentScene = node;
+            var networkChildren = (node.Node as NetworkNode3D).GetNetworkChildren(NetworkNode3D.NetworkChildrenSearchToggle.INCLUDE_SCENES).ToList();
+            networkChildren.Reverse();
+            networkChildren.ForEach(child => child._NetworkPrepare());
+            node._NetworkPrepare();
         }
 
-        public IPeerStateController.PeerSyncState GetPeerSyncState(PeerId peer)
+        public IPeerStateController.PeerSyncState GetPeerSyncState(NetPeer peer)
         {
             if (!PeerSyncState.ContainsKey(peer))
             {
@@ -68,13 +75,13 @@ namespace HLNC
             public IPeerStateController.PeerSyncState state;
         }
 
-        readonly private Dictionary<PeerId, PendingSyncState> pendingSyncStates = [];
-        public void SetPeerSyncState(PeerId peer, IPeerStateController.PeerSyncState state)
+        readonly private Dictionary<NetPeer, PendingSyncState> pendingSyncStates = [];
+        public void SetPeerSyncState(NetPeer peer, IPeerStateController.PeerSyncState state)
         {
             PeerSyncState[peer] = state;
         }
 
-        public void QueuePeerSyncState(PeerId peer, IPeerStateController.PeerSyncState state)
+        public void QueuePeerSyncState(NetPeer peer, IPeerStateController.PeerSyncState state)
         {
             pendingSyncStates[peer] = new PendingSyncState
             {
@@ -91,7 +98,7 @@ namespace HLNC
             }
             return null;
         }
-        public byte GetPeerNodeId(PeerId peer, NetworkNodeWrapper node)
+        public byte GetPeerNodeId(NetPeer peer, NetworkNodeWrapper node)
         {
             if (node == null) return 0;
             if (!globalNodeToLocalNodeMap.ContainsKey(peer))
@@ -105,7 +112,7 @@ namespace HLNC
             return globalNodeToLocalNodeMap[peer][node.NetworkId];
         }
 
-        public NetworkNodeWrapper GetPeerNode(PeerId peer, byte networkId)
+        public NetworkNodeWrapper GetPeerNode(NetPeer peer, byte networkId)
         {
             if (!localNodeToGlobalNodeMap.ContainsKey(peer))
             {
@@ -118,19 +125,19 @@ namespace HLNC
             return NetworkRunner.Instance.NetworkScenes[localNodeToGlobalNodeMap[peer][networkId]];
         }
 
-        public void DeregisterPeerNode(NetworkNodeWrapper node, PeerId? peer = null)
+        public void DeregisterPeerNode(NetworkNodeWrapper node, NetPeer peer = null)
         {
             if (NetworkRunner.Instance.IsServer)
             {
-                if (!peer.HasValue)
+                if (peer == null)
                 {
                     GD.PrintErr("Server must specify a peer when deregistering a node.");
                     return;
                 }
-                if (globalNodeToLocalNodeMap[peer.Value].ContainsKey(node.NetworkId))
+                if (globalNodeToLocalNodeMap[peer].ContainsKey(node.NetworkId))
                 {
-                    availablePeerNodes[peer.Value] &= ~(1 << globalNodeToLocalNodeMap[peer.Value][node.NetworkId]);
-                    globalNodeToLocalNodeMap[peer.Value].Remove(node.NetworkId);
+                    availablePeerNodes[peer] &= ~(1 << globalNodeToLocalNodeMap[peer][node.NetworkId]);
+                    globalNodeToLocalNodeMap[peer].Remove(node.NetworkId);
                 }
             }
             else
@@ -145,32 +152,32 @@ namespace HLNC
         // Up to 64 nodes can be networked per peer at a time.
         // TODO: Consider supporting more
         // TODO: Handle de-registration of nodes (e.g. despawn, and object interest)
-        public byte TryRegisterPeerNode(NetworkNodeWrapper node, PeerId? peer = null)
+        public byte TryRegisterPeerNode(NetworkNodeWrapper node, NetPeer peer = null)
         {
             if (NetworkRunner.Instance.IsServer)
             {
-                if (!peer.HasValue)
+                if (peer == null)
                 {
                     GD.PrintErr("Server must specify a peer when registering a node.");
                     return 0;
                 }
-                if (globalNodeToLocalNodeMap[peer.Value].ContainsKey(node.NetworkId))
+                if (globalNodeToLocalNodeMap[peer].ContainsKey(node.NetworkId))
                 {
-                    return globalNodeToLocalNodeMap[peer.Value][node.NetworkId];
+                    return globalNodeToLocalNodeMap[peer][node.NetworkId];
                 }
                 for (byte i = 0; i < MAX_NETWORK_NODES; i++)
                 {
                     byte localNodeId = (byte)(i + 1);
-                    if ((availablePeerNodes[peer.Value] & ((long)1 << localNodeId)) == 0)
+                    if ((availablePeerNodes[peer] & ((long)1 << localNodeId)) == 0)
                     {
-                        globalNodeToLocalNodeMap[peer.Value][node.NetworkId] = localNodeId;
-                        localNodeToGlobalNodeMap[peer.Value][localNodeId] = node.NetworkId;
-                        availablePeerNodes[peer.Value] |= (long)1 << localNodeId;
+                        globalNodeToLocalNodeMap[peer][node.NetworkId] = localNodeId;
+                        localNodeToGlobalNodeMap[peer][localNodeId] = node.NetworkId;
+                        availablePeerNodes[peer] |= (long)1 << localNodeId;
                         return localNodeId;
                     }
                 }
 
-                GD.PrintErr("Peer " + peer.Value + " has reached the maximum amount of nodes.");
+                GD.PrintErr("Peer " + peer + " has reached the maximum amount of nodes.");
                 return 0;
             }
 
@@ -197,23 +204,23 @@ namespace HLNC
         }
 
         [Signal]
-        public delegate void PlayerJoinedEventHandler(long peerId);
+        public delegate void PlayerJoinedEventHandler(NetPeer peer);
 
-        public void RegisterPlayer(long peerId)
+        public void RegisterPlayer(NetPeer peer)
         {
-            PeerSyncState[peerId] = IPeerStateController.PeerSyncState.INITIAL;
-            globalNodeToLocalNodeMap[peerId] = [];
-            localNodeToGlobalNodeMap[peerId] = [];
-            availablePeerNodes[peerId] = 0;
+            PeerSyncState[peer] = IPeerStateController.PeerSyncState.INITIAL;
+            globalNodeToLocalNodeMap[peer] = [];
+            localNodeToGlobalNodeMap[peer] = [];
+            availablePeerNodes[peer] = 0;
         }
 
-        public Dictionary<PeerId, HLBuffer> ExportState(int[] peers)
+        public Dictionary<ENetPacketPeer, HLBuffer> ExportState(Godot.Collections.Array<ENetPacketPeer> peers)
         {
-            Dictionary<PeerId, HLBuffer> peerBuffers = [];
-            foreach (PeerId peerId in peers)
+            Dictionary<NetPeer, HLBuffer> peerBuffers = [];
+            foreach (ENetPacketPeer peer in peers)
             {
                 long updatedNodes = 0;
-                peerBuffers[peerId] = new HLBuffer();
+                peerBuffers[peer] = new HLBuffer();
                 var peerNodesBuffers = new Dictionary<long, HLBuffer>();
                 var peerNodesSerializersList = new Dictionary<long, byte>();
                 foreach (var node in NetworkRunner.Instance.NetworkScenes.Values)
@@ -223,7 +230,7 @@ namespace HLNC
                     for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
                     {
                         var serializer = node.Serializers[serializerIdx];
-                        var serializerResult = serializer.Export(this, peerId);
+                        var serializerResult = serializer.Export(this, peer);
                         if (serializerResult.bytes.Length == 0)
                         {
                             continue;
@@ -235,7 +242,7 @@ namespace HLNC
                     {
                         continue;
                     }
-                    byte localNodeId = globalNodeToLocalNodeMap[peerId][node.NetworkId];
+                    byte localNodeId = globalNodeToLocalNodeMap[peer][node.NetworkId];
                     updatedNodes |= 1 << localNodeId;
                     peerNodesSerializersList[localNodeId] = serializersRun;
                     peerNodesBuffers[localNodeId] = new HLBuffer();
@@ -243,19 +250,19 @@ namespace HLNC
                 }
 
                 // 1. Pack a bit list of all nodes which have serialized data
-                HLBytes.Pack(peerBuffers[peerId], updatedNodes);
+                HLBytes.Pack(peerBuffers[peer], updatedNodes);
 
                 // 2. Pack what serializers are run for every node 
                 var orderedNodeKeys = peerNodesBuffers.OrderBy(x => x.Key).Select(x => x.Key).ToList();
                 foreach (var nodeKey in orderedNodeKeys)
                 {
-                    HLBytes.Pack(peerBuffers[peerId], peerNodesSerializersList[nodeKey]);
+                    HLBytes.Pack(peerBuffers[peer], peerNodesSerializersList[nodeKey]);
                 }
 
                 // 3. Pack the serialized data for every node
                 foreach (var nodeKey in orderedNodeKeys)
                 {
-                    HLBytes.Pack(peerBuffers[peerId], peerNodesBuffers[nodeKey].bytes);
+                    HLBytes.Pack(peerBuffers[peer], peerNodesBuffers[nodeKey].bytes);
                 }
             }
 
@@ -290,8 +297,10 @@ namespace HLNC
                 var localNodeId = nodeIdSerializerList.Key;
                 NetworkRunner.Instance.NetworkScenes.TryGetValue(localNodeId, out NetworkNodeWrapper node);
                 if (node == null) {
-                    var blankScene = NetworkNode3D.Instantiate();
-                    blankScene.NetworkId = localNodeId;
+                    var blankScene = new NetworkNode3D
+                    {
+                        NetworkId = localNodeId
+                    };
                     node = new NetworkNodeWrapper(blankScene);
                 }
                 for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
@@ -311,14 +320,14 @@ namespace HLNC
             }
         }
 
-        public void PeerAcknowledge(PeerId peerId, Tick tick)
+        public void PeerAcknowledge(NetPeer peer, Tick tick)
         {
-            if (pendingSyncStates.TryGetValue(peerId, out PendingSyncState pendingSyncState))
+            if (pendingSyncStates.TryGetValue(peer, out PendingSyncState pendingSyncState))
             {
                 if (pendingSyncState.tick <= tick)
                 {
-                    PeerSyncState[peerId] = pendingSyncState.state;
-                    pendingSyncStates.Remove(peerId);
+                    PeerSyncState[peer] = pendingSyncState.state;
+                    pendingSyncStates.Remove(peer);
                 }
             }
             foreach (var node in NetworkRunner.Instance.NetworkScenes.Values)
@@ -326,13 +335,11 @@ namespace HLNC
                 for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
                 {
                     var serializer = node.Serializers[serializerIdx];
-                    serializer.Acknowledge(this, peerId, tick);
+                    serializer.Acknowledge(this, peer, tick);
                 }
             }
         }
-
-        [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false, TransferChannel = 3, TransferMode = MultiplayerPeer.TransferModeEnum.UnreliableOrdered)]
-        public void Tick(int incomingTick, byte[] stateBytes)
+        public void ClientHandleTick(int incomingTick, byte[] stateBytes)
         {
             if (incomingTick <= NetworkRunner.Instance.CurrentTick)
             {
@@ -340,7 +347,7 @@ namespace HLNC
             }
             // GD.Print("INCOMING DATA: " + BitConverter.ToString(HLBytes.Decompress(stateBytes)));
             NetworkRunner.Instance.CurrentTick = incomingTick;
-            ImportState(new HLBuffer(HLBytes.Decompress(stateBytes)));
+            ImportState(new HLBuffer(stateBytes));
             foreach (var net_id in NetworkRunner.Instance.NetworkScenes.Keys)
             {
                 var node = NetworkRunner.Instance.NetworkScenes[net_id];
@@ -362,18 +369,9 @@ namespace HLNC
                     wrapper._NetworkProcess(CurrentTick);
                 }
             }
-            RpcId(1, "TickAcknowledge", incomingTick);
-        }
-
-        [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferChannel = 3, TransferMode = MultiplayerPeer.TransferModeEnum.UnreliableOrdered)]
-        public void TickAcknowledge(int clientCurrentTick)
-        {
-            if (!NetworkRunner.Instance.IsServer)
-            {
-                return;
-            }
-            int peerId = Multiplayer.GetRemoteSenderId();
-            PeerAcknowledge(peerId, clientCurrentTick);
+            HLBuffer buffer = new HLBuffer();
+            HLBytes.Pack(buffer, incomingTick);
+            NetworkRunner.Instance.ENetHost.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
         }
     }
 }

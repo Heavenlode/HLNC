@@ -31,13 +31,17 @@ namespace HLNC {
             return !(a == b);
         }
 
-        public Node Node { get; }
+        public Node Node { get; private set; } = null;
         private Dictionary<string, StringName> properties = new Dictionary<string, StringName>();
         private Dictionary<string, StringName> methods = new Dictionary<string, StringName>();
         public NetworkNodeWrapper(Node node) {
-            // TODO: Validate the node implements the interface correctly
-            Node = node;
             if (node == null) return;
+            if (!node.GetMeta("is_network_node", false).AsBool()) {
+                // The node will remain null if it is not a NetworkNode
+                return;
+            }
+            Node = node;
+            // TODO: Validate the node implements the interface correctly
             var requiredProperties = new HashSet<string> {
                 "InputAuthority",
                 "NetworkId",
@@ -130,9 +134,9 @@ namespace HLNC {
             throw new Exception($"Method {snakeCase} not found on {Node.GetPath()}");
         }
 
-        public PeerId InputAuthority {
+        public ENetPacketPeer InputAuthority {
             get {
-                return Get("InputAuthority").AsInt64();
+                return Get("InputAuthority").As<ENetPacketPeer>();
             }
 
             internal set {

@@ -27,10 +27,10 @@ namespace HLNC.Serialization.Serializers
 
         public void Cleanup() { }
 
-        public HLBuffer Export(IPeerStateController peerStateController, PeerId peerId)
+        public HLBuffer Export(IPeerStateController peerStateController, NetPeer peerId)
         {
             var buffer = new HLBuffer();
-            // Dictionary<PeerId, HLBuffer> despawnsBuffer = new Dictionary<PeerId, HLBuffer>();
+            // Dictionary<NetPeer, HLBuffer> despawnsBuffer = new Dictionary<NetPeer, HLBuffer>();
             // foreach (int peer_id in NetworkRunner.Instance.MultiplayerInstance.GetPeers())
             // {
             // 	despawnsBuffer[peer_id] = new HLBuffer();
@@ -55,7 +55,7 @@ namespace HLNC.Serialization.Serializers
             return buffer;
         }
 
-        public void Acknowledge(IPeerStateController peerStateController, PeerId peer, Tick tick)
+        public void Acknowledge(IPeerStateController peerStateController, NetPeer peer, Tick tick)
         {
             // if (!DespawnBuffers.ContainsKey(peer))
             // 	return;

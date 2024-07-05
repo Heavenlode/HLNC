@@ -89,7 +89,7 @@ namespace HLNC.Serialization.Serializers
                 propNode.Call("_on_network_change_" + friendlyPropName, tick, oldVal, value);
             }
 
-            lerpableChangeQueue[prop.Name] = new LerpableChangeQueue
+            lerpableChangeQueue[prop.NodePath + ":" + prop.Name] = new LerpableChangeQueue
             {
                 Prop = prop,
                 From = oldVal,
@@ -122,12 +122,13 @@ namespace HLNC.Serialization.Serializers
         public void Import(IPeerStateController peerStateController, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
         {
             nodeOut = wrapper;
+        
             var data = Deserialize(buffer);
             foreach (var propIndex in data.properties.Keys)
             {
+                var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][propIndex];
                 if (wrapper.Node.IsNodeReady())
                 {
-                    var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][propIndex];
                     ImportProperty(prop, peerStateController.CurrentTick, data.properties[propIndex]);
                 }
                 else
@@ -139,10 +140,10 @@ namespace HLNC.Serialization.Serializers
             return;
         }
 
-        private Dictionary<PeerId, Dictionary<Tick, long>> peerBufferCache = [];
+        private Dictionary<NetPeer, Dictionary<Tick, long>> peerBufferCache = [];
         // This should instead be a map of variable values that we can resend until acknowledgement
 
-        public HLBuffer Export(IPeerStateController peerStateController, PeerId peerId)
+        public HLBuffer Export(IPeerStateController peerStateController, NetPeer peerId)
         {
             var buffer = new HLBuffer();
 
@@ -197,7 +198,7 @@ namespace HLNC.Serialization.Serializers
                 var prop = NetworkScenesRegister.PROPERTY_LOOKUP[wrapper.Node.SceneFilePath][(byte)i];
                 var propNode = wrapper.Node.GetNode(prop.NodePath);
                 var varVal = propNode.Get(prop.Name);
-                HLBytes.Pack(buffer, varVal);
+                HLBytes.PackVariant(buffer, varVal);
             }
 
             return buffer;
@@ -208,7 +209,7 @@ namespace HLNC.Serialization.Serializers
             propertyUpdated.Clear();
         }
 
-        public void Acknowledge(IPeerStateController peerStateController, PeerId peerId, Tick latestAck)
+        public void Acknowledge(IPeerStateController peerStateController, NetPeer peerId, Tick latestAck)
         {
             if (!peerBufferCache.ContainsKey(peerId))
             {
@@ -231,9 +232,9 @@ namespace HLNC.Serialization.Serializers
         public void PhysicsProcess(double delta)
         {
 
-            foreach (var propName in lerpableChangeQueue.Keys.ToList())
+            foreach (var queueKey in lerpableChangeQueue.Keys.ToList())
             {
-                var toLerp = lerpableChangeQueue[propName];
+                var toLerp = lerpableChangeQueue[queueKey];
                 var lerpNode = wrapper.Node.GetNode(toLerp.Prop.NodePath);
                 if (toLerp.Weight < 1.0)
                 {
@@ -263,14 +264,14 @@ namespace HLNC.Serialization.Serializers
                         else
                         {
                             lerpNode.Set(toLerp.Prop.Name, toLerp.To);
-                            lerpableChangeQueue.Remove(propName);
+                            lerpableChangeQueue.Remove(queueKey);
                         }
                     }
 
                     if ((float)toLerp.Weight >= 1.0)
-                        lerpableChangeQueue.Remove(propName);
+                        lerpableChangeQueue.Remove(queueKey);
                 }
-                lerpableChangeQueue[propName] = toLerp;
+                lerpableChangeQueue[queueKey] = toLerp;
             }
         }
     }

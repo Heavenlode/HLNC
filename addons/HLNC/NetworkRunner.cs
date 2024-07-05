@@ -1,5 +1,5 @@
 global using NetworkId = System.Int64;
-global using PeerId = System.Int64;
+global using NetPeer = Godot.ENetPacketPeer;
 global using Tick = System.Int32;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +7,8 @@ using System.Linq;
 using Godot;
 using Godot.Collections;
 using HLNC.Serialization;
+using System;
+using System.Diagnostics;
 
 namespace HLNC
 {
@@ -32,18 +34,10 @@ namespace HLNC
 
         public string ZoneInstanceId => arguments.ContainsKey("zoneInstanceId") ? arguments["zoneInstanceId"] : "0";
 
-        public ENetMultiplayerPeer NetPeer = new();
-        public MultiplayerApi MultiplayerInstance;
-
-        private bool _isServer = false;
-        public bool IsServer => _isServer;
-
-        private bool _netStarted = false;
-
-        /// <summary>
-        /// Indicates whether the network connection has been established. Network is started via <see cref="StartServer()"/> or <see cref="StartClient()"/>. Once started, <see cref="NetworkNode3D._NetworkProcess(Tick)"/> will begin running per tick.
-        /// </summary>
-        public bool NetStarted => _netStarted;
+        internal ENetConnection ENet;
+        internal ENetPacketPeer ENetHost;
+        public bool IsServer { get; private set; }
+        public bool NetStarted { get; private set; }
 
         public NetworkNodeWrapper CurrentScene = new NetworkNodeWrapper(null);
 
@@ -51,13 +45,9 @@ namespace HLNC
 
         public int NetworkId_counter = 0;
         public System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
-        public System.Collections.Generic.Dictionary<PeerId, Array<NetworkId>> net_ids_memo = [];
-        public long LocalPlayerId
-        {
-            get { return MultiplayerInstance.GetUniqueId(); }
-        }
-        private Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
-        public Godot.Collections.Dictionary<PeerId, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
+        public System.Collections.Generic.Dictionary<NetPeer, Array<NetworkId>> net_ids_memo = [];
+        private Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
+        public Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
         private static NetworkRunner _instance;
         public static NetworkRunner Instance => _instance;
@@ -117,7 +107,7 @@ namespace HLNC
 
         public void StartServer()
         {
-            _isServer = true;
+            IsServer = true;
             DebugPrint("Starting Server");
             GetTree().MultiplayerPoll = false;
             var custom_port = Port;
@@ -126,52 +116,38 @@ namespace HLNC
                 GD.Print("PORT OVERRIDE: {0}", arguments["port"]);
                 custom_port = int.Parse(arguments["port"]);
             }
-            var err = NetPeer.CreateServer(custom_port, MaxPeers);
+            ENet = new ENetConnection();
+            var err = ENet.CreateHostBound(ServerAddress, custom_port, MaxPeers);
+            ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
             if (err != Error.Ok)
             {
                 DebugPrint($"Error starting: {err}");
                 return;
             }
-            MultiplayerInstance = MultiplayerApi.CreateDefaultInterface();
-            MultiplayerInstance.PeerConnected += _OnPeerConnected;
-            MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
-            GetTree().SetMultiplayer(MultiplayerInstance, "/root");
-            MultiplayerInstance.MultiplayerPeer = NetPeer;
-            _netStarted = true;
+            NetStarted = true;
             DebugPrint("Started");
         }
 
         public void StartClient()
         {
-            GetTree().MultiplayerPoll = false;
-            var err = NetPeer.CreateClient(ServerAddress, Port);
-            if (err != Error.Ok)
+            ENet = new ENetConnection();
+            ENet.CreateHost();
+            ENetHost = ENet.ConnectToHost(ServerAddress, 8888);
+            ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
+            // ENetHost = ENet.ConnectToHost(ServerAddress, 20406);
+            if (ENetHost == null)
             {
-                DebugPrint($"Error connecting: {err}");
+                DebugPrint($"Error connecting.");
                 return;
             }
-            MultiplayerInstance = MultiplayerApi.CreateDefaultInterface();
-            MultiplayerInstance.PeerConnected += _OnPeerConnected;
-            MultiplayerInstance.PeerDisconnected += _OnPeerDisconnected;
-            GetTree().SetMultiplayer(MultiplayerInstance, "/root");
-            MultiplayerInstance.MultiplayerPeer = NetPeer;
-            _netStarted = true;
+            NetStarted = true;
             DebugPrint("Started");
         }
 
         public int frame_counter = 0;
         public const int FRAMES_PER_SECOND = 60;
         public const int FRAMES_PER_TICK = 2;
-
-        /// <summary>
-        /// Ticks per second. The number of server-side network ticks occur within a second.
-        /// </summary>
         public static int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
-
-        /// <summary>
-        /// Maximum transfer unit, in bits. The number of bits the server can send in a single Tick to a client before it truncates serialized data.
-        /// 1400 is generally considered a safe maximum number for all network devices, including mobile.
-        /// </summary>
         public const int MTU = 1400;
 
         public int CurrentTick = 0;
@@ -186,7 +162,7 @@ namespace HLNC
 
         public void ServerProcessTick()
         {
-            var peers = Instance.MultiplayerInstance.GetPeers();
+            
             foreach (var net_id in NetworkScenes.Keys)
             {
                 var networkNode = NetworkScenes[net_id];
@@ -205,30 +181,25 @@ namespace HLNC
                 }
             }
 
-            var exportedState = NetworkPeerManager.Instance.ExportState(peers);
-            foreach (var peerId in MultiplayerInstance.GetPeers())
+            var exportedState = NetworkPeerManager.Instance.ExportState(ENet.GetPeers());
+            foreach (var peer in ENet.GetPeers())
             {
-                if (peerId == 1)
-                    continue;
-                if (!exportedState.ContainsKey(peerId))
+                var size = exportedState[peer].bytes.Length;
+                // if (network_debug != null)
+                // {
+                // 	debug_data_sizes.Add(compressed_payload.Length);
+                // }
+                if (size > MTU)
                 {
-                    GD.PrintErr($"No state to send to peer {peerId}");
+                    DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
                 }
-                else
-                {
-                    // GD.Print("SENT STATE for peer " + peerId + " : " + BitConverter.ToString(exportedState[peerId].bytes));
-                    var compressed_payload = HLBytes.Compress(exportedState[peerId].bytes);
-                    var size = exportedState[peerId].bytes.Length;
-                    // if (network_debug != null)
-                    // {
-                    // 	debug_data_sizes.Add(compressed_payload.Length);
-                    // }
-                    if (size > MTU)
-                    {
-                        DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
-                    }
-                    NetworkPeerManager.Instance.RpcId(peerId, "Tick", CurrentTick, compressed_payload);
-                }
+
+                var buffer = new HLBuffer();
+                HLBytes.Pack(buffer, CurrentTick);
+                HLBytes.Pack(buffer, exportedState[peer].bytes, true);
+                // DebugPrint(BitConverter.ToString(buffer.bytes));
+
+                peer.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
             }
         }
 
@@ -237,8 +208,49 @@ namespace HLNC
             if (!NetStarted)
                 return;
 
-            if (MultiplayerInstance.HasMultiplayerPeer())
-                MultiplayerInstance.Poll();
+            var enetEvent = ENet.Service();
+
+            while (true)
+            {
+                var eventType = enetEvent[0].As<ENetConnection.EventType>();
+                if (eventType == ENetConnection.EventType.None)
+                {
+                    break;
+                }
+                var packetPeer = enetEvent[1].As<ENetPacketPeer>();
+                switch (eventType)
+                {
+                    case ENetConnection.EventType.Connect:
+                        _OnPeerConnected(packetPeer);
+                        break;
+                    case ENetConnection.EventType.Disconnect:
+                        _OnPeerDisconnected(packetPeer);
+                        break;
+                    case ENetConnection.EventType.Receive:
+                        var data = new HLBuffer(packetPeer.GetPacket());
+                        var channel = enetEvent[3].As<int>();
+                        if (IsServer) {
+                            if (channel == 1) {
+                                // Peer is acknowledging a Tick
+                                var tick = HLBytes.UnpackInt32(data);
+                                NetworkPeerManager.Instance.PeerAcknowledge(packetPeer, tick);
+                            }
+                        } else {
+                            if (channel == 1) {
+                                if (data.bytes.Length == 0)
+                                {
+                                    // DebugPrint("Empty data received");
+                                    break;
+                                }
+                                var tick = HLBytes.UnpackInt32(data);
+                                var bytes = HLBytes.UnpackByteArray(data);
+                                NetworkPeerManager.Instance.ClientHandleTick(tick, bytes);
+                            }
+                        }
+                        break;
+                }
+                enetEvent = ENet.Service();
+            }
 
             if (IsServer)
             {
@@ -255,29 +267,20 @@ namespace HLNC
         [Signal]
         public delegate void PlayerConnectedEventHandler();
 
-        public void _OnPeerConnected(long peerId)
+        public void _OnPeerConnected(NetPeer peer)
         {
-            if (!IsServer)
-            {
-                if (peerId == 1)
-                    DebugPrint("Connected to server");
-                else
-                    DebugPrint("Peer connected to server");
-                return;
-            }
-
-            DebugPrint($"Peer {peerId} joined");
+            DebugPrint($"Peer {peer} joined");
 
             foreach (var node in GetTree().GetNodesInGroup("global_interest"))
             {
                 if (node is NetworkNode3D networkNode)
-                    networkNode.Interest[peerId] = true;
+                    networkNode.Interest[peer] = true;
             }
-            NetworkPeerManager.Instance.RegisterPlayer(peerId);
+            NetworkPeerManager.Instance.RegisterPlayer(peer);
 
             if (IsServer)
             {
-                EmitSignal("PlayerConnected", peerId);
+                EmitSignal("PlayerConnected", peer);
             }
         }
 
@@ -332,9 +335,9 @@ namespace HLNC
             return NetworkScenes[network_id];
         }
 
-        public void _OnPeerDisconnected(long peerId)
+        public void _OnPeerDisconnected(ENetPacketPeer peer)
         {
-            DebugPrint($"Peer disconnected peerId: {peerId}");
+            DebugPrint($"Peer disconnected peerId: {peer}");
         }
 
         public IEnumerable<NetworkNode3D> GetAllNetworkNodes(Node node, bool onlyScenes = false)
@@ -354,34 +357,32 @@ namespace HLNC
                 }
             }
         }
-
-        [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable, TransferChannel = 1)]
         public void TransferInput(int tick, byte networkId, Godot.Collections.Dictionary<int, Variant> incomingInput)
         {
-            var sender = MultiplayerInstance.GetRemoteSenderId();
-            var node = NetworkPeerManager.Instance.GetPeerNode(sender, networkId);
+            // var sender = MultiplayerInstance.GetRemoteSenderId();
+            // var node = NetworkPeerManager.Instance.GetPeerNode(sender, networkId);
 
-            if (node == null)
-            {
-                return;
-            }
+            // if (node == null)
+            // {
+            //     return;
+            // }
 
-            if (sender != node.InputAuthority)
-            {
-                return;
-            }
+            // if (sender != node.InputAuthority)
+            // {
+            //     return;
+            // }
 
-            if (!inputStore.ContainsKey(sender))
-            {
-                inputStore[sender] = [];
-            }
+            // if (!inputStore.ContainsKey(sender))
+            // {
+            //     inputStore[sender] = [];
+            // }
 
-            if (!inputStore[sender].ContainsKey(networkId))
-            {
-                inputStore[sender][networkId] = [];
-            }
+            // if (!inputStore[sender].ContainsKey(networkId))
+            // {
+            //     inputStore[sender][networkId] = [];
+            // }
 
-            inputStore[sender][networkId] = incomingInput;
+            // inputStore[sender][networkId] = incomingInput;
         }
     }
 }

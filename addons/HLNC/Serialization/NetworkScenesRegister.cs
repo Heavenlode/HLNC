@@ -45,7 +45,6 @@ namespace HLNC.Serialization
         /// </summary>
         internal static Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetworkProperty>>> PROPERTIES_MAP = [];
         internal static Dictionary<string, Dictionary<byte, CollectedNetworkProperty>> PROPERTY_LOOKUP = [];
-
         internal delegate void LoadCompleteEventHandler();
 
         // public static GetPropertyById
