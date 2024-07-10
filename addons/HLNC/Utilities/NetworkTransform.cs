@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using Godot;
 using Godot.Collections;
@@ -6,6 +7,7 @@ namespace HLNC.Utilities
 {
     public partial class NetworkTransform : NetworkNode3D
     {
+
         public bool teleporting = true;
 
         [Export]
@@ -97,6 +99,14 @@ namespace HLNC.Utilities
             }
 
             return -1;
+        }
+
+        public double NetworkLerpNetRotation(Variant from, Variant to, double weight)
+        {
+            Vector3 start = from.AsVector3();
+            Vector3 end = to.AsVector3();
+            NetRotation = new Vector3((float)Mathf.LerpAngle(start.X, end.X, weight), (float)Mathf.LerpAngle(start.Y, end.Y, weight), (float)Mathf.LerpAngle(start.Z, end.Z, weight));
+            return weight;
         }
 
         public override void _PhysicsProcess(double delta)

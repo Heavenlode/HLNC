@@ -37,6 +37,9 @@ namespace HLNC.Serialization
         
         internal static Dictionary<byte, Dictionary<string, int>> NODE_PATHS_PACK = [];
 
+        /// <summary>
+        /// A map of every packed scene to a list of paths to its internal network nodes.
+        /// </summary>
         internal static Dictionary<string, HashSet<string>> STATIC_NETWORK_NODE_PATHS = [];
 
         /// <summary>

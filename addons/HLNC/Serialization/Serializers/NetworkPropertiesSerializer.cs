@@ -238,6 +238,7 @@ namespace HLNC.Serialization.Serializers
                 var lerpNode = wrapper.Node.GetNode(toLerp.Prop.NodePath);
                 if (toLerp.Weight < 1.0)
                 {
+                    toLerp.Weight = Math.Min(toLerp.Weight + delta * 10, 1.0);
                     double result = -1;
                     if (lerpNode.HasMethod("NetworkLerp" + toLerp.Prop.Name))
                     {
@@ -250,7 +251,6 @@ namespace HLNC.Serialization.Serializers
                     if (result == -1)
                     {
                         // TODO: If this is too fast, it creates a jitter effect
-                        toLerp.Weight = Math.Min(toLerp.Weight + delta * 10, 1.0);
                         if (toLerp.Prop.Type == Variant.Type.Quaternion)
                         {
                             var next_value = ((Quaternion)toLerp.From).Normalized().Slerp(((Quaternion)toLerp.To).Normalized(), (float)toLerp.Weight);
