@@ -39,6 +39,25 @@ namespace HLNC
         public bool IsServer { get; private set; }
         public bool NetStarted { get; private set; }
 
+        // Indicates whether Blastoff negotiation is enabled
+        internal IBlastoffServerDriver BlastoffServer { get; private set; }
+        internal IBlastoffClientDriver BlastoffClient { get; private set; }
+        public enum BlastoffCommands {
+            NewInstance = 0,
+            ValidateClient = 1,
+            RedirectClient = 2,
+            InvalidClient = 3,
+        }
+        internal HashSet<NetPeer> BlastoffPendingValidation = new HashSet<NetPeer>();
+        internal Guid ZoneId = Guid.Empty;
+        
+        public enum ENetChannelId {
+            Tick = 1,
+            Input = 2,
+            ClientAuth = 3,
+            BlastoffAdmin = 254,
+        }
+
         public NetworkNodeWrapper CurrentScene = new NetworkNodeWrapper(null);
 
         // public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
@@ -105,6 +124,28 @@ namespace HLNC
 
         }
 
+        public void InstallBlastoffServerDriver(IBlastoffServerDriver blastoff)
+        {
+            if (!OS.HasFeature("dedicated_server"))
+            {
+                DebugPrint("Incorrectly installing Blastoff server driver on client.");
+                return;
+            }
+            BlastoffServer = blastoff;
+            GD.Print("Server: Blastoff Installed");
+        }
+
+        public void InstallBlastoffClientDriver(IBlastoffClientDriver blastoff)
+        {
+            if (OS.HasFeature("dedicated_server"))
+            {
+                DebugPrint("Incorrectly installing Blastoff client driver on server.");
+                return;
+            }
+            BlastoffClient = blastoff;
+            GD.Print("Client: Blastoff Installed");
+        }
+
         public void StartServer()
         {
             IsServer = true;
@@ -116,6 +157,12 @@ namespace HLNC
                 GD.Print("PORT OVERRIDE: {0}", arguments["port"]);
                 custom_port = int.Parse(arguments["port"]);
             }
+
+            if (arguments.ContainsKey("zoneId")) {
+                ZoneId = new Guid(arguments["zoneId"]);
+                DebugPrint($"Zone ID: {ZoneId}");
+            }
+
             ENet = new ENetConnection();
             var err = ENet.CreateHostBound(ServerAddress, custom_port, MaxPeers);
             ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
@@ -141,6 +188,14 @@ namespace HLNC
                 return;
             }
             NetStarted = true;
+            if (BlastoffClient != null) {
+                var zoneBytes = BlastoffClient.BlastoffGetZoneId().ToByteArray();
+                var tokenBytes = System.Text.Encoding.UTF8.GetBytes(BlastoffClient.BlastoffGetToken());
+                var combinedBytes = new byte[zoneBytes.Length + tokenBytes.Length];
+                zoneBytes.CopyTo(combinedBytes, 0);
+                tokenBytes.CopyTo(combinedBytes, zoneBytes.Length);
+                ENetHost.Send((int)ENetChannelId.ClientAuth, combinedBytes, (int)ENetPacketPeer.FlagReliable);
+            }
             DebugPrint("Started");
         }
 
@@ -229,23 +284,45 @@ namespace HLNC
                     case ENetConnection.EventType.Receive:
                         var data = new HLBuffer(packetPeer.GetPacket());
                         var channel = enetEvent[3].As<int>();
-                        if (IsServer) {
-                            if (channel == 1) {
-                                // Peer is acknowledging a Tick
-                                var tick = HLBytes.UnpackInt32(data);
-                                NetworkPeerManager.Instance.PeerAcknowledge(packetPeer, tick);
-                            }
-                        } else {
-                            if (channel == 1) {
-                                if (data.bytes.Length == 0)
-                                {
-                                    // DebugPrint("Empty data received");
+                        switch ((ENetChannelId)channel) {
+                            case ENetChannelId.Tick:
+                                if (IsServer) {
+                                    var tick = HLBytes.UnpackInt32(data);
+                                    NetworkPeerManager.Instance.PeerAcknowledge(packetPeer, tick);
+                                } else {
+                                    if (data.bytes.Length == 0)
+                                    {
+                                        break;
+                                    }
+                                    var tick = HLBytes.UnpackInt32(data);
+                                    var bytes = HLBytes.UnpackByteArray(data);
+                                    NetworkPeerManager.Instance.ClientHandleTick(tick, bytes);
+                                }
+                            break;
+                            case ENetChannelId.BlastoffAdmin:
+                                if (IsServer) {
+                                    if (BlastoffServer == null) {
+                                        // This channel is only used for Blastoff which must be enabled.
+                                        break;
+                                    }
+                                    if (BlastoffPendingValidation.Contains(packetPeer)) {
+                                        // We're in the process of validating a peer for Blastoff.
+                                        // The packet is two parts: a zone UUID, and a token
+                                        var zoneId = new Guid(data.bytes[0..32]);
+                                        var token = System.Text.Encoding.UTF8.GetString(data.bytes[32..]);
+                                        if (BlastoffServer.BlastoffValidatePeer(zoneId, token)) {
+                                            _validatePeerConnected(packetPeer);
+                                            packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.ValidateClient], (int)ENetPacketPeer.FlagReliable);
+                                        } else {
+                                            packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.InvalidClient], (int)ENetPacketPeer.FlagReliable);
+                                        }
+                                    }
+                                } else {
+                                    // Clients should never receive messages on the Blastoff channel
                                     break;
                                 }
-                                var tick = HLBytes.UnpackInt32(data);
-                                var bytes = HLBytes.UnpackByteArray(data);
-                                NetworkPeerManager.Instance.ClientHandleTick(tick, bytes);
-                            }
+                            break;
+                            
                         }
                         break;
                 }
@@ -267,10 +344,7 @@ namespace HLNC
         [Signal]
         public delegate void PlayerConnectedEventHandler();
 
-        public void _OnPeerConnected(NetPeer peer)
-        {
-            DebugPrint($"Peer {peer} joined");
-
+        internal void _validatePeerConnected(NetPeer peer) {
             foreach (var node in GetTree().GetNodesInGroup("global_interest"))
             {
                 if (node is NetworkNode3D networkNode)
@@ -278,9 +352,22 @@ namespace HLNC
             }
             NetworkPeerManager.Instance.RegisterPlayer(peer);
 
-            if (IsServer)
+            EmitSignal("PlayerConnected", peer);
+        }
+
+        public void _OnPeerConnected(NetPeer peer)
+        {
+            DebugPrint($"Peer {peer} joined");
+
+            if (!IsServer)
             {
-                EmitSignal("PlayerConnected", peer);
+                return;
+            }
+
+            if (BlastoffServer != null) {
+                BlastoffPendingValidation.Add(peer);
+            } else {
+                _validatePeerConnected(peer);
             }
         }
 
@@ -308,6 +395,12 @@ namespace HLNC
             networkChildren.ForEach(child => child._NetworkPrepare());
             node._NetworkPrepare();
 
+        }
+
+        public void ChangeZone() {
+            if (IsServer) return;
+            // var node = new NetworkNodeWrapper(new NetworkNode3D());
+            // ChangeSceneInstance(node);
         }
 
         public void Spawn(NetworkNode3D node, NetworkNode3D parent = null, string nodePath = ".")

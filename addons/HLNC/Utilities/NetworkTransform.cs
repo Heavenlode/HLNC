@@ -11,6 +11,9 @@ namespace HLNC.Utilities
         public bool teleporting = true;
 
         [Export]
+        public Node3D SourceNode { get; set; }
+
+        [Export]
         public Node3D TargetNode { get; set; }
 
         [NetworkProperty]
@@ -32,8 +35,11 @@ namespace HLNC.Utilities
         {
             base._Ready();
             TargetNode ??= GetParent3D();
+            SourceNode ??= GetParent3D();
             if (GetMeta("import_from_json", false).AsBool())
             {
+                SourceNode.Position = NetPosition;
+                SourceNode.Rotation = NetRotation;
                 TargetNode.Position = NetPosition;
                 TargetNode.Rotation = NetRotation;
             }
@@ -73,8 +79,8 @@ namespace HLNC.Utilities
             {
                 return;
             }
-            NetPosition = TargetNode.Position;
-            NetRotation = TargetNode.Rotation;
+            NetPosition = SourceNode.Position;
+            NetRotation = SourceNode.Rotation;
             if (IsTeleporting)
             {
                 if (teleportExported)
@@ -112,6 +118,7 @@ namespace HLNC.Utilities
         public override void _PhysicsProcess(double delta)
         {
             base._PhysicsProcess(delta);
+            if (!IsNetworkReady) return;
             if (NetworkRunner.Instance.IsServer)
             {
                 return;
