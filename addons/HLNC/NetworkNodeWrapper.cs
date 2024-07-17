@@ -7,6 +7,17 @@ using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
 
 namespace HLNC {
+
+    /// <summary>
+    /// Generic interface to utilize network nodes across languages (e.g. C#, GDScript).
+    /// Particularly useful when operating on network nodes under ambiguous circumstances.
+    /// </summary>
+    /// <remarks>
+    /// This class automatically handles NetworkNode validation. For example:
+    /// <code language="csharp">
+    /// var maybeNetworkNode = new NetworkNodeWrapper(GetNodeOrNull("MyAmbiguousNode"));
+    /// // If MyAmbiguousNode is not a NetworkNode, maybeNetworkNode == null
+    /// </code>
     public partial class NetworkNodeWrapper {
 
         // Custom operator overload to validate null

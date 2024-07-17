@@ -24,6 +24,7 @@ namespace HLNC
 
         internal List<NetworkNodeWrapper> NetworkSceneChildren = [];
 
+        /// <inheritdoc/>
         public override void _ExitTree()
         {
             base._ExitTree();

@@ -32,6 +32,9 @@ namespace HLNC
         /// </summary>
         [Export] public int MaxPeers = 5;
 
+        /// <summary>
+        /// The current Zone ID. This is mainly used for Blastoff.
+        /// </summary>
         public string ZoneInstanceId => arguments.ContainsKey("zoneInstanceId") ? arguments["zoneInstanceId"] : "0";
 
         internal ENetConnection ENet;
@@ -310,10 +313,11 @@ namespace HLNC
                                         // The packet is two parts: a zone UUID, and a token
                                         var zoneId = new Guid(data.bytes[0..32]);
                                         var token = System.Text.Encoding.UTF8.GetString(data.bytes[32..]);
-                                        if (BlastoffServer.BlastoffValidatePeer(zoneId, token)) {
+                                        if (BlastoffServer.BlastoffValidatePeer(zoneId, token, out var redirect)) {
                                             _validatePeerConnected(packetPeer);
                                             packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.ValidateClient], (int)ENetPacketPeer.FlagReliable);
                                         } else {
+                                            // TODO: If redirect is not Guid.Empty or null, we should redirect the client to that zone
                                             packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.InvalidClient], (int)ENetPacketPeer.FlagReliable);
                                         }
                                     }
