@@ -91,7 +91,7 @@ Better documentation and demo projects are coming soon. In the meantime, feel fr
 
 ## Documentation
 
-Coming soon
+More comprehensive documentation is available here: https://heavenlode.github.io/HLNC/
 
 ## What is this?
 
