@@ -10,7 +10,7 @@ using System;
 namespace HLNC
 {
     /// <summary>
-    /// The primary network manager for server and client.
+    /// The primary network manager for server and client. NetworkRunner handles the ENet stream and passing that data to the correct objects. For more information on what kind of data is sent and received on what channels, see <see cref="ENetChannelId"/>.
     /// </summary>
     public partial class NetworkRunner : Node
     {
@@ -36,38 +36,89 @@ namespace HLNC
 
         internal ENetConnection ENet;
         internal ENetPacketPeer ENetHost;
-        public bool IsServer { get; private set; }
-        public bool NetStarted { get; private set; }
 
-        // Indicates whether Blastoff negotiation is enabled
+        /// <summary>
+        /// This is set after <see cref="StartClient"/> or <see cref="StartServer"/> is called, i.e. when <see cref="NetStarted"/> == true. Before that, this value is unreliable.
+        /// </summary>
+        public bool IsServer { get; private set; }
+
+        /// <summary>
+        /// This is set to true once <see cref="StartClient"/> or <see cref="StartServer"/> have succeeded.
+        /// </summary>
+        public bool NetStarted { get; private set; }
+        
         internal IBlastoffServerDriver BlastoffServer { get; private set; }
         internal IBlastoffClientDriver BlastoffClient { get; private set; }
+
+        /// <summary>
+        /// These are commands which the server may send to Blastoff, which informs Blastoff how to act upon the client connection.
+        /// </summary>
         public enum BlastoffCommands {
+
+            /// <summary>
+            /// Requests Blastoff to create a new server instance, i.e. of the game.
+            /// </summary>
             NewInstance = 0,
+
+            /// <summary>
+            /// Informs Blastoff that the client is valid and communication may be bridged.
+            /// </summary>
             ValidateClient = 1,
+
+            /// <summary>
+            /// Requests Blastoff to redirect the user to another zone Id.
+            /// </summary>
             RedirectClient = 2,
+
+            /// <summary>
+            /// Requests Blastoff to disconnect the client.
+            /// </summary>
             InvalidClient = 3,
         }
         internal HashSet<NetPeer> BlastoffPendingValidation = new HashSet<NetPeer>();
         internal Guid ZoneId = Guid.Empty;
         
+        /// <summary>
+        /// Describes the channels of communication used by the network.
+        /// </summary>
         public enum ENetChannelId {
+
+            /// <summary>
+            /// Tick data sent by the server to the client, and from the client indicating the most recent tick it has received.
+            /// </summary>
             Tick = 1,
+
+            /// <summary>
+            /// Input data sent from the client.
+            /// </summary>
             Input = 2,
+
+            /// <summary>
+            /// Client data sent to the server to authenticate themselves and connect to a zone.
+            /// </summary>
             ClientAuth = 3,
+
+            /// <summary>
+            /// Server communication with Blastoff. Data sent to this channel from a client will be ignored by Blastoff.
+            /// </summary>
             BlastoffAdmin = 254,
         }
 
+        /// <summary>
+        /// The currently active root network scene. This should only be set via <see cref="ChangeSceneInstance(NetworkNodeWrapper)"/> or <see cref="ChangeScenePacked(PackedScene)"/>.
+        /// </summary>
         public NetworkNodeWrapper CurrentScene = new NetworkNodeWrapper(null);
 
-        // public PackedScene DebugScene = (PackedScene)GD.Load("res://addons/HLNC/NetworkDebug.tscn");
-
-        public int NetworkId_counter = 0;
-        public System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
+        internal int NetworkId_counter = 0;
+        internal System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
         private Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
         public Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
         private static NetworkRunner _instance;
+
+        /// <summary>
+        /// The singleton instance.
+        /// </summary>
         public static NetworkRunner Instance => _instance;
         
         /// <inheritdoc/>
