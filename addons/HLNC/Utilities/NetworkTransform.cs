@@ -7,9 +7,6 @@ namespace HLNC.Utilities
 {
     public partial class NetworkTransform : NetworkNode3D
     {
-
-        public bool teleporting = true;
-
         [Export]
         public Node3D SourceNode { get; set; }
 
@@ -31,6 +28,7 @@ namespace HLNC.Utilities
             _isTeleporting = true;
         }
 
+        /// <inheritdoc/>
         public override void _NetworkReady()
         {
             base._Ready();
@@ -72,6 +70,7 @@ namespace HLNC.Utilities
 
         bool teleportExported = false;
 
+        /// <inheritdoc/>
         public override void _NetworkProcess(int tick)
         {
             base._NetworkProcess(tick);
@@ -115,6 +114,7 @@ namespace HLNC.Utilities
             return weight;
         }
 
+        /// <inheritdoc/>
         public override void _PhysicsProcess(double delta)
         {
             base._PhysicsProcess(delta);

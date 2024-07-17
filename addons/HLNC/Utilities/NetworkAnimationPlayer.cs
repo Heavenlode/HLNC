@@ -15,6 +15,7 @@ namespace HLNC.Utilities
         [NetworkProperty]
         public float animation_position { get; set; } = 0.0f;
 
+        /// <inheritdoc/>
         public override void _Ready()
         {
             base._Ready();

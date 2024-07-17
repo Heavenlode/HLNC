@@ -194,6 +194,8 @@ namespace HLNC
 
         private static NetworkPeerManager _instance;
         public static NetworkPeerManager Instance => _instance;
+
+        /// <inheritdoc/>
         public override void _EnterTree()
         {
             if (_instance != null)

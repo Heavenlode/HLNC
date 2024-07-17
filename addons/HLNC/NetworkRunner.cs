@@ -1,14 +1,11 @@
 global using NetworkId = System.Int64;
 global using NetPeer = Godot.ENetPacketPeer;
 global using Tick = System.Int32;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using Godot.Collections;
 using HLNC.Serialization;
 using System;
-using System.Diagnostics;
 
 namespace HLNC
 {
@@ -67,12 +64,13 @@ namespace HLNC
 
         public int NetworkId_counter = 0;
         public System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
-        public System.Collections.Generic.Dictionary<NetPeer, Array<NetworkId>> net_ids_memo = [];
         private Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
         public Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
 
         private static NetworkRunner _instance;
         public static NetworkRunner Instance => _instance;
+        
+        /// <inheritdoc/>
         public override void _EnterTree()
         {
             if (_instance != null)
@@ -81,13 +79,14 @@ namespace HLNC
             }
             _instance = this;
         }
-        public void DebugPrint(string msg)
+        internal void DebugPrint(string msg)
         {
             GD.Print($"{(IsServer ? "Server" : "Client")}: {msg}");
         }
 
         System.Collections.Generic.Dictionary<string, string> arguments = [];
 
+        /// <inheritdoc/>
         public override void _Ready()
         {
             foreach (var argument in OS.GetCmdlineArgs())
@@ -202,22 +201,35 @@ namespace HLNC
             DebugPrint("Started");
         }
 
-        public int frame_counter = 0;
-        public const int FRAMES_PER_SECOND = 60;
-        public const int FRAMES_PER_TICK = 2;
-        public static int TPS = FRAMES_PER_SECOND / FRAMES_PER_TICK;
+        /// <summary>
+        /// This determines how fast the network sends data. When physics runs at 60 ticks per second, then at 2 PhysicsTicksPerNetworkTick, the network runs at 30hz.
+        /// </summary>
+        public const int PhysicsTicksPerNetworkTick = 2;
+
+        /// <summary>
+        /// Ticks Per Second. The number of Ticks which are expected to elapse every second.
+        /// </summary>
+        public static int TPS = Engine.PhysicsTicksPerSecond / PhysicsTicksPerNetworkTick;
+
+        /// <summary>
+        /// Maximum Transferrable Unit. The maximum number of bytes that should be sent in a single ENet UDP Packet (i.e. a single tick)
+        /// Not a hard limit.
+        /// </summary>
         public const int MTU = 1400;
 
-        public int CurrentTick = 0;
-
-        public System.Collections.Generic.Dictionary<object, object> network_properties_cache = [];
-
-        public Array<Variant> debug_data_sizes = [];
-        public System.Collections.Generic.Dictionary<object, object> debug_player_ping = [];
+        /// <summary>
+        /// The current network tick. On the client side, this does not represent the server's current tick, which will always be slightly ahead.
+        /// </summary>
+        public int CurrentTick { get; internal set; } = 0;
 
         [Signal]
         public delegate void OnAfterNetworkTickEventHandler(Tick tick);
 
+
+        private int _frameCounter = 0;
+        /// <summary>
+        /// This method is executed every tick on the Server side, and kicks off all logic which processes and sends data to every client.
+        /// </summary>
         public void ServerProcessTick()
         {
             
@@ -255,12 +267,13 @@ namespace HLNC
                 var buffer = new HLBuffer();
                 HLBytes.Pack(buffer, CurrentTick);
                 HLBytes.Pack(buffer, exportedState[peer].bytes, true);
-                // DebugPrint(BitConverter.ToString(buffer.bytes));
 
                 peer.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
             }
         }
 
+
+        /// <inheritdoc/>
         public override void _PhysicsProcess(double delta)
         {
             if (!NetStarted)
@@ -335,10 +348,10 @@ namespace HLNC
 
             if (IsServer)
             {
-                frame_counter += 1;
-                if (frame_counter < FRAMES_PER_TICK)
+                _frameCounter += 1;
+                if (_frameCounter < PhysicsTicksPerNetworkTick)
                     return;
-                frame_counter = 0;
+                _frameCounter = 0;
                 CurrentTick += 1;
                 ServerProcessTick();
                 EmitSignal("OnAfterNetworkTick", CurrentTick);
