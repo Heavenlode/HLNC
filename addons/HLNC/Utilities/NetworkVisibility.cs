@@ -8,6 +8,7 @@ namespace HLNC.Utilities
         [Export]
         public Array<Node> nodes = [];
 
+        /// <inheritdoc/>
         public override void _EnterTree()
         {
             var netParent = GetParentOrNull<NetworkNode3D>();
