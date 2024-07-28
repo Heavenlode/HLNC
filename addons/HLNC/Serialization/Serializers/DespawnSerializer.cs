@@ -18,7 +18,7 @@ namespace HLNC.Serialization.Serializers
             return new Data();
         }
 
-        public void Import(IPeerStateController peerStateController, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
+        public void Import(WorldRunner currentWorld, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
         {
             nodeOut = node;
             var data = Deserialize(buffer);
@@ -27,7 +27,7 @@ namespace HLNC.Serialization.Serializers
 
         public void Cleanup() { }
 
-        public HLBuffer Export(IPeerStateController peerStateController, NetPeer peerId)
+        public HLBuffer Export(WorldRunner currentWorld, NetPeer peerId)
         {
             var buffer = new HLBuffer();
             // Dictionary<NetPeer, HLBuffer> despawnsBuffer = new Dictionary<NetPeer, HLBuffer>();
@@ -55,7 +55,7 @@ namespace HLNC.Serialization.Serializers
             return buffer;
         }
 
-        public void Acknowledge(IPeerStateController peerStateController, NetPeer peer, Tick tick)
+        public void Acknowledge(WorldRunner currentWorld, NetPeer peer, Tick tick)
         {
             // if (!DespawnBuffers.ContainsKey(peer))
             // 	return;

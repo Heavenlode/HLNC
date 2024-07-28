@@ -58,6 +58,9 @@ namespace HLNC {
                 "NetworkId",
                 "NetworkParentId",
                 "DynamicSpawn",
+                "CurrentWorld",
+                "InputBuffer",
+                "InterestLayers"
             };
             foreach (var prop in node.GetPropertyList()) {
                 var pascalName = ToPascalCase(prop["name"].AsString());
@@ -165,7 +168,17 @@ namespace HLNC {
             }
         }
 
-        public NetworkNodeWrapper NetworkParent => NetworkRunner.Instance.GetFromNetworkId(NetworkParentId);
+        public WorldRunner CurrentWorld {
+            get {
+                return Get("CurrentWorld").As<WorldRunner>();
+            }
+
+            internal set {
+                Set("CurrentWorld", value);
+            }
+        }
+
+        public NetworkNodeWrapper NetworkParent => CurrentWorld.GetNodeFromNetworkId(NetworkParentId);
         
         // TODO: Handle null?
         internal byte NetworkSceneId => NetworkScenesRegister.SCENES_PACK[Node.SceneFilePath];
@@ -190,6 +203,26 @@ namespace HLNC {
             }
         }
 
+        public Godot.Collections.Dictionary<byte, Variant> InputBuffer {
+            get {
+                return Get("InputBuffer").As<Godot.Collections.Dictionary<byte, Variant>>();
+            }
+
+            internal set {
+                Set("InputBuffer", value);
+            }
+        }
+
+        public Godot.Collections.Dictionary<string, long> InterestLayers {
+            get {
+                return Get("InterestLayers").As<Godot.Collections.Dictionary<string, long>>();
+            }
+
+            internal set {
+                Set("InterestLayers", value);
+            }
+        }
+
         public IStateSerailizer[] Serializers {
             get {
                 // TODO: Support serializers across other languages / node types
@@ -200,12 +233,16 @@ namespace HLNC {
             }
         }
 
-        internal void _NetworkPrepare() {
-            Call("_NetworkPrepare");
+        internal void _NetworkPrepare(WorldRunner worldRunner) {
+            Call("_NetworkPrepare", [worldRunner]);
         }
 
         public void _NetworkProcess(Tick tick) {
             Call("_NetworkProcess", tick);
+        }
+
+        public void SetPeerInterest(string peerId, long interestLayers, bool recurse = true) {
+            Call("SetPeerInterest", peerId, interestLayers, recurse);
         }
 
         public List<NetworkNodeWrapper> StaticNetworkChildren {

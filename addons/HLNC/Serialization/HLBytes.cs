@@ -17,7 +17,7 @@ namespace HLNC.Serialization
             Array.Resize(ref array, array.Length + toAdd.Length);
             Array.Copy(toAdd, 0, array, array.Length - toAdd.Length, toAdd.Length);
         }
-        public static void PackVariant(HLBuffer buffer, Variant varVal, bool packType = false)
+        public static void PackVariant(HLBuffer buffer, Variant varVal, bool packLength = false, bool packType = false)
         {
             if (varVal.VariantType == Variant.Type.Vector3)
             {
@@ -46,6 +46,13 @@ namespace HLNC.Serialization
             else if (varVal.VariantType == Variant.Type.Array)
             {
                 PackArray(buffer, (Godot.Collections.Array)varVal, packType);
+            }
+            else if (varVal.VariantType == Variant.Type.PackedByteArray)
+            {
+                Pack(buffer, (byte[])varVal, packLength, packType);
+            } else if (varVal.VariantType == Variant.Type.String)
+            {
+                Pack(buffer, (string)varVal, packType);
             }
             else
             {
@@ -264,7 +271,21 @@ namespace HLNC.Serialization
             buffer.pointer += varVal.Length;
         }
 
-        public static Variant? UnpackVariant(HLBuffer buffer, Variant.Type? knownType = null)
+        public static void Pack(HLBuffer buffer, string varVal, bool packType = false)
+        {
+            if (packType)
+            {
+                Array.Resize(ref buffer.bytes, buffer.bytes.Length + 1);
+                buffer.bytes[buffer.pointer] = (byte)Variant.Type.String;
+                buffer.pointer += 1;
+            }
+            Pack(buffer, varVal.Length);
+            Array.Resize(ref buffer.bytes, buffer.bytes.Length + varVal.Length);
+            Array.Copy(System.Text.Encoding.UTF8.GetBytes(varVal), 0, buffer.bytes, buffer.pointer, varVal.Length);
+            buffer.pointer += varVal.Length;
+        }
+
+        public static Variant? UnpackVariant(HLBuffer buffer, int length = 0, Variant.Type? knownType = null)
         {
             Variant.Type type;
             if (knownType.HasValue)
@@ -306,7 +327,11 @@ namespace HLNC.Serialization
             }
             else if (type == Variant.Type.PackedByteArray)
             {
-                return UnpackByteArray(buffer);
+                return UnpackByteArray(buffer, length);
+            }
+            else if (type == Variant.Type.String)
+            {
+                return UnpackString(buffer);
             }
             else
             {
@@ -365,7 +390,11 @@ namespace HLNC.Serialization
             return BitConverter.ToSingle(bytes, 0);
         }
 
-        // Alias for UnpackInt8
+        /// <summary>
+        /// Alias for <see cref="UnpackInt8(HLBuffer)"/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         public static byte UnpackByte(HLBuffer buffer)
         {
             return UnpackInt8(buffer);
@@ -437,12 +466,23 @@ namespace HLNC.Serialization
             return result;
         }
 
-        public static byte[] UnpackByteArray(HLBuffer buffer)
+        public static byte[] UnpackByteArray(HLBuffer buffer, int length = 0)
         {
-            var size = BitConverter.ToInt32(buffer.bytes, buffer.pointer);
-            buffer.pointer += 4;
+            var size = length;
+            if (size == 0)
+            {
+                size = UnpackInt32(buffer);
+            }
             var result = new byte[size];
             Array.Copy(buffer.bytes, buffer.pointer, result, 0, size);
+            buffer.pointer += size;
+            return result;
+        }
+
+        public static string UnpackString(HLBuffer buffer)
+        {
+            var size = UnpackInt32(buffer);
+            var result = System.Text.Encoding.UTF8.GetString(buffer.bytes, buffer.pointer, size);
             buffer.pointer += size;
             return result;
         }

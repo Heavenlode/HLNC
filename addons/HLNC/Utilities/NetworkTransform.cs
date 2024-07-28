@@ -31,10 +31,10 @@ namespace HLNC.Utilities
         /// <inheritdoc/>
         public override void _NetworkReady()
         {
-            base._Ready();
+            base._NetworkReady();
             TargetNode ??= GetParent3D();
             SourceNode ??= GetParent3D();
-            if (GetMeta("import_from_json", false).AsBool())
+            if (GetMeta("import_from_external", false).AsBool())
             {
                 SourceNode.Position = NetPosition;
                 SourceNode.Rotation = NetRotation;
@@ -117,12 +117,16 @@ namespace HLNC.Utilities
         /// <inheritdoc/>
         public override void _PhysicsProcess(double delta)
         {
+            if (Engine.IsEditorHint())
+            {
+                return;
+            }
             base._PhysicsProcess(delta);
-            if (!IsNetworkReady) return;
             if (NetworkRunner.Instance.IsServer)
             {
                 return;
             }
+            if (!IsNetworkReady) return;
             TargetNode.Position = NetPosition;
             TargetNode.Rotation = NetRotation;
         }

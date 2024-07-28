@@ -1,10 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
+using Grpc.Core;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
-using Newtonsoft.Json.Linq;
+using Microsoft.VisualBasic;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 
 namespace HLNC
 {
@@ -18,15 +23,39 @@ namespace HLNC
         The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
         </summary>
     */
+    [Tool]
     public partial class NetworkNode3D : Node3D, IStateSerializable, INotifyPropertyChanged
     {
         public bool IsNetworkScene => GetMeta("is_network_scene", false).AsBool();
 
         internal List<NetworkNodeWrapper> NetworkSceneChildren = [];
+        internal List<Tuple<string, string>> InitialSetNetworkProperties = [];
+        public WorldRunner CurrentWorld { get; internal set; }
+        public Godot.Collections.Dictionary<byte, Variant> InputBuffer = [];
+        public Godot.Collections.Dictionary<string, long> InterestLayers = [];
+
+        [Signal]
+        public delegate void InterestChangedEventHandler(string peerId, long interestLayers);
+        public void SetPeerInterest(string peerId, long interestLayers, bool recurse = true)
+        {
+            InterestLayers[peerId] = interestLayers;
+            EmitSignal("InterestChanged", peerId, interestLayers);
+            if (recurse)
+            {
+                foreach (var child in GetNetworkChildren(NetworkChildrenSearchToggle.INCLUDE_SCENES))
+                {
+                    child.SetPeerInterest(peerId, interestLayers, recurse);
+                }
+            }
+        }
 
         /// <inheritdoc/>
         public override void _ExitTree()
         {
+            if (Engine.IsEditorHint())
+            {
+                return;
+            }
             base._ExitTree();
             if (NetworkParent != null && NetworkParent.Node is NetworkNode3D _networkNodeParent)
             {
@@ -57,35 +86,41 @@ namespace HLNC
                 }
                 _networkParentId = value;
                 {
-                    if (IsNetworkScene && value != 0 && NetworkRunner.Instance.GetFromNetworkId(value).Node is NetworkNode3D _networkNodeParent)
+                    if (IsNetworkScene && value != 0 && CurrentWorld.GetNodeFromNetworkId(value).Node is NetworkNode3D _networkNodeParent)
                     {
                         _networkNodeParent.NetworkSceneChildren.Add(new NetworkNodeWrapper(this));
                     }
                 }
             }
         }
-        public NetworkNodeWrapper NetworkParent { get {
-            return NetworkRunner.Instance.GetFromNetworkId(NetworkParentId);
-        } internal set {
-            NetworkParentId = value?.NetworkId ?? 0;
-        } }
+        public NetworkNodeWrapper NetworkParent
+        {
+            get
+            {
+                if (CurrentWorld == null) return null;
+                return CurrentWorld.GetNodeFromNetworkId(NetworkParentId);
+            }
+            internal set
+            {
+                NetworkParentId = value?.NetworkId ?? 0;
+            }
+        }
         public bool DynamicSpawn { get; internal set; } = false;
 
         // Cannot have more than 8 serializers
-        public IStateSerailizer[] Serializers { get; private set; }
+        public IStateSerailizer[] Serializers { get; private set; } = [];
 
-        public JObject ToJSON(bool recurse = true)
+        public BsonDocument ToBSONDocument(bool recurse = true, HashSet<Type> skipTypes = null)
         {
             if (!IsNetworkScene)
             {
-                throw new System.Exception("Only scenes can be converted to JSON: " + GetPath());
+                throw new System.Exception("Only scenes can be converted to BSON: " + GetPath());
             }
-
-            var result = new JObject();
-            result["data"] = new JObject();
+            BsonDocument result = new BsonDocument();
+            result["data"] = new BsonDocument();
             if (IsNetworkScene)
             {
-                result["scenePack"] = NetworkScenesRegister.SCENES_PACK[SceneFilePath];
+                result["scene"] = SceneFilePath;
             }
             // We retain this for debugging purposes.
             result["nodeName"] = Name.ToString();
@@ -96,59 +131,82 @@ namespace HLNC
                 {
                     var nodePath = staticNetworkNodePathAndProps.Key;
                     var nodeProps = staticNetworkNodePathAndProps.Value;
-                    result["data"][nodePath] = new JObject();
-                    var nodeData = result["data"][nodePath] as JObject;
+                    result["data"][nodePath] = new BsonDocument();
+                    var nodeData = result["data"][nodePath] as BsonDocument;
+                    var hasValues = false;
                     foreach (var property in nodeProps)
                     {
                         var prop = GetNode(nodePath).Get(property.Value.Name);
-                        if (prop.VariantType == Variant.Type.String)
+                        if (property.Value.Type == Variant.Type.String)
                         {
                             nodeData[property.Value.Name] = prop.ToString();
                         }
-                        else if (prop.VariantType == Variant.Type.Float)
+                        else if (property.Value.Type == Variant.Type.Float)
                         {
                             nodeData[property.Value.Name] = prop.AsDouble();
                         }
-                        else if (prop.VariantType == Variant.Type.Int)
+                        else if (property.Value.Type == Variant.Type.Int)
                         {
                             nodeData[property.Value.Name] = prop.AsInt64();
                         }
-                        else if (prop.VariantType == Variant.Type.Bool)
+                        else if (property.Value.Type == Variant.Type.Bool)
                         {
                             nodeData[property.Value.Name] = prop.AsBool();
                         }
-                        else if (prop.VariantType == Variant.Type.Vector2)
+                        else if (property.Value.Type == Variant.Type.Vector2)
                         {
                             var vec = prop.As<Vector2>();
-                            nodeData[property.Value.Name] = new JArray(vec.X, vec.Y);
+                            nodeData[property.Value.Name] = new BsonArray { vec.X, vec.Y };
                         }
-                        else if (prop.VariantType == Variant.Type.Vector3)
+                        else if (property.Value.Type == Variant.Type.Vector3)
                         {
                             var vec = prop.As<Vector3>();
-                            nodeData[property.Value.Name] = new JArray(vec.X, vec.Y, vec.Z);
+                            nodeData[property.Value.Name] = new BsonArray { vec.X, vec.Y, vec.Z };
                         }
+                        else if (property.Value.Type == Variant.Type.Nil)
+                        {
+                            nodeData[property.Value.Name] = null;
+                        }
+                        else if (property.Value.Type == Variant.Type.PackedByteArray)
+                        {
+                            if (property.Value.Subtype == VariantSubtype.Guid)
+                            {
+                                nodeData[property.Value.Name] = new BsonBinaryData(new Guid(prop.AsByteArray()), GuidRepresentation.Standard);
+                            }
+                            else
+                            {
+                                nodeData[property.Value.Name] = new BsonBinaryData(prop.AsByteArray(), BsonBinarySubType.Binary);
+                            }
+                        }
+                        else
+                        {
+                            GD.PrintErr("Serializing to JSON unsupported property type: ", prop.VariantType);
+                            continue;
+                        }
+                        hasValues = true;
                     }
 
-                    if (!nodeData.HasValues)
+                    if (!hasValues)
                     {
-                        (result["data"] as JObject).Remove(nodePath);
+                        // Delete empty objects from JSON, i.e. network nodes with no network properties.
+                        (result["data"] as BsonDocument).Remove(nodePath);
                     }
                 }
             }
 
             if (recurse)
             {
-                result["children"] = new JObject();
+                result["children"] = new BsonDocument();
                 foreach (var child in NetworkSceneChildren)
                 {
-                    if (child.Node is NetworkNode3D networkChild)
+                    if (child.Node is NetworkNode3D networkChild && (skipTypes == null || !skipTypes.Contains(networkChild.GetType())))
                     {
                         string pathTo = GetPathTo(networkChild.GetParent());
-                        if (!(result["children"] as JObject).ContainsKey(pathTo))
+                        if (!(result["children"] as BsonDocument).Contains(pathTo))
                         {
-                            result["children"][pathTo] = new JArray();
+                            result["children"][pathTo] = new BsonArray();
                         }
-                        (result["children"][pathTo] as JArray).Add(networkChild.ToJSON());
+                        (result["children"][pathTo] as BsonArray).Add(networkChild.ToBSONDocument());
                     }
                 }
             }
@@ -156,16 +214,29 @@ namespace HLNC
             return result;
         }
 
-        public static async Task<NetworkNode3D> FromJSON(JObject data)
+        public async void FromBSON(byte[] data)
         {
-            NetworkNode3D node;
-            if (data.ContainsKey("scenePack"))
+            await NetworkNode3D.FromBSON<NetworkNode3D>(data, this);
+        }
+
+        public static async Task<T> FromBSON<T>(byte[] data, T fillNode = null) where T : NetworkNode3D
+        {
+            return await FromBSON<T>(BsonSerializer.Deserialize<BsonDocument>(data), fillNode);
+        }
+
+        public static async Task<T> FromBSON<T>(BsonDocument data, T fillNode = null) where T : NetworkNode3D
+        {
+            T node = fillNode;
+            if (fillNode == null)
             {
-                node = NetworkScenesRegister.SCENES_MAP[(byte)data["scenePack"]].Instantiate<NetworkNode3D>();
-            }
-            else
-            {
-                node = new NetworkNode3D();
+                if (data.Contains("scene"))
+                {
+                    node = GD.Load<PackedScene>(data["scene"].AsString).Instantiate<T>();
+                }
+                else
+                {
+                    throw new System.Exception("No scene path found in BSON data");
+                }
             }
             var tcs = new TaskCompletionSource<bool>();
             node.Ready += () =>
@@ -178,19 +249,18 @@ namespace HLNC
                     }
                     else
                     {
-                        child.Node.SetMeta("import_from_json", true);
+                        child.Node.SetMeta("import_from_external", true);
                     }
                 }
-                node.SetMeta("import_from_json", true);
+                node.SetMeta("import_from_external", true);
                 tcs.SetResult(true);
             };
             NetworkRunner.Instance.AddChild(node);
             await tcs.Task;
-            NetworkRunner.Instance.RemoveChild(node);
-            foreach (var networkNodePathAndProps in data["data"] as JObject)
+            foreach (var networkNodePathAndProps in data["data"] as BsonDocument)
             {
-                var nodePath = networkNodePathAndProps.Key;
-                var nodeProps = networkNodePathAndProps.Value as JObject;
+                var nodePath = networkNodePathAndProps.Name;
+                var nodeProps = networkNodePathAndProps.Value as BsonDocument;
                 var targetNode = node.GetNodeOrNull(nodePath);
                 if (targetNode == null)
                 {
@@ -199,44 +269,57 @@ namespace HLNC
                 }
                 foreach (var prop in nodeProps)
                 {
-                    var variantType = targetNode.Get(prop.Key).VariantType;
+                    node.InitialSetNetworkProperties.Add(new Tuple<string, string>(nodePath, prop.Name));
+                    var variantType = targetNode.Get(prop.Name).VariantType;
+                    var propData = NetworkScenesRegister.PROPERTIES_MAP[node.SceneFilePath][nodePath][prop.Name];
                     if (variantType == Variant.Type.String)
                     {
-                        targetNode.Set(prop.Key, prop.Value.ToString());
+                        targetNode.Set(prop.Name, prop.Value.ToString());
                     }
                     else if (variantType == Variant.Type.Float)
                     {
-                        targetNode.Set(prop.Key, (float)prop.Value);
+                        targetNode.Set(prop.Name, prop.Value.AsDouble);
                     }
                     else if (variantType == Variant.Type.Int)
                     {
-                        targetNode.Set(prop.Key, (int)prop.Value);
+                        targetNode.Set(prop.Name, prop.Value.AsInt64);
                     }
                     else if (variantType == Variant.Type.Bool)
                     {
-                        targetNode.Set(prop.Key, (bool)prop.Value);
+                        targetNode.Set(prop.Name, (bool)prop.Value);
                     }
                     else if (variantType == Variant.Type.Vector2)
                     {
-                        var vec = prop.Value as JArray;
-                        targetNode.Set(prop.Key, new Vector2((float)vec[0], (float)vec[1]));
+                        var vec = prop.Value as BsonArray;
+                        targetNode.Set(prop.Name, new Vector2((float)vec[0].AsDouble, (float)vec[1].AsDouble));
+                    }
+                    else if (variantType == Variant.Type.PackedByteArray)
+                    {
+                        if (propData.Subtype == VariantSubtype.Guid)
+                        {
+                            targetNode.Set(prop.Name, new BsonBinaryData(prop.Value.AsGuid, GuidRepresentation.CSharpLegacy).AsByteArray);
+                        }
+                        else
+                        {
+                            targetNode.Set(prop.Name, prop.Value.AsByteArray);
+                        }
                     }
                     else if (variantType == Variant.Type.Vector3)
                     {
-                        var vec = prop.Value as JArray;
-                        targetNode.Set(prop.Key, new Vector3((float)vec[0], (float)vec[1], (float)vec[2]));
+                        var vec = prop.Value as BsonArray;
+                        targetNode.Set(prop.Name, new Vector3((float)vec[0].AsDouble, (float)vec[1].AsDouble, (float)vec[2].AsDouble));
                     }
                 }
             }
-            if (data.ContainsKey("children"))
+            if (data.Contains("children"))
             {
-                foreach (var child in data["children"] as JObject)
+                foreach (var child in data["children"] as BsonDocument)
                 {
-                    var nodePath = child.Key;
-                    var children = child.Value as JArray;
+                    var nodePath = child.Name;
+                    var children = child.Value as BsonArray;
                     foreach (var childData in children)
                     {
-                        var childNode = await FromJSON(childData as JObject);
+                        var childNode = await FromBSON<T>(childData as BsonDocument);
                         var parent = node.GetNodeOrNull(nodePath);
                         if (parent == null)
                         {
@@ -247,13 +330,14 @@ namespace HLNC
                     }
                 }
             }
+            NetworkRunner.Instance.RemoveChild(node);
             return node;
         }
 
         [Signal]
         public delegate void NetworkPropertyChangedEventHandler(string nodePath, StringName propertyName);
 
-        public NetworkNode3D()
+        public override void _EnterTree()
         {
             if (GetType().GetCustomAttributes(typeof(NetworkScenes), true).Length > 0)
             {
@@ -264,11 +348,8 @@ namespace HLNC
             {
                 return;
             }
-            Serializers = [
-                new SpawnSerializer(new NetworkNodeWrapper(this)),
-                new NetworkPropertiesSerializer(new NetworkNodeWrapper(this)),
-            ];
         }
+
         public NetworkId NetworkId { get; internal set; } = -1;
         public NetPeer InputAuthority { get; internal set; } = null;
 
@@ -276,8 +357,6 @@ namespace HLNC
         {
             get { return NetworkRunner.Instance.IsServer || (!NetworkRunner.Instance.IsServer && InputAuthority == NetworkRunner.Instance.ENetHost); }
         }
-
-        public Dictionary<NetPeer, bool> Interest = [];
 
         public static NetworkNode3D FindFromChild(Node node)
         {
@@ -329,16 +408,21 @@ namespace HLNC
             // NetworkRunner.Instance.Despawn(this);
         }
 
-        public void _NetworkPrepare()
+        public void _NetworkPrepare(WorldRunner world)
         {
             if (Engine.IsEditorHint())
             {
                 return;
             }
 
+            CurrentWorld = world;
+
             if (IsNetworkScene)
             {
-                NetworkRunner.Instance.RegisterSpawn(new NetworkNodeWrapper(this));
+                var networkChildren = GetNetworkChildren(NetworkNode3D.NetworkChildrenSearchToggle.INCLUDE_SCENES).ToList();
+                networkChildren.Reverse();
+                networkChildren.ForEach(child => child._NetworkPrepare(world));
+                world.RegisterSpawn(new NetworkNodeWrapper(this));
                 if (!NetworkRunner.Instance.IsServer)
                 {
                     // Clients dequeue network scenes and prepare them later via serializers triggered by the server.
@@ -373,7 +457,24 @@ namespace HLNC
                 }
             }
 
+            SetupSerializers(true);
+            foreach (var initialSetProp in InitialSetNetworkProperties)
+            {
+                EmitSignal("NetworkPropertyChanged", initialSetProp.Item1, initialSetProp.Item2);
+            }
             _NetworkReady();
+        }
+
+        internal void SetupSerializers(bool checkIfNetworkScene = false)
+        {
+            if (!checkIfNetworkScene || IsNetworkScene)
+            {
+                var spawnSerializer = new SpawnSerializer();
+                AddChild(spawnSerializer);
+                var propertySerializer = new NetworkPropertiesSerializer();
+                AddChild(propertySerializer);
+                Serializers = [spawnSerializer, propertySerializer];
+            }
         }
 
         public virtual void _NetworkReady()
@@ -389,36 +490,29 @@ namespace HLNC
             }
             if (NetworkRunner.Instance.IsServer)
                 return;
-
-            if (IsCurrentOwner && !NetworkRunner.Instance.IsServer && this is INetworkInputHandler)
-            {
-                INetworkInputHandler inputHandler = (INetworkInputHandler)this;
-                if (inputHandler.InputBuffer.Count > 0)
-                {
-                    // NetworkRunner.Instance.RpcId(1, "TransferInput", NetworkRunner.Instance.CurrentTick, (byte)NetworkId, inputHandler.InputBuffer);
-                    inputHandler.InputBuffer.Clear();
-                }
-            }
         }
 
         public Godot.Collections.Dictionary<int, Variant> GetInput()
         {
             if (!IsCurrentOwner) return null;
-            if (!NetworkRunner.Instance.InputStore.ContainsKey(InputAuthority))
+            if (!CurrentWorld.InputStore.ContainsKey(InputAuthority))
                 return null;
 
             byte netId;
-            if (NetworkRunner.Instance.IsServer) {
-                netId = NetworkPeerManager.Instance.GetPeerNodeId(InputAuthority, new NetworkNodeWrapper(this));
-            } else {
+            if (NetworkRunner.Instance.IsServer)
+            {
+                netId = CurrentWorld.GetPeerNodeId(InputAuthority, new NetworkNodeWrapper(this));
+            }
+            else
+            {
                 netId = (byte)NetworkId;
             }
 
-            if (!NetworkRunner.Instance.InputStore[InputAuthority].ContainsKey(netId))
+            if (!CurrentWorld.InputStore[InputAuthority].ContainsKey(netId))
                 return null;
 
-            var inputs = NetworkRunner.Instance.InputStore[InputAuthority][netId];
-            NetworkRunner.Instance.InputStore[InputAuthority].Remove(netId);
+            var inputs = CurrentWorld.InputStore[InputAuthority][netId];
+            CurrentWorld.InputStore[InputAuthority].Remove(netId);
             return inputs;
         }
 

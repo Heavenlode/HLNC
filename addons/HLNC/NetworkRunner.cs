@@ -6,6 +6,7 @@ using System.Linq;
 using Godot;
 using HLNC.Serialization;
 using System;
+using System.Text;
 
 namespace HLNC
 {
@@ -20,22 +21,44 @@ namespace HLNC
         [Export] public string ServerAddress = "127.0.0.1";
 
         /// <summary>
-        /// The port for the server to listen on, and the client to connect to.
+        /// The port for the server to listen on, and the client to connect to. If BlastoffClient is installed, this will be overridden to 20406, the Blastoff port.
         /// </summary>
         [Export] public int Port = 8888;
 
         /// <summary>
         /// The maximum number of allowed connections before the server starts rejecting clients.
         /// </summary>
-        [Export] public int MaxPeers = 5;
+        [Export] public int MaxPeers = 100;
 
         /// <summary>
-        /// The current Zone ID. This is mainly used for Blastoff.
+        /// The current World ID. This is mainly used for Blastoff.
         /// </summary>
-        public string ZoneInstanceId => arguments.ContainsKey("zoneInstanceId") ? arguments["zoneInstanceId"] : "0";
-
+        public Dictionary<Guid, WorldRunner> Worlds { get; private set; } = [];
         internal ENetConnection ENet;
         internal ENetPacketPeer ENetHost;
+
+        internal Dictionary<string, NetPeer> Peers = [];
+        internal Dictionary<NetPeer, string> PeerIds = [];
+        internal Dictionary<Guid, List<NetPeer>> WorldPeerMap = [];
+        internal Dictionary<NetPeer, WorldRunner> PeerWorldMap = [];
+
+        public NetPeer GetPeer(string id)
+        {
+            if (Peers.ContainsKey(id))
+            {
+                return Peers[id];
+            }
+            return null;
+        }
+
+        public string GetPeerId(NetPeer peer)
+        {
+            if (PeerIds.ContainsKey(peer))
+            {
+                return PeerIds[peer];
+            }
+            return null;
+        }
 
         /// <summary>
         /// This is set after <see cref="StartClient"/> or <see cref="StartServer"/> is called, i.e. when <see cref="NetStarted"/> == true. Before that, this value is unreliable.
@@ -46,14 +69,15 @@ namespace HLNC
         /// This is set to true once <see cref="StartClient"/> or <see cref="StartServer"/> have succeeded.
         /// </summary>
         public bool NetStarted { get; private set; }
-        
+
         internal IBlastoffServerDriver BlastoffServer { get; private set; }
         internal IBlastoffClientDriver BlastoffClient { get; private set; }
 
         /// <summary>
         /// These are commands which the server may send to Blastoff, which informs Blastoff how to act upon the client connection.
         /// </summary>
-        public enum BlastoffCommands {
+        public enum BlastoffCommands
+        {
 
             /// <summary>
             /// Requests Blastoff to create a new server instance, i.e. of the game.
@@ -66,7 +90,7 @@ namespace HLNC
             ValidateClient = 1,
 
             /// <summary>
-            /// Requests Blastoff to redirect the user to another zone Id.
+            /// Requests Blastoff to redirect the user to another world Id.
             /// </summary>
             RedirectClient = 2,
 
@@ -76,12 +100,12 @@ namespace HLNC
             InvalidClient = 3,
         }
         internal HashSet<NetPeer> BlastoffPendingValidation = new HashSet<NetPeer>();
-        internal Guid ZoneId = Guid.Empty;
-        
+
         /// <summary>
         /// Describes the channels of communication used by the network.
         /// </summary>
-        public enum ENetChannelId {
+        public enum ENetChannelId
+        {
 
             /// <summary>
             /// Tick data sent by the server to the client, and from the client indicating the most recent tick it has received.
@@ -94,33 +118,17 @@ namespace HLNC
             Input = 2,
 
             /// <summary>
-            /// Client data sent to the server to authenticate themselves and connect to a zone.
-            /// </summary>
-            ClientAuth = 3,
-
-            /// <summary>
             /// Server communication with Blastoff. Data sent to this channel from a client will be ignored by Blastoff.
             /// </summary>
-            BlastoffAdmin = 254,
+            BlastoffAdmin = 249,
         }
-
-        /// <summary>
-        /// The currently active root network scene. This should only be set via <see cref="ChangeSceneInstance(NetworkNodeWrapper)"/> or <see cref="ChangeScenePacked(PackedScene)"/>.
-        /// </summary>
-        public NetworkNodeWrapper CurrentScene = new NetworkNodeWrapper(null);
-
-        internal int NetworkId_counter = 0;
-        internal System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
-        private Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
-        public Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
-
         private static NetworkRunner _instance;
 
         /// <summary>
         /// The singleton instance.
         /// </summary>
         public static NetworkRunner Instance => _instance;
-        
+
         /// <inheritdoc/>
         public override void _EnterTree()
         {
@@ -130,12 +138,12 @@ namespace HLNC
             }
             _instance = this;
         }
-        internal void DebugPrint(string msg)
+        internal static void DebugPrint(string msg)
         {
-            GD.Print($"{(IsServer ? "Server" : "Client")}: {msg}");
+            GD.Print($"{(OS.HasFeature("dedicated_server") ? "Server" : "Client")}: {msg}");
         }
 
-        System.Collections.Generic.Dictionary<string, string> arguments = [];
+        public System.Collections.Generic.Dictionary<string, string> StartArgs = [];
 
         /// <inheritdoc/>
         public override void _Ready()
@@ -145,36 +153,15 @@ namespace HLNC
                 if (argument.Contains('='))
                 {
                     var keyValuePair = argument.Split("=");
-                    arguments[keyValuePair[0].TrimStart('-')] = keyValuePair[1];
+                    StartArgs[keyValuePair[0].TrimStart('-')] = keyValuePair[1];
                 }
                 else
                 {
                     // Options without an argument will be present in the dictionary,
                     // with the value set to an empty string.
-                    arguments[argument.TrimStart('-')] = "";
+                    StartArgs[argument.TrimStart('-')] = "";
                 }
             }
-        }
-
-        public void RegisterSpawn(NetworkNodeWrapper wrapper)
-        {
-            if (IsServer)
-            {
-                NetworkId_counter += 1;
-                while (NetworkScenes.ContainsKey(NetworkId_counter))
-                {
-                    NetworkId_counter += 1;
-                }
-                NetworkScenes[NetworkId_counter] = wrapper;
-                wrapper.NetworkId = NetworkId_counter;
-                return;
-            }
-
-            if (!wrapper.DynamicSpawn)
-            {
-                wrapper.Node.QueueFree();
-            }
-
         }
 
         public void InstallBlastoffServerDriver(IBlastoffServerDriver blastoff)
@@ -185,7 +172,7 @@ namespace HLNC
                 return;
             }
             BlastoffServer = blastoff;
-            GD.Print("Server: Blastoff Installed");
+            DebugPrint("Blastoff Installed");
         }
 
         public void InstallBlastoffClientDriver(IBlastoffClientDriver blastoff)
@@ -196,7 +183,7 @@ namespace HLNC
                 return;
             }
             BlastoffClient = blastoff;
-            GD.Print("Client: Blastoff Installed");
+            DebugPrint("Blastoff Installed");
         }
 
         public void StartServer()
@@ -205,15 +192,10 @@ namespace HLNC
             DebugPrint("Starting Server");
             GetTree().MultiplayerPoll = false;
             var custom_port = Port;
-            if (arguments.ContainsKey("port"))
+            if (StartArgs.ContainsKey("port"))
             {
-                GD.Print("PORT OVERRIDE: {0}", arguments["port"]);
-                custom_port = int.Parse(arguments["port"]);
-            }
-
-            if (arguments.ContainsKey("zoneId")) {
-                ZoneId = new Guid(arguments["zoneId"]);
-                DebugPrint($"Zone ID: {ZoneId}");
+                DebugPrint("PORT OVERRIDE: " + StartArgs["port"]);
+                custom_port = int.Parse(StartArgs["port"]);
             }
 
             ENet = new ENetConnection();
@@ -225,30 +207,24 @@ namespace HLNC
                 return;
             }
             NetStarted = true;
-            DebugPrint("Started");
+            DebugPrint($"Started on {ServerAddress}:{custom_port}");
         }
 
         public void StartClient()
         {
             ENet = new ENetConnection();
             ENet.CreateHost();
-            ENetHost = ENet.ConnectToHost(ServerAddress, 8888);
+            ENetHost = ENet.ConnectToHost(ServerAddress, BlastoffClient != null ? 20406 : Port);
             ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
-            // ENetHost = ENet.ConnectToHost(ServerAddress, 20406);
             if (ENetHost == null)
             {
                 DebugPrint($"Error connecting.");
                 return;
             }
             NetStarted = true;
-            if (BlastoffClient != null) {
-                var zoneBytes = BlastoffClient.BlastoffGetZoneId().ToByteArray();
-                var tokenBytes = System.Text.Encoding.UTF8.GetBytes(BlastoffClient.BlastoffGetToken());
-                var combinedBytes = new byte[zoneBytes.Length + tokenBytes.Length];
-                zoneBytes.CopyTo(combinedBytes, 0);
-                tokenBytes.CopyTo(combinedBytes, zoneBytes.Length);
-                ENetHost.Send((int)ENetChannelId.ClientAuth, combinedBytes, (int)ENetPacketPeer.FlagReliable);
-            }
+            var worldRunner = new WorldRunner();
+            WorldRunner.CurrentWorld = worldRunner;
+            GetTree().CurrentScene.AddChild(worldRunner);
             DebugPrint("Started");
         }
 
@@ -268,61 +244,6 @@ namespace HLNC
         /// </summary>
         public const int MTU = 1400;
 
-        /// <summary>
-        /// The current network tick. On the client side, this does not represent the server's current tick, which will always be slightly ahead.
-        /// </summary>
-        public int CurrentTick { get; internal set; } = 0;
-
-        [Signal]
-        public delegate void OnAfterNetworkTickEventHandler(Tick tick);
-
-
-        private int _frameCounter = 0;
-        /// <summary>
-        /// This method is executed every tick on the Server side, and kicks off all logic which processes and sends data to every client.
-        /// </summary>
-        public void ServerProcessTick()
-        {
-            
-            foreach (var net_id in NetworkScenes.Keys)
-            {
-                var networkNode = NetworkScenes[net_id];
-                if (networkNode == null)
-                    continue;
-
-                if (!IsInstanceValid(networkNode.Node) || networkNode.Node.IsQueuedForDeletion())
-                {
-                    NetworkScenes.Remove(net_id);
-                    continue;
-                }
-                networkNode._NetworkProcess(CurrentTick);
-                foreach (var networkChild in networkNode.StaticNetworkChildren)
-                {
-                    networkChild._NetworkProcess(CurrentTick);
-                }
-            }
-
-            var exportedState = NetworkPeerManager.Instance.ExportState(ENet.GetPeers());
-            foreach (var peer in ENet.GetPeers())
-            {
-                var size = exportedState[peer].bytes.Length;
-                // if (network_debug != null)
-                // {
-                // 	debug_data_sizes.Add(compressed_payload.Length);
-                // }
-                if (size > MTU)
-                {
-                    DebugPrint($"Warning: Data size {size} exceeds MTU {MTU}");
-                }
-
-                var buffer = new HLBuffer();
-                HLBytes.Pack(buffer, CurrentTick);
-                HLBytes.Pack(buffer, exportedState[peer].bytes, true);
-
-                peer.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
-            }
-        }
-
 
         /// <inheritdoc/>
         public override void _PhysicsProcess(double delta)
@@ -330,10 +251,9 @@ namespace HLNC
             if (!NetStarted)
                 return;
 
-            var enetEvent = ENet.Service();
-
             while (true)
             {
+                var enetEvent = ENet.Service();
                 var eventType = enetEvent[0].As<ENetConnection.EventType>();
                 if (eventType == ENetConnection.EventType.None)
                 {
@@ -343,7 +263,14 @@ namespace HLNC
                 switch (eventType)
                 {
                     case ENetConnection.EventType.Connect:
-                        _OnPeerConnected(packetPeer);
+                        if (packetPeer == ENetHost)
+                        {
+                            _OnConnectedToServer();
+                        }
+                        else
+                        {
+                            _OnPeerConnected(packetPeer);
+                        }
                         break;
                     case ENetConnection.EventType.Disconnect:
                         _OnPeerDisconnected(packetPeer);
@@ -351,149 +278,159 @@ namespace HLNC
                     case ENetConnection.EventType.Receive:
                         var data = new HLBuffer(packetPeer.GetPacket());
                         var channel = enetEvent[3].As<int>();
-                        switch ((ENetChannelId)channel) {
+                        switch ((ENetChannelId)channel)
+                        {
                             case ENetChannelId.Tick:
-                                if (IsServer) {
+                                if (IsServer)
+                                {
                                     var tick = HLBytes.UnpackInt32(data);
-                                    NetworkPeerManager.Instance.PeerAcknowledge(packetPeer, tick);
-                                } else {
+                                    PeerWorldMap[packetPeer].PeerAcknowledge(packetPeer, tick);
+                                }
+                                else
+                                {
                                     if (data.bytes.Length == 0)
                                     {
                                         break;
                                     }
                                     var tick = HLBytes.UnpackInt32(data);
                                     var bytes = HLBytes.UnpackByteArray(data);
-                                    NetworkPeerManager.Instance.ClientHandleTick(tick, bytes);
+                                    // GD.Print(BitConverter.ToString(bytes));
+                                    WorldRunner.CurrentWorld.ClientHandleTick(tick, bytes);
                                 }
-                            break;
+                                break;
+                            case ENetChannelId.Input:
+                                if (IsServer)
+                                {
+                                    PeerWorldMap[packetPeer].ReceiveInput(packetPeer, data);
+                                }
+                                else
+                                {
+                                    // Clients should never receive messages on the Input channel
+                                    break;
+                                }
+                                break;
                             case ENetChannelId.BlastoffAdmin:
-                                if (IsServer) {
-                                    if (BlastoffServer == null) {
+                                if (IsServer)
+                                {
+                                    if (BlastoffServer == null)
+                                    {
                                         // This channel is only used for Blastoff which must be enabled.
                                         break;
                                     }
-                                    if (BlastoffPendingValidation.Contains(packetPeer)) {
+                                    if (BlastoffPendingValidation.Contains(packetPeer))
+                                    {
                                         // We're in the process of validating a peer for Blastoff.
-                                        // The packet is two parts: a zone UUID, and a token
-                                        var zoneId = new Guid(data.bytes[0..32]);
-                                        var token = System.Text.Encoding.UTF8.GetString(data.bytes[32..]);
-                                        if (BlastoffServer.BlastoffValidatePeer(zoneId, token, out var redirect)) {
-                                            _validatePeerConnected(packetPeer);
+                                        var token = System.Text.Encoding.UTF8.GetString(data.bytes);
+                                        if (BlastoffServer.BlastoffValidatePeer(token, out var worldId))
+                                        {
+                                            _validatePeerConnected(packetPeer, worldId, token);
                                             packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.ValidateClient], (int)ENetPacketPeer.FlagReliable);
-                                        } else {
-                                            // TODO: If redirect is not Guid.Empty or null, we should redirect the client to that zone
+                                        }
+                                        else
+                                        {
                                             packetPeer.Send((int)ENetChannelId.BlastoffAdmin, [(byte)BlastoffCommands.InvalidClient], (int)ENetPacketPeer.FlagReliable);
                                         }
                                     }
-                                } else {
+                                }
+                                else
+                                {
                                     // Clients should never receive messages on the Blastoff channel
                                     break;
                                 }
-                            break;
-                            
+                                break;
+
                         }
                         break;
                 }
-                enetEvent = ENet.Service();
             }
+        }
 
-            if (IsServer)
+        internal void _validatePeerConnected(NetPeer peer, Guid worldId, string token = "")
+        {
+            var peerId = Guid.NewGuid().ToString();
+            Peers[peerId] = peer;
+            PeerIds[peer] = peerId;
+
+            foreach (var node in GetTree().GetNodesInGroup("global_interest"))
             {
-                _frameCounter += 1;
-                if (_frameCounter < PhysicsTicksPerNetworkTick)
-                    return;
-                _frameCounter = 0;
-                CurrentTick += 1;
-                ServerProcessTick();
-                EmitSignal("OnAfterNetworkTick", CurrentTick);
+                var wrapper = new NetworkNodeWrapper(node);
+                if (wrapper == null) continue;
+                wrapper.SetPeerInterest(peerId, Int64.MaxValue, false);
+            }
+            Worlds[worldId].JoinPeer(peer, token);
+            BlastoffPendingValidation.Remove(peer);
+        }
+
+        private void StartBlastoffNegotiation()
+        {
+            // We build the UUID as a string because of endian issues... or something
+            // This is related to UUID Representation in C#
+            var tokenBytes = System.Text.Encoding.UTF8.GetBytes(BlastoffClient.BlastoffGetToken());
+            var err = ENetHost.Send((int)ENetChannelId.BlastoffAdmin, tokenBytes, (int)ENetPacketPeer.FlagReliable);
+            if (err != Error.Ok)
+            {
+                DebugPrint($"Error sending Blastoff data: {err}");
+            }
+        }
+
+        private void _OnConnectedToServer()
+        {
+            DebugPrint("Connected to server");
+            if (BlastoffClient != null)
+            {
+                StartBlastoffNegotiation();
+            }
+        }
+
+        private void _OnPeerConnected(NetPeer peer)
+        {
+            DebugPrint($"Peer {peer} joined");
+            if (BlastoffServer != null)
+            {
+                BlastoffPendingValidation.Add(peer);
+            }
+            else
+            {
+                // TODO: Don't use GUID Empty
+                _validatePeerConnected(peer, Guid.Empty);
             }
         }
 
         [Signal]
-        public delegate void PlayerConnectedEventHandler();
+        public delegate void OnWorldCreatedEventHandler(WorldRunner world);
 
-        internal void _validatePeerConnected(NetPeer peer) {
-            foreach (var node in GetTree().GetNodesInGroup("global_interest"))
-            {
-                if (node is NetworkNode3D networkNode)
-                    networkNode.Interest[peer] = true;
-            }
-            NetworkPeerManager.Instance.RegisterPlayer(peer);
-
-            EmitSignal("PlayerConnected", peer);
-        }
-
-        public void _OnPeerConnected(NetPeer peer)
+        public WorldRunner CreateWorldPacked(Guid worldId, PackedScene scene)
         {
-            DebugPrint($"Peer {peer} joined");
-
-            if (!IsServer)
-            {
-                return;
-            }
-
-            if (BlastoffServer != null) {
-                BlastoffPendingValidation.Add(peer);
-            } else {
-                _validatePeerConnected(peer);
-            }
-        }
-
-        public void ChangeScenePacked(PackedScene scene)
-        {
-            // This allows us to change scenes without using Godot's built-in scene changer
-            // We do this because Godot's scene changer doesn't work well with networked scenes
-            if (!IsServer) return;
+            if (!IsServer) return null;
             var node = new NetworkNodeWrapper((NetworkNode3D)scene.Instantiate());
-            ChangeSceneInstance(node);
+            return CreateWorldInstance(worldId, node);
         }
 
-        public void ChangeSceneInstance(NetworkNodeWrapper node)
+        public WorldRunner CreateWorldInstance(Guid worldId, NetworkNodeWrapper node)
         {
-            if (!IsServer) return;
-            if (CurrentScene.Node != null) {
-                CurrentScene.Node.QueueFree();
-            }
+            if (!IsServer) return null;
             node.DynamicSpawn = true;
-            // TODO: Support this more generally
-            GetTree().CurrentScene.AddChild(node.Node);
-            CurrentScene = node;
-            var networkChildren = (node.Node as NetworkNode3D).GetNetworkChildren(NetworkNode3D.NetworkChildrenSearchToggle.INCLUDE_SCENES).ToList();
-            networkChildren.Reverse();
-            networkChildren.ForEach(child => child._NetworkPrepare());
-            node._NetworkPrepare();
-
-        }
-
-        public void ChangeZone() {
-            if (IsServer) return;
-            // var node = new NetworkNodeWrapper(new NetworkNode3D());
-            // ChangeSceneInstance(node);
-        }
-
-        public void Spawn(NetworkNode3D node, NetworkNode3D parent = null, string nodePath = ".")
-        {
-            if (!IsServer) return;
-
-            node.DynamicSpawn = true;
-            node.NetworkParent = new NetworkNodeWrapper(null);
-            if (parent == null)
+            var godotPhysicsWorld = new SubViewport
             {
-                CurrentScene.Node.GetNode(nodePath).AddChild(node);
-            }
-            else
-            {
-                parent.GetNode(nodePath).AddChild(node);
-            }
-        }
 
-        public NetworkNodeWrapper GetFromNetworkId(NetworkId network_id)
-        {
-            if (network_id == -1)
-                return new NetworkNodeWrapper(null);
-            if (!NetworkScenes.ContainsKey(network_id))
-                return new NetworkNodeWrapper(null);
-            return NetworkScenes[network_id];
+                OwnWorld3D = true,
+                World3D = new World3D(),
+                Name = worldId.ToString()
+            };
+            var worldRunner = new WorldRunner
+            {
+                WorldId = worldId,
+                RootScene = node,
+            };
+            Worlds[worldId] = worldRunner;
+            WorldPeerMap[worldId] = [];
+
+            godotPhysicsWorld.AddChild(worldRunner);
+            godotPhysicsWorld.AddChild(node.Node);
+            GetTree().CurrentScene.AddChild(godotPhysicsWorld);
+            node._NetworkPrepare(worldRunner);
+            EmitSignal("OnWorldCreated", worldRunner);
+            return worldRunner;
         }
 
         public void _OnPeerDisconnected(ENetPacketPeer peer)
@@ -517,33 +454,6 @@ namespace HLNC
                     yield return nestedNode;
                 }
             }
-        }
-        public void TransferInput(int tick, byte networkId, Godot.Collections.Dictionary<int, Variant> incomingInput)
-        {
-            // var sender = MultiplayerInstance.GetRemoteSenderId();
-            // var node = NetworkPeerManager.Instance.GetPeerNode(sender, networkId);
-
-            // if (node == null)
-            // {
-            //     return;
-            // }
-
-            // if (sender != node.InputAuthority)
-            // {
-            //     return;
-            // }
-
-            // if (!inputStore.ContainsKey(sender))
-            // {
-            //     inputStore[sender] = [];
-            // }
-
-            // if (!inputStore[sender].ContainsKey(networkId))
-            // {
-            //     inputStore[sender][networkId] = [];
-            // }
-
-            // inputStore[sender][networkId] = incomingInput;
         }
     }
 }

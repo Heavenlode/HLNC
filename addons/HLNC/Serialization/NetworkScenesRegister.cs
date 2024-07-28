@@ -7,12 +7,21 @@ using Godot;
 
 namespace HLNC.Serialization
 {
+    public enum VariantSubtype {
+        None,
+        Guid,
+        Byte,
+        Int,
+
+    }
     internal struct CollectedNetworkProperty
     {
         public string NodePath;
         public string Name;
         public Variant.Type Type;
         public byte Index;
+        public VariantSubtype Subtype;
+        public long InterestMask;
     }
     public partial class NetworkScenesRegister : Node
     {
@@ -51,7 +60,7 @@ namespace HLNC.Serialization
         internal delegate void LoadCompleteEventHandler();
 
         // public static GetPropertyById
-        public NetworkScenesRegister()
+        public override void _EnterTree()
         {
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -126,6 +135,8 @@ namespace HLNC.Serialization
                                                     continue;
                                                 }
 
+                                                var subType = (attr as NetworkProperty).Subtype;
+
                                                 propertyId += 1;
                                                 if (propertyId >= MAX_NETWORK_PROPERTIES)
                                                 {
@@ -133,9 +144,17 @@ namespace HLNC.Serialization
                                                     return;
                                                 }
                                                 Variant.Type propType = Variant.Type.Nil;
-                                                if (property.PropertyType == typeof(int))
+                                                if (property.PropertyType == typeof(long) || property.PropertyType == typeof(int) || property.PropertyType == typeof(byte))
                                                 {
                                                     propType = Variant.Type.Int;
+                                                    if (property.PropertyType == typeof(byte))
+                                                    {
+                                                        subType = VariantSubtype.Byte;
+                                                    }
+                                                    else if (property.PropertyType == typeof(int))
+                                                    {
+                                                        subType = VariantSubtype.Int;
+                                                    }
                                                 }
                                                 else if (property.PropertyType == typeof(float))
                                                 {
@@ -156,6 +175,9 @@ namespace HLNC.Serialization
                                                 else if (property.PropertyType == typeof(bool))
                                                 {
                                                     propType = Variant.Type.Bool;
+                                                } else if (property.PropertyType == typeof(byte[]))
+                                                {
+                                                    propType = Variant.Type.PackedByteArray;
                                                 }
                                                 else
                                                 {
@@ -169,6 +191,8 @@ namespace HLNC.Serialization
                                                     Name = property.Name,
                                                     Type = propType,
                                                     Index = (byte)propertyId,
+                                                    Subtype = subType,
+                                                    InterestMask = (attr as NetworkProperty).InterestMask,
                                                 };
                                                 PROPERTIES_MAP[scenePath].TryAdd(relativeChildPath, []);
                                                 PROPERTIES_MAP[scenePath][relativeChildPath].TryAdd(property.Name, collectedProperty);
