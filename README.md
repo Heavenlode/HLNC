@@ -57,6 +57,7 @@ namespace MyGame
 * Input authority (cheat prevention)
 * Data Interpolation
 * Advanced, variable-level Interest management
+* Multiple "Worlds" within one Godot server instance
 
 ### Coming soon
 * Rollback / Lag compensation (blocked by [Godot #2821](https://github.com/godotengine/godot-proposals/issues/2821))
