@@ -5,3 +5,4 @@
 Documentation/Help/Working
 Documentation/Help/LastBuild.log
 Documentation/Help/LastBuild.log
+*.uid

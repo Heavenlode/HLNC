@@ -1,5 +1,7 @@
 <Project>
   <ItemGroup>
+    <AdditionalFiles Include="**\*.tscn" />
+    <PackageReference Include="HLNC.SourceGenerator" Version="0.1.0" />
     <PackageReference Include="MongoDB.Bson" Version="2.28.0" />
     <PackageReference Include="Fody" Version="6.8.0">
       <PrivateAssets>all</PrivateAssets>
@@ -9,5 +11,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>compile; runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+        <PackageReference Include="MethodBoundaryAspect.Fody" Version="2.0.149">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>compile; runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+  <PropertyGroup>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <GenerateRequiresPreviewFeaturesAttribute>True</GenerateRequiresPreviewFeaturesAttribute> 
+  </PropertyGroup>
 </Project>

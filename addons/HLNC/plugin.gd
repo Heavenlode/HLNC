@@ -2,7 +2,6 @@
 extends EditorPlugin
 
 const AUTOLOAD_RUNNER = "NetworkRunner"
-const AUTOLOAD_SCENES_REGISTER = "NetworkScenesRegister"
 # const MainPanel = preload("res://addons/HLNC/editor_plugin/main_screen.tscn")
 
 # var main_panel_instance
@@ -20,15 +19,14 @@ func _enter_tree():
 # 		var content = template.get_as_text()
 # 		template.close()
 # 		content.replace("$SCENES_ENUM", "NONE")
-# 		content.replace("$SCENES_MAP", "")
+# 		content.replace("$GetScenesMap()", "")
 # 		content.replace("$PATH_PACK", "")
 # 		var file = FileAccess.open("res://addons/HLNC/generated/registered_nodes.cs",FileAccess.WRITE)
 # 		file.store_string(content)
 # 		file.close()
 # 		editor_file_system.reimport_files(["res://addons/HLNC/generated/registered_nodes.cs"])
 # 		editor_file_system.scan()
-	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/NetworkRunner.cs")
-	add_autoload_singleton(AUTOLOAD_SCENES_REGISTER, "res://addons/HLNC/Serialization/NetworkScenesRegister.cs")
+	add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/HLNC/Core/NetworkRunner.cs")
 # 	main_panel_instance = MainPanel.instantiate()
 # 	# Add the main panel to the editor's main viewport.
 # 	get_editor_interface().get_editor_main_screen().add_child(main_panel_instance)
@@ -43,7 +41,6 @@ func _enter_tree():
 func _exit_tree():
 # 	if main_panel_instance:
 # 		main_panel_instance.queue_free()
-	remove_autoload_singleton(AUTOLOAD_SCENES_REGISTER)
 	remove_autoload_singleton(AUTOLOAD_RUNNER)
 
 
