@@ -1,5 +1,4 @@
 using Godot;
-using Heavenlode.Responsibilities;
 using HLNC;
 using System;
 using System.Collections.Generic;
@@ -40,12 +39,12 @@ namespace HLNC.Addons.Questing
         /// The array index indicates the quest ID. The value at each index is a bitfield of the completed steps.
         /// For example, if a quest has 3 steps, and steps 0 and 2 are completed, then the value at index 0 would be 0b101 (or 5 in decimal).
         /// </summary>
-        [NetworkProperty(InterestMask = (long)Heavenlode.InterestLayers.Owner)]
+        [NetworkProperty]
         public long[] CompletedSteps { get; set; } = [];
 
         // The currently active quest step has active tasks.
         // Once when every task has been completed can the quest step proceed.
-        [NetworkProperty(InterestMask = (long)Heavenlode.InterestLayers.Owner)]
+        [NetworkProperty]
         public byte[] CompletedTasks { get; set; } = [];
 
         public int GetQuestStep(int questId)
