@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using Godot;
+using HLNC.Utils;
 
 namespace HLNC.Serialization
 {
@@ -60,7 +61,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                GD.Print("HLBytes.Pack: Unhandled type: " + varVal.VariantType);
+                Debugger.Log($"HLBytes.Pack: Unhandled type: {varVal.VariantType}", Debugger.DebugLevel.ERROR);
             }
         }
 
@@ -349,7 +350,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                GD.Print("HLBytes.UnpackVariant: Unhandled type: " + type);
+                Debugger.Log($"HLBytes.UnpackVariant: Unhandled type: {type}", Debugger.DebugLevel.ERROR);
                 return null;
             }
         }
@@ -469,7 +470,7 @@ namespace HLNC.Serialization
                 }
                 else
                 {
-                    GD.Print("Failed to unpack array element " + i);
+                    Debugger.Log($"Failed to unpack array element {i}", Debugger.DebugLevel.ERROR);
                 }
             }
             return result;
@@ -503,7 +504,7 @@ namespace HLNC.Serialization
                 }
                 else
                 {
-                    GD.Print("Failed to unpack dictionary element " + i);
+                    Debugger.Log($"Failed to unpack dictionary element {i}", Debugger.DebugLevel.ERROR);
                 }
             }
             return result;

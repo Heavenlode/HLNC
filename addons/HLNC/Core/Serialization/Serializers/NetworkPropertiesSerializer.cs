@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using HLNC.Utils;
 
 namespace HLNC.Serialization.Serializers
 {
@@ -65,7 +66,7 @@ namespace HLNC.Serialization.Serializers
                     }
                     else
                     {
-                        GD.PrintErr("Property not found: ", nodePath, ":", propertyName);
+                        Debugger.Log($"Property not found: {nodePath}:{propertyName}", Debugger.DebugLevel.ERROR);
                     }
                 }));
 

@@ -3,6 +3,14 @@ class_name ProjectSettingsController extends EditorPlugin
 
 func _enter_tree():
     ProjectSettings.set_setting("HLNC/network/IP", "127.0.0.1")
+    ProjectSettings.set_setting("HLNC/config/log_level", 0)
+    ProjectSettings.add_property_info({
+        "name": "HLNC/config/log_level",
+        "type": TYPE_INT,
+        "hint": PROPERTY_HINT_ENUM,
+        "hint_string": "Error:1,Warn:2,Info:4,Verbose:8",
+        "usage": PROPERTY_USAGE_DEFAULT,
+    })
     ProjectSettings.add_property_info({
         "name": "HLNC/network/IP",
         "type": TYPE_STRING,
@@ -35,6 +43,7 @@ func _build():
 
 func _exit_tree():
     ProjectSettings.set_setting("application/run/main_scene", ProjectSettings.get_setting("HLNC/world/default_scene"))
+    ProjectSettings.clear("HLNC/config/log_level")
     ProjectSettings.clear("HLNC/network/default_port")
     ProjectSettings.clear("HLNC/network/IP")
     ProjectSettings.clear("HLNC/world/default_scene")

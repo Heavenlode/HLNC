@@ -1,7 +1,5 @@
-using System;
-using System.Diagnostics;
 using Godot;
-using Godot.Collections;
+using HLNC.Utils;
 
 namespace HLNC.Utilities
 {
@@ -50,7 +48,7 @@ namespace HLNC.Utilities
             {
                 return (Node3D)parent;
             }
-            GD.PrintErr("NetworkTransform parent is not a Node3D");
+            Debugger.Log("NetworkTransform parent is not a Node3D", Debugger.DebugLevel.ERROR);
             return null;
         }
 

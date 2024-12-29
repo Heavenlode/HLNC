@@ -8,6 +8,7 @@ using Godot;
 using HLNC.Addons.Lazy;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
+using HLNC.Utils;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
@@ -170,8 +171,8 @@ namespace HLNC
 						continue;
 					}
 					var prop = GetNode(nodePath).Get(property.Name);
-					var val = HLNC.Serialization.BsonSerialize.SerializeVariant(context, prop, property.Subtype);
-					// GD.Print("Serializing: ", nodePath, ".", property.Name, " with value: ", val);
+					var val = Serialization.BsonSerialize.SerializeVariant(context, prop, property.Subtype);
+					Debugger.Log($"Serializing: {nodePath}.{property.Name} with value: {val}", Debugger.DebugLevel.VERBOSE);
 					if (val == null) continue;
 					nodeData[property.Name] = val;
 					hasValues = true;
@@ -261,7 +262,7 @@ namespace HLNC
 				var targetNode = node.GetNodeOrNull(nodePath);
 				if (targetNode == null)
 				{
-					GD.PrintErr("Node not found for: ", nodePath);
+					Debugger.Log($"Node not found for: ${nodePath}", Debugger.DebugLevel.ERROR);
 					continue;
 				}
 				foreach (var prop in nodeProps)
@@ -339,7 +340,7 @@ namespace HLNC
 					}
 					catch (InvalidCastException)
 					{
-						GD.PrintErr("Failed to set property: ", prop.Name, " on ", nodePath, " with value: ", prop.Value, " and type: ", variantType);
+						Debugger.Log($"Failed to set property: {prop.Name} on {nodePath} with value: {prop.Value} and type: {variantType}", Debugger.DebugLevel.ERROR);
 					}
 				}
 			}
@@ -355,7 +356,7 @@ namespace HLNC
 						var parent = node.GetNodeOrNull(nodePath);
 						if (parent == null)
 						{
-							GD.PrintErr("Parent node not found for: ", nodePath);
+							Debugger.Log($"Parent node not found for: {nodePath}", Debugger.DebugLevel.ERROR);
 							continue;
 						}
 						parent.AddChild(childNode);
@@ -536,7 +537,7 @@ namespace HLNC
 		}
 		public async void _prepareSpawn(NetPeer peer)
 		{
-			GD.Print("Loading peer values for: ", Name);
+			Debugger.Log($"Loading peer values for: {Name}", Debugger.DebugLevel.VERBOSE);
 			// TODO: Will this cause an exception if peer is altered?
 			var peerLoader = this as ILazyPeerStatesLoader;
 			var result = await peerLoader.LoadPeerValues(peer);

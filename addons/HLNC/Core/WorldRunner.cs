@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using HLNC.Serialization;
+using HLNC.Utils;
 
 namespace HLNC
 {
@@ -119,7 +120,7 @@ namespace HLNC
                 foreach (var networkChild in networkNode.StaticNetworkChildren)
                 {
                     if (networkChild.Node == null) {
-                        GD.PrintErr($"Network child node is null", networkNode.Node.SceneFilePath);
+                        Debugger.Log($"Network child node is unexpectedly null: {networkNode.Node.SceneFilePath}", Debugger.DebugLevel.ERROR);
                     }
                     if (networkChild.Node.ProcessMode == ProcessModeEnum.Disabled)
                     {
@@ -149,7 +150,7 @@ namespace HLNC
                 var size = exportedState[peer].bytes.Length;
                 if (size > NetworkRunner.MTU)
                 {
-                    NetworkRunner.DebugPrint($"Warning: Data size {size} exceeds MTU {NetworkRunner.MTU}");
+                    Debugger.Log($"Data size {size} exceeds MTU {NetworkRunner.MTU}", Debugger.DebugLevel.WARN);
                 }
 
                 var buffer = new HLBuffer();
@@ -202,7 +203,7 @@ namespace HLNC
             {
                 RootScene.Node.QueueFree();
             }
-            NetworkRunner.DebugPrint("Changing scene to " + node.Node.Name);
+            Debugger.Log("Changing scene to " + node.Node.Name);
             // TODO: Support this more generally
             GetTree().CurrentScene.AddChild(node.Node);
             RootScene = node;
@@ -303,7 +304,7 @@ namespace HLNC
             {
                 if (peer == null)
                 {
-                    GD.PrintErr("Server must specify a peer when deregistering a node.");
+                    Debugger.Log("Server must specify a peer when deregistering a node.", Debugger.DebugLevel.ERROR);
                     return;
                 }
                 if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetworkId))
@@ -332,7 +333,7 @@ namespace HLNC
             {
                 if (peer == null)
                 {
-                    GD.PrintErr("Server must specify a peer when registering a node.");
+                    Debugger.Log("Server must specify a peer when registering a node.", Debugger.DebugLevel.ERROR);
                     return 0;
                 }
                 if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetworkId))
@@ -353,7 +354,7 @@ namespace HLNC
                     }
                 }
 
-                GD.PrintErr("Peer " + peer + " has reached the maximum amount of nodes.");
+                Debugger.Log($"Peer {peer} has reached the maximum amount of nodes.", Debugger.DebugLevel.ERROR);
                 return 0;
             }
 
@@ -670,13 +671,13 @@ namespace HLNC
             var node = GetNodeFromNetworkId(worldNetworkId);
             if (node == null)
             {
-                GD.PrintErr("Received input for unknown node " + worldNetworkId);
+                Debugger.Log($"Received input for unknown node {worldNetworkId}", Debugger.DebugLevel.ERROR);
                 return;
             }
 
             if (node.InputAuthority != peer)
             {
-                GD.PrintErr("Received input for node " + worldNetworkId + " from unauthorized peer " + peer);
+                Debugger.Log($"Received input for node {worldNetworkId} from unauthorized peer {peer}", Debugger.DebugLevel.ERROR);
                 return;
             }
 
@@ -730,7 +731,7 @@ namespace HLNC
             foreach (var arg in functionInfo.Arguments) {
                 var result = HLBytes.UnpackVariant(buffer, knownType: arg.Type);
                 if (!result.HasValue) {
-                    GD.PrintErr($"Failed to unpack argument of type {arg} for function {functionInfo.Name}");
+                    Debugger.Log($"Failed to unpack argument of type {arg} for function {functionInfo.Name}", Debugger.DebugLevel.ERROR);
                     return;
                 }
                 args.Add(result.Value);

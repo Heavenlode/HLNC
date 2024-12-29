@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using HLNC.Utils;
 
 namespace HLNC.Serialization.Serializers
 {
@@ -68,7 +69,7 @@ namespace HLNC.Serialization.Serializers
             if (data.parentId != 0 && networkParent == null)
             {
                 // The parent node is not registered, so we can't spawn this node
-                GD.PrintErr("Parent node not found for: ", NetworkScenesRegister.UnpackScene(data.classId).ResourcePath, " - Parent ID: ", data.parentId);
+                Debugger.Log($"Parent node not found for: {NetworkScenesRegister.UnpackScene(data.classId).ResourcePath} - Parent ID: {data.parentId}", Debugger.DebugLevel.ERROR);
                 return;
             }
 

@@ -22,11 +22,11 @@ namespace HLNC.Utils
 			NetworkRunner.Instance.StartServer();
 			if (Env.Instance.InitialWorldScene != null)
 			{
-				NetworkRunner.DebugPrint("Loading initial world scene: " + Env.Instance.InitialWorldScene);
-				NetworkRunner.DebugPrint("No existing zone data found. Create fresh zone instance.");
+				Debugger.Log("Loading initial world scene: " + Env.Instance.InitialWorldScene);
+				Debugger.Log("No existing zone data found. Create fresh zone instance.");
 				var InitialWorldScene = GD.Load<PackedScene>(Env.Instance.InitialWorldScene);
 				NetworkRunner.Instance.CreateWorldPacked(Env.Instance.InitialWorldId, InitialWorldScene);
-				GD.Print("Server ready");
+				Debugger.Log("Server ready");
 			}
 			else
 			{

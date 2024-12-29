@@ -1,5 +1,6 @@
 using Godot;
 using HLNC;
+using HLNC.Utils;
 using System;
 using System.Collections.Generic;
 
@@ -72,11 +73,11 @@ namespace HLNC.Addons.Questing
                     {
                         if (newValue[i] == 1)
                         {
-                            GD.Print("Responsibility accepted!");
+                            // GD.Print("Responsibility accepted!");
                         }
                         else
                         {
-                            GD.Print("Responsibility step completed!");
+                            // GD.Print("Responsibility step completed!");
                         }
                     }
                 }
@@ -84,7 +85,7 @@ namespace HLNC.Addons.Questing
                 {
                     if (newValue[i] == 1)
                     {
-                        GD.Print("Responsibility accepted!");
+                        // GD.Print("Responsibility accepted!");
                     }
                 }
             }
@@ -170,7 +171,7 @@ namespace HLNC.Addons.Questing
             }
             if (stepId + 1 > 63)
             {
-                GD.PrintErr($"Step ID {stepId} is out of bounds for quest {questId}");
+                Debugger.Log($"Step ID {stepId} is out of bounds for quest {questId}", Debugger.DebugLevel.ERROR);
                 return;
             }
             CompletedSteps[questId] = CompletedSteps[questId] | (1 << stepId);

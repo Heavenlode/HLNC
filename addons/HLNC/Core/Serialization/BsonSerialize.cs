@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using HLNC.Utils;
 using MongoDB.Bson;
 
 namespace HLNC.Serialization
@@ -68,7 +69,7 @@ namespace HLNC.Serialization
                     // Ensure obj implements IBsonSerializable.
                     if (!(obj is IBsonSerializable))
                     {
-                        GD.PrintErr("Object does not implement IBsonSerializable: ", obj);
+                        Debugger.Log($"Object does not implement IBsonSerializable: {obj}", Debugger.DebugLevel.ERROR);
                         return null;
                     }
                     return (obj as IBsonSerializable).BsonSerialize(context);
@@ -97,7 +98,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                GD.PrintErr("Serializing to JSON unsupported property type: ", variant.VariantType);
+                Debugger.Log($"Serializing to JSON unsupported property type: {variant.VariantType}", Debugger.DebugLevel.ERROR);
                 return null;
             }
         }

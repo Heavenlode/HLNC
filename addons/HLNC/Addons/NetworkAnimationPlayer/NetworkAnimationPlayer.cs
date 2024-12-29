@@ -1,4 +1,5 @@
 using Godot;
+using HLNC.Utils;
 
 namespace HLNC.Utilities
 {
@@ -40,7 +41,7 @@ namespace HLNC.Utilities
             {
                 return;
             }
-            GD.Print("Seeking to " + new_val);
+            Debugger.Log($"Seeking to {new_val}");
             animation_player.Seek(new_val, true, true);
         }
 
@@ -53,7 +54,7 @@ namespace HLNC.Utilities
             int animation_index = System.Array.IndexOf(animations, animation);
             if (animation_index == -1)
             {
-                GD.Print("Animation not found: " + animation);
+                Debugger.Log($"Animation not found: {animation}", Debugger.DebugLevel.ERROR);
                 return;
             }
             active_animation = animation_index;

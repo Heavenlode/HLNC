@@ -6,6 +6,7 @@ using Godot;
 using HLNC.Serialization;
 using System;
 using HLNC.Addons.Blastoff;
+using HLNC.Utils;
 
 namespace HLNC
 {
@@ -143,37 +144,33 @@ namespace HLNC
             }
             Instance = this;
         }
-        internal static void DebugPrint(string msg)
-        {
-            GD.Print($"{(OS.HasFeature("dedicated_server") ? "Server" : "Client")}: {msg}");
-        }
 
         public void InstallBlastoffServerDriver(IBlastoffServerDriver blastoff)
         {
             if (!OS.HasFeature("dedicated_server"))
             {
-                DebugPrint("Incorrectly installing Blastoff server driver on client.");
+                Debugger.Log("Incorrectly installing Blastoff server driver on client.");
                 return;
             }
             BlastoffServer = blastoff;
-            DebugPrint("Blastoff Installed");
+            Debugger.Log("Blastoff Installed");
         }
 
         public void InstallBlastoffClientDriver(IBlastoffClientDriver blastoff)
         {
             if (OS.HasFeature("dedicated_server"))
             {
-                DebugPrint("Incorrectly installing Blastoff client driver on server.");
+                Debugger.Log("Incorrectly installing Blastoff client driver on server.");
                 return;
             }
             BlastoffClient = blastoff;
-            DebugPrint("Blastoff Installed");
+            Debugger.Log("Blastoff Installed");
         }
 
         public void StartServer()
         {
             IsServer = true;
-            DebugPrint("Starting Server");
+            Debugger.Log("Starting Server");
             GetTree().MultiplayerPoll = false;
 
             ENet = new ENetConnection();
@@ -181,11 +178,11 @@ namespace HLNC
             ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
             if (err != Error.Ok)
             {
-                DebugPrint($"Error starting: {err}");
+                Debugger.Log($"Error starting: {err}");
                 return;
             }
             NetStarted = true;
-            DebugPrint($"Started on {ServerAddress}:{Port}");
+            Debugger.Log($"Started on {ServerAddress}:{Port}");
         }
 
         public void StartClient()
@@ -196,14 +193,14 @@ namespace HLNC
             ENet.Compress(ENetConnection.CompressionMode.RangeCoder);
             if (ENetHost == null)
             {
-                DebugPrint($"Error connecting.");
+                Debugger.Log($"Error connecting.");
                 return;
             }
             NetStarted = true;
             var worldRunner = new WorldRunner();
             WorldRunner.CurrentWorld = worldRunner;
             GetTree().CurrentScene.AddChild(worldRunner);
-            DebugPrint("Started");
+            Debugger.Log("Started");
         }
 
         /// <summary>
@@ -354,13 +351,13 @@ namespace HLNC
             var err = ENetHost.Send((int)ENetChannelId.BlastoffAdmin, tokenBytes, (int)ENetPacketPeer.FlagReliable);
             if (err != Error.Ok)
             {
-                DebugPrint($"Error sending Blastoff data: {err}");
+                Debugger.Log($"Error sending Blastoff data: {err}");
             }
         }
 
         private void _OnConnectedToServer()
         {
-            DebugPrint("Connected to server");
+            Debugger.Log("Connected to server");
             if (BlastoffClient != null)
             {
                 StartBlastoffNegotiation();
@@ -369,7 +366,7 @@ namespace HLNC
 
         private void _OnPeerConnected(NetPeer peer)
         {
-            DebugPrint($"Peer {peer} joined");
+            Debugger.Log($"Peer {peer} joined");
             if (BlastoffServer != null)
             {
                 BlastoffPendingValidation.Add(peer);
@@ -422,7 +419,7 @@ namespace HLNC
 
         public void _OnPeerDisconnected(ENetPacketPeer peer)
         {
-            DebugPrint($"Peer disconnected peerId: {peer}");
+            Debugger.Log($"Peer disconnected peerId: {peer}");
         }
 
         public IEnumerable<NetworkNode3D> GetAllNetworkNodes(Node node, bool onlyScenes = false)
