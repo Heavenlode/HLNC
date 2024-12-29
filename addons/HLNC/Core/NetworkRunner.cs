@@ -384,7 +384,7 @@ namespace HLNC
         public WorldRunner CreateWorldPacked(Guid worldId, PackedScene scene)
         {
             if (!IsServer) return null;
-            var node = new NetworkNodeWrapper((NetworkNode3D)scene.Instantiate());
+            var node = new NetworkNodeWrapper(scene.Instantiate());
             return SetupWorldInstance(worldId, node);
         }
 
@@ -420,24 +420,6 @@ namespace HLNC
         public void _OnPeerDisconnected(ENetPacketPeer peer)
         {
             Debugger.Log($"Peer disconnected peerId: {peer}");
-        }
-
-        public IEnumerable<NetworkNode3D> GetAllNetworkNodes(Node node, bool onlyScenes = false)
-        {
-            if (node is NetworkNode3D networkNode)
-            {
-                if (!onlyScenes || NetworkScenesRegister.IsNetworkScene(networkNode.SceneFilePath))
-                {
-                    yield return networkNode;
-                }
-            }
-            foreach (Node childNode in node.GetChildren())
-            {
-                foreach (var nestedNode in GetAllNetworkNodes(childNode, onlyScenes))
-                {
-                    yield return nestedNode;
-                }
-            }
         }
     }
 }

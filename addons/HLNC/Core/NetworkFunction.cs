@@ -12,36 +12,36 @@ namespace HLNC
         // TODO: I'm worried that this somehow may produce memory leaks
         public override void OnEntry(MethodExecutionArgs args)
         {
-            if (args.Instance is NetworkNode3D netNode)
+            if (args.Instance is INetworkNode netNode)
             {
-                if (netNode.IsRemoteCall)
+                if (netNode.Network.IsRemoteCall)
                 {
                     // We only send a remote call if the incoming call isn't already from remote.
                     return;
                 }
                 var networkScene = "";
-                if (netNode.IsNetworkScene)
+                if (netNode.Network.IsNetworkScene)
                 {
-                    networkScene = netNode.SceneFilePath;
+                    networkScene = netNode.Network.Owner.Node.SceneFilePath;
                 }
                 else
                 {
-                    networkScene = netNode.NetworkParent.Node.SceneFilePath;
+                    networkScene = netNode.Network.NetworkParent.Node.SceneFilePath;
                 }
 
                 NetworkId netId;
-                if (netNode.IsNetworkScene)
+                if (netNode.Network.IsNetworkScene)
                 {
-                    netId = netNode.NetworkId;
+                    netId = netNode.Network.NetworkId;
                 }
                 else
                 {
-                    netId = netNode.NetworkParent.NetworkId;
+                    netId = netNode.Network.NetworkParent.NetworkId;
                 }
 
                 CollectedNetworkFunction functionInfo;
                 if (!NetworkScenesRegister
-                        .LookupFunction(networkScene, netNode.NodePathFromNetworkScene(), args.Method.Name, out functionInfo))
+                        .LookupFunction(networkScene, netNode.Network.NodePathFromNetworkScene(), args.Method.Name, out functionInfo))
                 {
                     throw new Exception($"Function {args.Method.Name} not found in network scene {networkScene}");
                 }
@@ -52,7 +52,7 @@ namespace HLNC
                     arguments = arguments.Skip(1).ToArray();
                 }
 
-                netNode.CurrentWorld
+                netNode.Network.CurrentWorld
                     .SendNetworkFunction(netId, functionInfo.Index, arguments.ToList().Select((x, index) =>
                     {
                         switch (functionInfo.Arguments[index].Type)

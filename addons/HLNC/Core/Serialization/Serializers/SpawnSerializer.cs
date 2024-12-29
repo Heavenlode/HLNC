@@ -74,13 +74,13 @@ namespace HLNC.Serialization.Serializers
             }
 
             NetworkRunner.Instance.RemoveChild(nodeOut.Node);
-            var newNode = NetworkScenesRegister.UnpackScene(data.classId).Instantiate<NetworkNode3D>();
-            newNode.IsClientSpawn = true;
-            newNode.NetworkId = networkId;
-            newNode.CurrentWorld = currentWorld;
+            var newNode = NetworkScenesRegister.UnpackScene(data.classId).Instantiate<INetworkNode>();
+            newNode.Network.IsClientSpawn = true;
+            newNode.Network.NetworkId = networkId;
+            newNode.Network.CurrentWorld = currentWorld;
             newNode.SetupSerializers();
-            NetworkRunner.Instance.AddChild(newNode);
-            nodeOut = new NetworkNodeWrapper(newNode);
+            nodeOut = newNode.Network.Owner;
+            NetworkRunner.Instance.AddChild(nodeOut.Node);
             if (networkParent != null)
             {
                 nodeOut.NetworkParentId = networkParent.NetworkId;
@@ -153,11 +153,11 @@ namespace HLNC.Serialization.Serializers
                 return buffer;
             }
 
-            if (wrapper.Node is NetworkNode3D networkNode) {
+            if (wrapper.Node is INetworkNode networkNode) {
                 // TODO: Maybe this should exist in the node wrapper?
-                if (!networkNode.spawnReady.GetValueOrDefault(peer, false))
+                if (!networkNode.Network.spawnReady.GetValueOrDefault(peer, false))
                 {
-                    networkNode.PrepareSpawn(peer);
+                    networkNode.Network.PrepareSpawn(peer);
                     // The node is not ready to be spawned yet
                     return buffer;
                 }

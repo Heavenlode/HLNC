@@ -124,7 +124,7 @@ namespace HLNC.Utilities
             {
                 return;
             }
-            if (!IsWorldReady) return;
+            if (!Network.IsWorldReady) return;
             TargetNode.Position = NetPosition;
             TargetNode.Rotation = NetRotation;
         }

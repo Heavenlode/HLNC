@@ -15,6 +15,8 @@ namespace HLNC.Utils {
             var messageString = $"({level}) HLNC.{(Env.Instance.HasServerFeatures ? "Server" : "Client")}: {msg}";
             if (level == DebugLevel.ERROR) {
                 GD.PrintErr(messageString);
+                // Also print stack trace
+                GD.Print(new System.Exception().StackTrace);
             } else {
                 GD.Print(messageString);
             }

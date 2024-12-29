@@ -109,7 +109,7 @@ namespace HLNC.Serialization
                 {
                     subType = VariantSubtype.Lazy;
                 }
-                else if (t == typeof(NetworkNode3D))
+                else if (t == typeof(INetworkNode))
                 {
                     subType = VariantSubtype.NetworkNode;
                 }

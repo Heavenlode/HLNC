@@ -136,10 +136,10 @@ namespace HLNC
                 if (queuedFunction.FunctionInfo.WithPeer) {
                     args = new List<Variant>(){queuedFunction.Sender}.Concat(args).ToArray();
                 }
-                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as NetworkNode3D;
-                functionNode.IsRemoteCall = true;
-                functionNode.Call(queuedFunction.FunctionInfo.Name, args);
-                functionNode.IsRemoteCall = false;
+                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetworkNode;
+                functionNode.Network.IsRemoteCall = true;
+                functionNode.Network.Owner.Call(queuedFunction.FunctionInfo.Name, args);
+                functionNode.Network.IsRemoteCall = false;
             }
             queuedNetworkFunctions.Clear();
 
@@ -367,25 +367,25 @@ namespace HLNC
             return 1;
         }
 
-        public NetworkNode3D Spawn(NetworkNode3D node, NetworkNode3D parent = null, NetPeer inputAuthority = null, string nodePath = ".")
+        public T Spawn<T>(T node, NetworkNodeWrapper parent = null, NetPeer inputAuthority = null, string nodePath = ".") where T : Node, INetworkNode
         {
             if (NetworkRunner.Instance.IsClient) return null;
 
-            node.IsClientSpawn = true;
-            node.CurrentWorld = this;
-            node.InputAuthority = inputAuthority;
+            node.Network.IsClientSpawn = true;
+            node.Network.CurrentWorld = this;
+            node.Network.InputAuthority = inputAuthority;
             if (parent == null)
             {
-                node.NetworkParent = RootScene;
-                node.NetworkParent.Node.GetNode(nodePath).AddChild(node);
+                node.Network.NetworkParent = RootScene;
+                node.Network.NetworkParent.Node.GetNode(nodePath).AddChild(node);
             }
             else
             {
-                node.NetworkParent = new NetworkNodeWrapper(parent);
-                parent.GetNode(nodePath).AddChild(node);
+                node.Network.NetworkParent = parent;
+                parent.Node.GetNode(nodePath).AddChild(node);
             }
-            node._NetworkPrepare(this);
-            node._WorldReady();
+            node.Network._NetworkPrepare(this);
+            node.Network._WorldReady();
             return node;
         }
 
@@ -497,10 +497,8 @@ namespace HLNC
                 NetworkScenes.TryGetValue(localNodeId, out NetworkNodeWrapper node);
                 if (node == null)
                 {
-                    var blankScene = new NetworkNode3D
-                    {
-                        NetworkId = localNodeId
-                    };
+                    var blankScene = new NetworkNode3D();
+                    blankScene.Network.NetworkId = localNodeId;
                     blankScene.SetupSerializers();
                     NetworkRunner.Instance.AddChild(blankScene);
                     node = new NetworkNodeWrapper(blankScene);
@@ -591,10 +589,10 @@ namespace HLNC
                 if (queuedFunction.FunctionInfo.WithPeer) {
                     args = new List<Variant>(){queuedFunction.Sender}.Concat(args).ToArray();
                 }
-                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as NetworkNode3D;
-                functionNode.IsRemoteCall = true;
-                functionNode.Call(queuedFunction.FunctionInfo.Name, args);
-                functionNode.IsRemoteCall = false;
+                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetworkNode;
+                functionNode.Network.IsRemoteCall = true;
+                functionNode.Network.Owner.Node.Call(queuedFunction.FunctionInfo.Name, args);
+                functionNode.Network.IsRemoteCall = false;
             }
             queuedNetworkFunctions.Clear();
 

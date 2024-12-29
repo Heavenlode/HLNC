@@ -57,7 +57,7 @@ namespace HLNC.Serialization.Serializers
 
             if (NetworkRunner.Instance.IsServer)
             {
-                wrapper.Node.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
+                wrapper.Network.Connect("NetworkPropertyChanged", Callable.From((string nodePath, string propertyName) =>
                 {
                     if (NetworkScenesRegister.LookupProperty(wrapper.Node.SceneFilePath, nodePath, propertyName, out var prop))
                     {
@@ -70,7 +70,7 @@ namespace HLNC.Serialization.Serializers
                     }
                 }));
 
-                wrapper.Node.Connect("InterestChanged", Callable.From((string peerId, long interest) =>
+                wrapper.Network.Connect("InterestChanged", Callable.From((string peerId, long interest) =>
                 {
                     var peer = NetworkRunner.Instance.GetPeer(peerId);
                     if (peer != null && !peerInitialPropSync.ContainsKey(peer))

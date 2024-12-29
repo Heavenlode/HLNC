@@ -31,8 +31,4 @@ namespace HLNC.Serialization.Serializers
         public void Acknowledge(WorldRunner currentWorld, NetPeer peer, Tick tick);
         public void Cleanup();
     }
-    public interface IStateSerializable
-    {
-        public IStateSerializer[] Serializers { get; }
-    }
 }

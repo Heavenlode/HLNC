@@ -11,8 +11,8 @@ namespace HLNC.Utilities
         /// <inheritdoc/>
         public override void _EnterTree()
         {
-            var netParent = GetParentOrNull<NetworkNode3D>();
-            if (netParent.IsCurrentOwner && NetworkRunner.Instance.IsClient)
+            var netParent = GetParentOrNull<INetworkNode>();
+            if (netParent.Network.IsCurrentOwner && NetworkRunner.Instance.IsClient)
             {
                 return;
             }

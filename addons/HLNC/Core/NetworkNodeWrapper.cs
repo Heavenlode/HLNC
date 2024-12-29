@@ -4,6 +4,7 @@ using System.Linq;
 using Godot;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
+using HLNC.Utils;
 
 namespace HLNC {
 
@@ -17,7 +18,7 @@ namespace HLNC {
     /// var maybeNetworkNode = new NetworkNodeWrapper(GetNodeOrNull("MyAmbiguousNode"));
     /// // If MyAmbiguousNode is not a NetworkNode, maybeNetworkNode == null
     /// </code>
-    public partial class NetworkNodeWrapper {
+    public partial class NetworkNodeWrapper : RefCounted {
 
         // Custom operator overload to validate null
         public static bool operator ==(NetworkNodeWrapper a, NetworkNodeWrapper b) {
@@ -42,13 +43,15 @@ namespace HLNC {
         }
 
         public Node Node { get; private set; } = null;
+        public NetworkController Network => (Node as INetworkNode).Network;
         private Dictionary<string, StringName> properties = new Dictionary<string, StringName>();
         private Dictionary<string, StringName> methods = new Dictionary<string, StringName>();
         public NetworkNodeWrapper(Node node) {
             if (node == null) return;
 
             // TODO: Better way to figure out if network node?
-            if (node is not NetworkNode3D) {
+            if (node is not INetworkNode) {
+                Debugger.Log($"Node {node.GetPath()} does not implement INetworkNode", Debugger.DebugLevel.WARN);
                 // The node will remain null if it is not a NetworkNode
                 return;
             }
@@ -123,28 +126,28 @@ namespace HLNC {
             return snakeCase;
         }
         private Variant Get(string name) {
-            return Node.Get(properties[name]);
+            return Network.Get(properties[name]);
         }
 
         private void Set(string name, Variant value) {
-            Node.Set(properties[name], value);
+            Network.Set(properties[name], value);
         }
 
         private Variant Call(string name, params Variant[] args) {
             if (methods.ContainsKey(name)) {
-                return Node.Call(methods[name], args);
+                return Network.Call(methods[name], args);
             }
 
-            if (Node.HasMethod(name)) {
-                var result = Node.Call(name, args);
+            if (Network.HasMethod(name)) {
+                var result = Network.Call(name, args);
                 methods[name] = new StringName(name);
                 return result;
             }
             
             var snakeCase = ToSnakeCase(name);
-            if (Node.HasMethod(snakeCase)) {
+            if (Network.HasMethod(snakeCase)) {
                 methods[name] = new StringName(snakeCase);
-                return Node.Call(snakeCase, args);
+                return Network.Call(snakeCase, args);
             }
 
             throw new Exception($"Method {snakeCase} not found on {Node.GetPath()}");
