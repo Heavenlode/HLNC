@@ -1,20 +1,20 @@
 # HLBuffer Class
 
 
-Standard object used to package data that will be transferred across the network. Used extensively by <a href="T_HLNC_Serialization_HLBytes">HLBytes</a>.
+\[Missing &lt;summary&gt; documentation for "T:HLNC.Serialization.HLBuffer"\]
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+67fc7a7b454bc0ade857a4ae4930fb238e351d35
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+b0975625c25154a1fdd31b2c47aff0d2d2f398ac
 
 **C#**
 ``` C#
-public class HLBuffer
+public class HLBuffer : RefCounted
 ```
 
-<table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  HLBuffer</td></tr>
+<table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  RefCounted  →  HLBuffer</td></tr>
 </table>
 
 
@@ -22,8 +22,11 @@ public class HLBuffer
 ## Constructors
 <table>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBuffer__ctor">HLBuffer</a></td>
-<td>Standard object used to package data that will be transferred across the network. Used extensively by <a href="T_HLNC_Serialization_HLBytes">HLBytes</a>.</td></tr>
+<td><a href="M_HLNC_Serialization_HLBuffer__ctor">HLBuffer()</a></td>
+<td>Initializes a new instance of the HLBuffer class</td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBuffer__ctor_1">HLBuffer(Byte[])</a></td>
+<td>Initializes a new instance of the HLBuffer class</td></tr>
 </table>
 
 ## Properties

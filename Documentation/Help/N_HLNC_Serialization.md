@@ -8,12 +8,46 @@
 ## Classes
 <table>
 <tr>
+<td><a href="T_HLNC_Serialization_BsonSerialize">BsonSerialize</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_CollectedNetFunction">CollectedNetFunction</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_CollectedNetProperty">CollectedNetProperty</a></td>
+<td> </td></tr>
+<tr>
 <td><a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a></td>
-<td>Standard object used to package data that will be transferred across the network. Used extensively by <a href="T_HLNC_Serialization_HLBytes">HLBytes</a>.</td></tr>
+<td> </td></tr>
 <tr>
 <td><a href="T_HLNC_Serialization_HLBytes">HLBytes</a></td>
-<td>Converts variables and Godot variants into binary and vice-versa. <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a> is the medium of storage.</td></tr>
+<td> </td></tr>
 <tr>
-<td><a href="T_HLNC_Serialization_NetworkScenesRegister">NetworkScenesRegister</a></td>
+<td><a href="T_HLNC_Serialization_NetFunctionArgument">NetFunctionArgument</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_ProtocolRegistry">ProtocolRegistry</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_ProtocolRegistryBuilder">ProtocolRegistryBuilder</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_ProtocolResource">ProtocolResource</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_SerialMetadata">SerialMetadata</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_SerialTypeIdentifier">SerialTypeIdentifier</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_StaticMethodResource">StaticMethodResource</a></td>
+<td> </td></tr>
+</table>
+
+## Enumerations
+<table>
+<tr>
+<td><a href="T_HLNC_Serialization_StaticMethodType">StaticMethodType</a></td>
 <td> </td></tr>
 </table>

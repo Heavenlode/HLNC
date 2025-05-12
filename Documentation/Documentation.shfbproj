@@ -33,8 +33,8 @@
     <HelpFileFormat>Markdown</HelpFileFormat>
     <SyntaxFilters>C#</SyntaxFilters>
     <PresentationStyle>Markdown</PresentationStyle>
-    <CleanIntermediates>False</CleanIntermediates>
-    <KeepLogFile>True</KeepLogFile>
+    <CleanIntermediates>True</CleanIntermediates>
+    <KeepLogFile>False</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <IndentHtml>False</IndentHtml>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
@@ -85,8 +85,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Content" />
-    <Folder Include="Content\VersionHistory" />
     <Folder Include="icons" />
     <Folder Include="media" />
   </ItemGroup>
@@ -100,12 +98,12 @@
   </ItemGroup> -->
   <ItemGroup>
     <Content Include="icons\Help.png" />
-    <Content Include="Introduction.md" />
   </ItemGroup>
   <ItemGroup>
     <SiteMap Include="Documentation.sitemap" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Introduction.md" />
     <Content Include="media\Pasted image 20250510132846.png">
       <ImageId>Pasted image 20250510132846</ImageId>
       <AlternateText>Pasted image 20250510132846</AlternateText>
@@ -144,16 +142,12 @@
     </PostBuildEvent>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
-
   <PropertyGroup>
-  <!-- Hide the unwanted items -->
-  <HideNamespaces>False</HideNamespaces>
-  <HidePrivateTypes>True</HidePrivateTypes>
-  <IncludeVersionInfoPage>False</IncludeVersionInfoPage>
-  <IncludeGettingStartedPage>False</IncludeGettingStartedPage>
-  
-  <!-- Create a nested structure for APIs -->
-  <RootNamespaceContainer>True</RootNamespaceContainer>
-  <RootNamespaceTitle>API Details</RootNamespaceTitle>
-</PropertyGroup>
+    <HideNamespaces>False</HideNamespaces>
+    <HidePrivateTypes>True</HidePrivateTypes>
+    <IncludeVersionInfoPage>False</IncludeVersionInfoPage>
+    <IncludeGettingStartedPage>False</IncludeGettingStartedPage>
+    <RootNamespaceContainer>True</RootNamespaceContainer>
+    <RootNamespaceTitle>API Details</RootNamespaceTitle>
+  </PropertyGroup>
 </Project>

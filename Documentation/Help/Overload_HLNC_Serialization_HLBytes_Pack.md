@@ -19,16 +19,22 @@
 <td><a href="M_HLNC_Serialization_HLBytes_Pack_3">Pack(HLBuffer, Boolean, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_6">Pack(HLBuffer, Int32, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_6">Pack(HLBuffer, Int16, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_7">Pack(HLBuffer, Int32[], Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_7">Pack(HLBuffer, Int32, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_8">Pack(HLBuffer, Int64, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_8">Pack(HLBuffer, Int32[], Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_9">Pack(HLBuffer, Single, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_9">Pack(HLBuffer, Int64, Boolean)</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_10">Pack(HLBuffer, Single, Boolean)</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_11">Pack(HLBuffer, String, Boolean)</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_Pack_5">Pack(HLBuffer, Byte[], Boolean, Boolean)</a></td>

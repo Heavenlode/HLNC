@@ -1,13 +1,13 @@
 # HLBytes Class
 
 
-Converts variables and Godot variants into binary and vice-versa. <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a> is the medium of storage.
+\[Missing &lt;summary&gt; documentation for "T:HLNC.Serialization.HLBytes"\]
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+67fc7a7b454bc0ade857a4ae4930fb238e351d35
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+b0975625c25154a1fdd31b2c47aff0d2d2f398ac
 
 **C#**
 ``` C#
@@ -47,22 +47,31 @@ public class HLBytes
 <td><a href="M_HLNC_Serialization_HLBytes_Pack_3">Pack(HLBuffer, Boolean, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_6">Pack(HLBuffer, Int32, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_6">Pack(HLBuffer, Int16, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_7">Pack(HLBuffer, Int32[], Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_7">Pack(HLBuffer, Int32, Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_8">Pack(HLBuffer, Int64, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_8">Pack(HLBuffer, Int32[], Boolean)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_HLBytes_Pack_9">Pack(HLBuffer, Single, Boolean)</a></td>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_9">Pack(HLBuffer, Int64, Boolean)</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_10">Pack(HLBuffer, Single, Boolean)</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_Pack_11">Pack(HLBuffer, String, Boolean)</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_Pack_5">Pack(HLBuffer, Byte[], Boolean, Boolean)</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_PackArray">PackArray</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_PackDictionary">PackDictionary</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_PackVariant">PackVariant</a></td>
@@ -80,7 +89,13 @@ public class HLBytes
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackByteArray">UnpackByteArray</a></td>
 <td> </td></tr>
 <tr>
+<td><a href="M_HLNC_Serialization_HLBytes_UnpackDictionary">UnpackDictionary</a></td>
+<td> </td></tr>
+<tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackFloat">UnpackFloat</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_UnpackInt16">UnpackInt16</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackInt32">UnpackInt32</a></td>
@@ -96,6 +111,9 @@ public class HLBytes
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackQuaternion">UnpackQuaternion</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="M_HLNC_Serialization_HLBytes_UnpackString">UnpackString</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackVariant">UnpackVariant</a></td>

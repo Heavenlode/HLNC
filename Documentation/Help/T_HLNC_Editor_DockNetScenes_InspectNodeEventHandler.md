@@ -1,0 +1,28 @@
+# DockNetScenes.InspectNodeEventHandler Delegate
+
+
+\[Missing &lt;summary&gt; documentation for "T:HLNC.Editor.DockNetScenes.InspectNodeEventHandler"\]
+
+
+
+## Definition
+**Namespace:** <a href="N_HLNC_Editor">HLNC.Editor</a>  
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+b0975625c25154a1fdd31b2c47aff0d2d2f398ac
+
+**C#**
+``` C#
+public delegate void InspectNodeEventHandler(
+	Node node
+)
+```
+
+
+
+#### Parameters
+<dl><dt>  Node</dt><dd> </dd></dl>
+
+## See Also
+
+
+#### Reference
+<a href="N_HLNC_Editor">HLNC.Editor Namespace</a>  

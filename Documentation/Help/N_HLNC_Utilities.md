@@ -8,10 +8,10 @@
 ## Classes
 <table>
 <tr>
-<td><a href="T_HLNC_Utilities_NetworkAnimationPlayer">NetworkAnimationPlayer</a></td>
+<td><a href="T_HLNC_Utilities_NetTransform2D">NetTransform2D</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="T_HLNC_Utilities_NetworkTransform">NetworkTransform</a></td>
+<td><a href="T_HLNC_Utilities_NetTransform3D">NetTransform3D</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="T_HLNC_Utilities_NetworkVisibility">NetworkVisibility</a></td>
