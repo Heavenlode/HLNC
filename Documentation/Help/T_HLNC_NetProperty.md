@@ -1,13 +1,19 @@
 # NetProperty Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetProperty"\]
+Mark a property as being Networked. The <a href="T_HLNC_WorldRunner">WorldRunner</a> automatically processes these through the NetPropertiesSerializer to be optimally sent across the network. Only changes are networked. When the client receives a change on the property, if a method exists 
+
+**C#**  
+``` C#
+OnNetworkChange{PropertyName}(int tick, T oldValue, T newValue)
+```
+ it will be called on the client side.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#

@@ -7,10 +7,10 @@
 <table>
 <tr>
 <td><a href="P_HLNC_WorldRunner_CurrentTick">CurrentTick</a></td>
-<td> </td></tr>
+<td>The current network tick. On the client side, this does not represent the server's current tick, which will always be slightly ahead.</td></tr>
 <tr>
 <td><a href="P_HLNC_WorldRunner_CurrentWorld">CurrentWorld</a></td>
-<td> </td></tr>
+<td>Only applicable on the client side.</td></tr>
 <tr>
 <td><a href="P_HLNC_WorldRunner_DebugEnet">DebugEnet</a></td>
 <td> </td></tr>

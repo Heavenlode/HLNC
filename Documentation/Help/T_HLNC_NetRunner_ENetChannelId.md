@@ -1,13 +1,13 @@
 # NetRunner.ENetChannelId Enumeration
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetRunner.ENetChannelId"\]
+Describes the channels of communication used by the network.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -21,19 +21,19 @@ public enum ENetChannelId
 <tr>
 <td>Tick</td>
 <td>1</td>
-<td> </td></tr>
+<td>Tick data sent by the server to the client, and from the client indicating the most recent tick it has received.</td></tr>
 <tr>
 <td>Input</td>
 <td>2</td>
-<td> </td></tr>
+<td>Input data sent from the client.</td></tr>
 <tr>
 <td>Function</td>
 <td>3</td>
-<td> </td></tr>
+<td>NetFunction call.</td></tr>
 <tr>
 <td>BlastoffAdmin</td>
 <td>249</td>
-<td> </td></tr>
+<td>Server communication with Blastoff. Data sent to this channel from a client will be ignored by Blastoff.</td></tr>
 </table>
 
 ## See Also

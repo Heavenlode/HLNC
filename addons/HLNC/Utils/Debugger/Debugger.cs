@@ -1,13 +1,7 @@
 using Godot;
 
-namespace HLNC.Utils
+namespace HLNC.Utility.Tools
 {
-    public class TickLog
-    {
-        public string Message;
-        public Debugger.DebugLevel Level;
-    }
-
     [Tool]
     public partial class Debugger : Node
     {

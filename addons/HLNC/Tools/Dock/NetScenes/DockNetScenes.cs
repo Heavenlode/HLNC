@@ -1,7 +1,7 @@
 using Godot;
 using HLNC.Serialization;
 
-namespace HLNC.Editor
+namespace HLNC.Internal.Editor
 {
     [Tool]
     public partial class DockNetScenes : Control

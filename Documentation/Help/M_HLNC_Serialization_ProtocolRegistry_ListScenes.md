@@ -1,13 +1,13 @@
 # ListScenes Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListScenes"\]
+List all network scenes.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -18,7 +18,7 @@ public Dictionary<string, Array<string>> ListScenes()
 
 #### Return Value
 Dictionary(<a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a>, Array(<a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a>))  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListScenes"\]
+A dictionary with scene paths as keys and arrays of NetNode paths as values.
 
 ## See Also
 

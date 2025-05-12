@@ -1,13 +1,13 @@
 # ListProperties(String, String) Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListProperties(System.String,System.String)"\]
+List all NetProperties for a given NetNode within the scene.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -20,11 +20,11 @@ public Array<CollectedNetProperty> ListProperties(
 
 
 #### Parameters
-<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>\[Missing &lt;param name="scene"/&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListProperties(System.String,System.String)"\]</dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>\[Missing &lt;param name="node"/&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListProperties(System.String,System.String)"\]</dd></dl>
+<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>The scene path.</dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>The node path.</dd></dl>
 
 #### Return Value
 Array(<a href="T_HLNC_Serialization_CollectedNetProperty">CollectedNetProperty</a>)  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListProperties(System.String,System.String)"\]
+An array of NetProperties.
 
 ## See Also
 

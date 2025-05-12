@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace HLNC
+namespace HLNC.Internal.Editor
 {
     [Tool]
     public partial class Downloader : Node

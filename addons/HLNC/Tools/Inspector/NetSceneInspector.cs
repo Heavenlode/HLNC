@@ -3,7 +3,7 @@ using HLNC.Serialization;
 using System;
 using System.Linq;
 
-namespace HLNC.Editor
+namespace HLNC.Internal.Editor
 {
     [Tool]
     public partial class NetSceneInspector : EditorInspectorPlugin

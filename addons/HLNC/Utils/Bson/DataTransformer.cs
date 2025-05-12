@@ -9,15 +9,15 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 
-namespace HLNC.Utils.Bson
+namespace HLNC.Utility.Tools
 {
-    public partial class DataTransformer : Node
+    public partial class BsonTransformer : Node
     {
 
         /// <summary>
         /// The singleton instance.
         /// </summary>
-        public static DataTransformer Instance { get; internal set; }
+        public static BsonTransformer Instance { get; internal set; }
 
         /// <inheritdoc/>
         public override void _EnterTree()

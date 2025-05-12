@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace HLNC.Utilities
+namespace HLNC.Utility.Nodes
 {
     public partial class NetworkVisibility : Node3D
     {

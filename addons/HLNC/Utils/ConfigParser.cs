@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Godot;
 
-namespace HLNC.Utils
+namespace HLNC.Internal.Utility
 {
-    public class ConfigParser
+    internal class ConfigParser
     {
         public Dictionary<string, string> resourceToPathMap = new Dictionary<string, string>(); 
         public class GdScene

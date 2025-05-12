@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace HLNC.Editor
+namespace HLNC.Internal.Editor
 {
 
     [Tool]

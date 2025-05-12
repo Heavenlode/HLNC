@@ -1,6 +1,6 @@
 using System;
 
-namespace HLNC.Utilities
+namespace HLNC.Utility.Nodes
 {
     public class TickTimer
     {

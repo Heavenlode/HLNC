@@ -1,13 +1,13 @@
 # IsNetScene Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.IsNetScene(System.String)"\]
+Check if a scene is a NetScene.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -19,11 +19,11 @@ public bool IsNetScene(
 
 
 #### Parameters
-<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>\[Missing &lt;param name="scenePath"/&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.IsNetScene(System.String)"\]</dd></dl>
+<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>The scene path.</dd></dl>
 
 #### Return Value
 <a href="https://learn.microsoft.com/dotnet/api/system.boolean" target="_blank" rel="noopener noreferrer">Boolean</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.IsNetScene(System.String)"\]
+True if the scene is a NetScene, false otherwise.
 
 ## See Also
 

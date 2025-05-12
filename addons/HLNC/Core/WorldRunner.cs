@@ -4,9 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Godot;
+using HLNC.Internal.Editor.DTO;
 using HLNC.Serialization;
-using HLNC.Utils;
-using HLNC.Utils.Bson;
+using HLNC.Utility.Tools;
+using HLNC.Utility.Tools;
 using MongoDB.Bson;
 
 namespace HLNC
@@ -309,7 +310,7 @@ namespace HLNC
             }
             tickLogBuffer.Clear();
 
-            var fullGameState = DataTransformer.Instance.ToBSONDocument(RootScene.Node as INetNode, recurse: true);
+            var fullGameState = BsonTransformer.Instance.ToBSONDocument(RootScene.Node as INetNode, recurse: true);
             var exportBuffer = new HLBuffer();
             HLBytes.Pack(exportBuffer, (byte)DebugDataType.EXPORT);
             HLBytes.Pack(exportBuffer, fullGameState.ToBson());

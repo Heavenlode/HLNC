@@ -61,7 +61,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackByte">UnpackByte</a></td>
-<td> </td></tr>
+<td>Alias for <a href="M_HLNC_Serialization_HLBytes_UnpackInt8">UnpackInt8(HLBuffer)</a></td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackByteArray">UnpackByteArray</a></td>
 <td> </td></tr>

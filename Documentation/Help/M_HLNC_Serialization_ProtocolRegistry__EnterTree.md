@@ -1,13 +1,17 @@
 # _EnterTree Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry._EnterTree"\]
+
+Called when the node enters the SceneTree (e.g. upon instantiating, scene changing, or after calling AddChild(Node, Boolean, InternalMode) in a script). If the node has children, its _EnterTree() callback will be called first, and then that of the children.
+
+Corresponds to the NotificationEnterTree notification in _Notification(Int32).
+
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#

@@ -19,5 +19,5 @@
 <td> </td></tr>
 <tr>
 <td><a href="T_HLNC_Serialization_Serializers_IStateSerializer">IStateSerializer</a></td>
-<td> </td></tr>
+<td>Defines an object which the server utilizes to serialize and send data to the client, and the client can then receive and deserialize from the server.</td></tr>
 </table>

@@ -25,7 +25,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_CheckStaticInitialization">CheckStaticInitialization</a></td>
-<td> </td></tr>
+<td>This is called for nodes that are initialized in a scene by default. Clients automatically dequeue all network nodes on initialization. All network nodes on the client side must come from the server by gaining Interest in the node.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_ClientHandleTick">ClientHandleTick</a></td>
 <td> </td></tr>
@@ -52,7 +52,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_GetPeerNode">GetPeerNode</a></td>
-<td> </td></tr>
+<td>Get the network node from a peer and a network ID relative to that peer.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_GetPeerNodeId">GetPeerNodeId</a></td>
 <td> </td></tr>
@@ -76,7 +76,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_ServerProcessTick">ServerProcessTick</a></td>
-<td> </td></tr>
+<td>This method is executed every tick on the Server side, and kicks off all logic which processes and sends data to every client.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_SetPeerState">SetPeerState(ENetPacketPeer, WorldRunner.PeerState)</a></td>
 <td> </td></tr>

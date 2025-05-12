@@ -1,7 +1,7 @@
 using System.Linq;
 using Godot;
-using HLNC.Editor.DTO;
-namespace HLNC.Editor
+using HLNC.Internal.Editor.DTO;
+namespace HLNC.Internal.Editor
 {
     [Tool]
     public partial class BarChart : VBoxContainer

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LiteDB;
 
-namespace HLNC.Editor.DTO
+namespace HLNC.Internal.Editor.DTO
 {
     public class TickFrame
     {

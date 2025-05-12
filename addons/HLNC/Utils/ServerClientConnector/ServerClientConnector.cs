@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace HLNC.Utils
+namespace HLNC.Utility.Tools
 {
 	public partial class ServerClientConnector : Node
 	{

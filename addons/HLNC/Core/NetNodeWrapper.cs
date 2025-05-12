@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
-using HLNC.Utils;
+using HLNC.Utility.Tools;
 
 namespace HLNC {
 

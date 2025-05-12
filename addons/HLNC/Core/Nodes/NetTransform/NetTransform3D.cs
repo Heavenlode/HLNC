@@ -1,7 +1,7 @@
 using Godot;
-using HLNC.Utils;
+using HLNC.Utility.Tools;
 
-namespace HLNC.Utilities
+namespace HLNC.Utility.Nodes
 {
 	[GlobalClass]
 	public partial class NetTransform3D : NetNode3D

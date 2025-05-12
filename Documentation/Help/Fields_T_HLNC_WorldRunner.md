@@ -10,7 +10,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="F_HLNC_WorldRunner_RootScene">RootScene</a></td>
-<td> </td></tr>
+<td>Only used by the client to determine the current root scene.</td></tr>
 </table>
 
 ## See Also

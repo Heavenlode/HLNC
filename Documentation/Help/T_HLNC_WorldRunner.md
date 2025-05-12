@@ -7,7 +7,7 @@
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -30,10 +30,10 @@ public class WorldRunner : Node
 <table>
 <tr>
 <td><a href="P_HLNC_WorldRunner_CurrentTick">CurrentTick</a></td>
-<td> </td></tr>
+<td>The current network tick. On the client side, this does not represent the server's current tick, which will always be slightly ahead.</td></tr>
 <tr>
 <td><a href="P_HLNC_WorldRunner_CurrentWorld">CurrentWorld</a></td>
-<td> </td></tr>
+<td>Only applicable on the client side.</td></tr>
 <tr>
 <td><a href="P_HLNC_WorldRunner_DebugEnet">DebugEnet</a></td>
 <td> </td></tr>
@@ -67,7 +67,7 @@ public class WorldRunner : Node
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_CheckStaticInitialization">CheckStaticInitialization</a></td>
-<td> </td></tr>
+<td>This is called for nodes that are initialized in a scene by default. Clients automatically dequeue all network nodes on initialization. All network nodes on the client side must come from the server by gaining Interest in the node.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_ClientHandleTick">ClientHandleTick</a></td>
 <td> </td></tr>
@@ -94,7 +94,7 @@ public class WorldRunner : Node
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_GetPeerNode">GetPeerNode</a></td>
-<td> </td></tr>
+<td>Get the network node from a peer and a network ID relative to that peer.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_GetPeerNodeId">GetPeerNodeId</a></td>
 <td> </td></tr>
@@ -118,7 +118,7 @@ public class WorldRunner : Node
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_ServerProcessTick">ServerProcessTick</a></td>
-<td> </td></tr>
+<td>This method is executed every tick on the Server side, and kicks off all logic which processes and sends data to every client.</td></tr>
 <tr>
 <td><a href="M_HLNC_WorldRunner_SetPeerState">SetPeerState(ENetPacketPeer, WorldRunner.PeerState)</a></td>
 <td> </td></tr>
@@ -153,7 +153,7 @@ public class WorldRunner : Node
 <td> </td></tr>
 <tr>
 <td><a href="F_HLNC_WorldRunner_RootScene">RootScene</a></td>
-<td> </td></tr>
+<td>Only used by the client to determine the current root scene.</td></tr>
 </table>
 
 ## See Also

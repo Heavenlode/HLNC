@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
-namespace HLNC.Utils
+namespace HLNC.Utility.Tools
 {
     [Tool]
     public partial class Env : Node

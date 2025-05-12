@@ -1,13 +1,13 @@
 # GetPropertyCount Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.GetPropertyCount(System.String)"\]
+Get the number of NetProperties in a scene.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -19,11 +19,11 @@ public int GetPropertyCount(
 
 
 #### Parameters
-<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>\[Missing &lt;param name="scene"/&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.GetPropertyCount(System.String)"\]</dd></dl>
+<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.string" target="_blank" rel="noopener noreferrer">String</a></dt><dd>The scene path.</dd></dl>
 
 #### Return Value
 <a href="https://learn.microsoft.com/dotnet/api/system.int32" target="_blank" rel="noopener noreferrer">Int32</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.GetPropertyCount(System.String)"\]
+The number of NetProperties.
 
 ## See Also
 

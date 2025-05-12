@@ -16,10 +16,10 @@
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_Serializers_IStateSerializer_Export">Export</a></td>
-<td> </td></tr>
+<td>Server-side only. Serialize and send data to the client.</td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_Serializers_IStateSerializer_Import">Import</a></td>
-<td> </td></tr>
+<td>Client-side only. Receive and deserialize binary received from the server.</td></tr>
 </table>
 
 ## See Also

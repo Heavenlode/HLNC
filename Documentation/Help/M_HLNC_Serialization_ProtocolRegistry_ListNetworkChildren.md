@@ -1,13 +1,13 @@
 # ListNetworkChildren Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListNetworkChildren(Godot.Node)"\]
+List all NetNodes which are children of a given NetNode.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -19,11 +19,11 @@ public Array<NetNodeWrapper> ListNetworkChildren(
 
 
 #### Parameters
-<dl><dt>  Node</dt><dd>\[Missing &lt;param name="node"/&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListNetworkChildren(Godot.Node)"\]</dd></dl>
+<dl><dt>  Node</dt><dd>The node.</dd></dl>
 
 #### Return Value
 Array(<a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a>)  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.ProtocolRegistry.ListNetworkChildren(Godot.Node)"\]
+An array of NetNodes.
 
 ## See Also
 

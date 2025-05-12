@@ -2,13 +2,13 @@
 <file name="T_HLNC_NetNode2D_SignalName" /># NetNode2D.SignalName Class<span id="PageHeader"> </span>
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetNode2D.SignalName"\]
+Cached StringNames for the signals contained in this class, for fast lookup.
 
 <SectionTitle xml:space="preserve">
 
 ## Definition
 </SectionTitle>**Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -16,7 +16,7 @@
 ```
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  <span class="noLink">SignalName</span>  →  <span class="noLink">SignalName</span>  →  <span class="noLink">SignalName</span>  →  <span class="noLink">SignalName</span>  →  <span class="selflink">NetNode2D<span class="languageSpecificText"><span class="cs">.</span><span class="vb">.</span><span class="cpp">::</span><span class="nu">.</span><span class="fs">.</span></span>SignalName</span></td></tr>
-<tr><td><strong>Derived</strong></td><td><a href="T_HLNC_Utilities_NetTransform2D_SignalName">HLNC.Utilities<span class="languageSpecificText"><span class="cs">.</span><span class="vb">.</span><span class="cpp">::</span><span class="nu">.</span><span class="fs">.</span></span>NetTransform2D<span class="languageSpecificText"><span class="cs">.</span><span class="vb">.</span><span class="cpp">::</span><span class="nu">.</span><span class="fs">.</span></span>SignalName</a></td></tr>
+<tr><td><strong>Derived</strong></td><td><a href="T_HLNC_Utility_Nodes_NetTransform2D_SignalName">HLNC.Utility.Nodes<span class="languageSpecificText"><span class="cs">.</span><span class="vb">.</span><span class="cpp">::</span><span class="nu">.</span><span class="fs">.</span></span>NetTransform2D<span class="languageSpecificText"><span class="cs">.</span><span class="vb">.</span><span class="cpp">::</span><span class="nu">.</span><span class="fs">.</span></span>SignalName</a></td></tr>
 </table>
 
 <SectionTitle xml:space="preserve">

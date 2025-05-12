@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Godot;
 using HLNC.Serialization;
 using System;
-using HLNC.Utils;
+using HLNC.Utility.Tools;
 
 namespace HLNC
 {

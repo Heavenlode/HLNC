@@ -2,13 +2,13 @@
 <file name="F_HLNC_Serialization_ProtocolResource_PropertyName_STATIC_METHODS" /># STATIC_METHODS Field<span id="PageHeader"> </span>
 
 
-\[Missing &lt;summary&gt; documentation for "F:HLNC.Serialization.ProtocolResource.PropertyName.STATIC_METHODS"\]
+Cached name for the 'STATIC_METHODS' field.
 
 <SectionTitle xml:space="preserve">
 
 ## Definition
 </SectionTitle>**Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#

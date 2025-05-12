@@ -1,13 +1,13 @@
 # HLBytes Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.Serialization.HLBytes"\]
+Converts variables and Godot variants into binary and vice-versa. <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a> is the medium of storage.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -84,7 +84,7 @@ public class HLBytes
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackByte">UnpackByte</a></td>
-<td> </td></tr>
+<td>Alias for <a href="M_HLNC_Serialization_HLBytes_UnpackInt8">UnpackInt8(HLBuffer)</a></td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_HLBytes_UnpackByteArray">UnpackByteArray</a></td>
 <td> </td></tr>

@@ -1,11 +1,11 @@
 using System;
 using Godot;
-using HLNC.Editor.DTO;
+using HLNC.Internal.Editor.DTO;
 using HLNC.Serialization;
-using HLNC.Utils;
+using HLNC.Utility.Tools;
 using LiteDB;
 
-namespace HLNC.Editor
+namespace HLNC.Internal.Editor
 {
     [Tool]
     public partial class ServerDebugClient : Window

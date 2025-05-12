@@ -5,10 +5,10 @@
 <table>
 <tr>
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_ListProperties">ListProperties(String)</a></td>
-<td> </td></tr>
+<td>List all NetProperties in a scene.</td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_ListProperties_1">ListProperties(String, String)</a></td>
-<td> </td></tr>
+<td>List all NetProperties for a given NetNode within the scene.</td></tr>
 </table>
 
 ## See Also

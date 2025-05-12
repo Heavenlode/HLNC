@@ -1,13 +1,13 @@
 # IStateSerializer Interface
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.Serialization.Serializers.IStateSerializer"\]
+Defines an object which the server utilizes to serialize and send data to the client, and the client can then receive and deserialize from the server.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization_Serializers">HLNC.Serialization.Serializers</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -29,10 +29,10 @@ public interface IStateSerializer
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_Serializers_IStateSerializer_Export">Export</a></td>
-<td> </td></tr>
+<td>Server-side only. Serialize and send data to the client.</td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_Serializers_IStateSerializer_Import">Import</a></td>
-<td> </td></tr>
+<td>Client-side only. Receive and deserialize binary received from the server.</td></tr>
 </table>
 
 ## See Also

@@ -1,6 +1,6 @@
 using Godot;
 using Godot.Collections;
-using HLNC.Utils;
+using HLNC.Internal.Utility;
 using System;
 using System.Linq;
 

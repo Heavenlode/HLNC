@@ -1,7 +1,7 @@
 using System;
 using Godot;
 using HLNC.Serialization;
-using HLNC.Utils.Bson;
+using HLNC.Utility.Tools;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
@@ -47,7 +47,7 @@ namespace HLNC {
         }
         public static UUID BsonDeserialize(Variant context, byte[] bson, UUID initialObject)
         {
-            var bsonValue = DataTransformer.Instance.DeserializeBsonValue<BsonBinaryData>(bson);
+            var bsonValue = BsonTransformer.Instance.DeserializeBsonValue<BsonBinaryData>(bson);
             var guid = GuidConverter.FromBytes(bsonValue.Bytes, GuidRepresentation.Standard);
             var result = new UUID(guid.ToByteArray());
             return result;

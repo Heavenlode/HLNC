@@ -10,7 +10,7 @@
 <td> </td></tr>
 <tr>
 <td><a href="P_HLNC_Serialization_ProtocolRegistry_Instance">Instance</a></td>
-<td> </td></tr>
+<td>The singleton instance.</td></tr>
 </table>
 
 ## See Also

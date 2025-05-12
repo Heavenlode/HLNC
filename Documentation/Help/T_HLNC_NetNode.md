@@ -1,13 +1,13 @@
 # NetNode Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetNode"\]
+Node, extended with HLNC networking capabilities. This is the most basic networked 3D object. On every network tick, all NetNode nodes in the scene tree automatically have their <a href="T_HLNC_NetProperty">network properties</a> updated with the latest data from the server. Then, the special <a href="M_HLNC_NetNode__NetworkProcess">NetworkProcess</a> method is called, which indicates that a network Tick has occurred. Network properties can only update on the server side. For a client to update network properties, they must send client inputs to the server via implementing the [!:INetworkInputHandler] interface, or network function calls via <a href="T_HLNC_NetFunction">NetFunction</a> attributes. The server receives client inputs, can access them via [!:GetInput], and handle them accordingly within <a href="M_HLNC_NetNode__NetworkProcess">NetworkProcess</a> to mutate state.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -46,7 +46,17 @@ public class NetNode : Node, INetNode,
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_NetNode__PhysicsProcess">_PhysicsProcess</a></td>
-<td><br />(Overrides Node._PhysicsProcess(Double))</td></tr>
+<td><p>Called during the physics processing step of the main loop. Physics processing means that the frame rate is synced to the physics, i.e. the <em>delta</em> parameter will <em>generally</em> be constant (see exceptions below). <em>delta</em> is in seconds.</p><p>
+
+It is only called if physics processing is enabled, which is done automatically if this method is overridden, and can be toggled with SetPhysicsProcess(Boolean).</p><p>
+
+Processing happens in order of ProcessPhysicsPriority, lower priority values are called first. Nodes with the same priority are processed in tree order, or top to bottom as seen in the editor (also known as pre-order traversal).</p><p>
+
+Corresponds to the NotificationPhysicsProcess notification in _Notification(Int32).</p><p><b>
+
+Note:</b> This method is only called if the node is present in the scene tree (i.e. if it's not an orphan).</p><p><b>
+
+Note:</b><em>delta</em> will be larger than expected if running at a framerate lower than PhysicsTicksPerSecond / MaxPhysicsStepsPerFrame FPS. This is done to avoid "spiral of death" scenarios where performance would plummet due to an ever-increasing number of physics steps per frame. This behavior affects both _Process(Double) and _PhysicsProcess(Double). As a result, avoid using <em>delta</em> for time measurements in real-world seconds. Use the Time singleton's methods for this purpose instead, such as GetTicksUsec().</p><br />(Overrides Node._PhysicsProcess(Double))</td></tr>
 <tr>
 <td><a href="M_HLNC_NetNode__WorldReady">_WorldReady</a></td>
 <td> </td></tr>

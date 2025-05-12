@@ -1,13 +1,13 @@
 # SerialMetadata Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.Serialization.SerialMetadata"\]
+This resource is used to extend Godot's Variant type, particularly for the types sent across the network for <a href="T_HLNC_Serialization_CollectedNetProperty">CollectedNetProperty</a> and <a href="T_HLNC_Serialization_CollectedNetFunction">CollectedNetFunction</a>. The purpose is to have additional information at runtime about how the data should be encoded and decoded without using reflection. We can't depend on Godot's variant alone, as the provided types in Variant.Type are not detailed enough. The value used for the TypeIdentifier comes from the [!:ProtocolRegistry.SerialTypeIdentifiers] dictionary, which itself is populated at compile time by the <a href="T_HLNC_Serialization_SerialTypeIdentifier">SerialTypeIdentifier</a> attribute.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
 
 **C#**
 ``` C#
@@ -16,6 +16,11 @@ public class SerialMetadata : Resource
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  RefCounted  →  Resource  →  SerialMetadata</td></tr>
 </table>
+
+
+
+## Example
+Some examples of how/why this is used: <ul><li>Godot's variant includes "Variant.Type.Int" but does not differentiate between 8 bit, 16 bit, 32 bit, or 64 bit integers. By appending a TypeIdentifier to a CollectedNetProperty, the serializer knows how many bytes to read from the stream.</li><li>Godot's variant includes "Variant.Type.Object", but doesn't tell us what type of object. Implicitly, we know that only [!:INetSerializable] Objects are sent across the network, but this allows us to know what the implementing type is.</li></ul>
 
 
 

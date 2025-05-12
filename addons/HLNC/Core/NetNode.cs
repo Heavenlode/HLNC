@@ -3,7 +3,7 @@ using System.ComponentModel;
 using Godot;
 using HLNC.Serialization;
 using HLNC.Serialization.Serializers;
-using HLNC.Utils.Bson;
+using HLNC.Utility.Tools;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
@@ -106,7 +106,7 @@ namespace HLNC
 
 		public static NetNode BsonDeserialize(Variant context, byte[] bson, NetNode obj)
 		{
-			var data = DataTransformer.Instance.DeserializeBsonValue<BsonDocument>(bson);
+			var data = BsonTransformer.Instance.DeserializeBsonValue<BsonDocument>(bson);
 			if (data.IsBsonNull) return null;
 			var doc = data.AsBsonDocument;
 			var node = obj == null ? new NetNode() : obj;

@@ -1,6 +1,6 @@
 using System;
 using Godot;
-using HLNC.Utils;
+using HLNC.Utility.Tools;
 
 namespace HLNC.Serialization
 {

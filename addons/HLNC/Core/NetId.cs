@@ -1,6 +1,6 @@
 using Godot;
 using HLNC.Serialization;
-using HLNC.Utils.Bson;
+using HLNC.Utility.Tools;
 using MongoDB.Bson;
 
 namespace HLNC
@@ -17,7 +17,7 @@ namespace HLNC
         }
         public static NetId BsonDeserialize(Variant context, byte[] bson, NetId initialObject)
         {
-            var bsonValue = DataTransformer.Instance.DeserializeBsonValue<BsonInt64>(bson);
+            var bsonValue = BsonTransformer.Instance.DeserializeBsonValue<BsonInt64>(bson);
             return new NetId(bsonValue.Value);
         }
         public BsonValue BsonSerialize(Variant context)

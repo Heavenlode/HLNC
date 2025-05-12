@@ -2,7 +2,7 @@ using System;
 using Godot;
 using Godot.Collections;
 
-namespace HLNC.Tools {
+namespace HLNC.Internal.Editor {
 
     [Tool]
     public partial class AddonManager : Window
