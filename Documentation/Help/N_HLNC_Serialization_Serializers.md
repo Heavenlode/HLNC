@@ -11,7 +11,13 @@
 <td><a href="T_HLNC_Serialization_Serializers_BitConstants">BitConstants</a></td>
 <td> </td></tr>
 <tr>
+<td><a href="T_HLNC_Serialization_Serializers_DespawnSerializer">DespawnSerializer</a></td>
+<td> </td></tr>
+<tr>
 <td><a href="T_HLNC_Serialization_Serializers_NetPropertiesSerializer">NetPropertiesSerializer</a></td>
+<td> </td></tr>
+<tr>
+<td><a href="T_HLNC_Serialization_Serializers_SpawnSerializer">SpawnSerializer</a></td>
 <td> </td></tr>
 </table>
 
