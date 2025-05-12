@@ -1,12 +1,16 @@
 using Godot;
-using HLNC.Serialization;
 using MongoDB.Bson;
 
 namespace HLNC {
 
-    // TODO: Document this interface, when it's necessary, how it's used, etc.
-    public interface IBsonSerializable {
-        public BsonValue BsonSerialize(Variant context);
-        public static abstract GodotObject BsonDeserialize(Variant context, BsonValue bson, GodotObject initialObject);
+    // Non-generic base interface
+    public interface IBsonSerializableBase {
+        BsonValue BsonSerialize(Variant context);
+    }
+
+    // Generic interface inherits from base
+    public interface IBsonSerializable<T> : IBsonSerializableBase where T : GodotObject {
+        // BsonSerialize is inherited from IBsonSerializableBase
+        static abstract T BsonDeserialize(Variant context, byte[] bson, T initialObject);
     }
 }

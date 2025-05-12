@@ -1,17 +1,13 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using HLNC.Serialization;
-
 namespace HLNC.Serialization.Serializers
 {
-    internal class DespawnSerializer(NetworkNodeWrapper node) : IStateSerializer
+    internal class DespawnSerializer(NetNodeWrapper node) : IStateSerializer
     {
         private struct Data
         {
 
         }
 
-        private NetworkNodeWrapper node = node;
+        private NetNodeWrapper node = node;
 
         private Data Deserialize(HLBuffer data)
         {
@@ -20,7 +16,7 @@ namespace HLNC.Serialization.Serializers
 
         public void Begin() {}
 
-        public void Import(WorldRunner currentWorld, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
+        public void Import(WorldRunner currentWorld, HLBuffer buffer, out NetNodeWrapper nodeOut)
         {
             nodeOut = node;
             var data = Deserialize(buffer);
@@ -33,7 +29,7 @@ namespace HLNC.Serialization.Serializers
         {
             var buffer = new HLBuffer();
             // Dictionary<NetPeer, HLBuffer> despawnsBuffer = new Dictionary<NetPeer, HLBuffer>();
-            // foreach (int peer_id in NetworkRunner.Instance.MultiplayerInstance.GetPeers())
+            // foreach (int peer_id in NetRunner.Instance.MultiplayerInstance.GetPeers())
             // {
             // 	despawnsBuffer[peer_id] = new HLBuffer();
             // }
@@ -65,9 +61,9 @@ namespace HLNC.Serialization.Serializers
             // 	return;
             // foreach (int network_id in DespawnBuffers[peer][tick])
             // {
-            // 	if (NetworkRunner.Instance.NetworkNodes.ContainsKey(network_id))
+            // 	if (NetRunner.Instance.NetNodes.ContainsKey(network_id))
             // 	{
-            // 		NetworkRunner.Instance.NetworkNodes[network_id].QueueFree();
+            // 		NetRunner.Instance.NetNodes[network_id].QueueFree();
             // 	}
             // }
             // DespawnBuffers[peer].Remove(tick);

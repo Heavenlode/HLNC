@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using Godot;
 using HLNC.Utils;
 
@@ -61,7 +58,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                Debugger.Log($"HLBytes.Pack: Unhandled type: {varVal.VariantType}", Debugger.DebugLevel.ERROR);
+                Debugger.Instance.Log($"HLBytes.Pack: Unhandled type: {varVal.VariantType}\nStack Trace:\n{System.Environment.StackTrace}", Debugger.DebugLevel.ERROR);
             }
         }
 
@@ -350,7 +347,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                Debugger.Log($"HLBytes.UnpackVariant: Unhandled type: {type}", Debugger.DebugLevel.ERROR);
+                Debugger.Instance.Log($"HLBytes.UnpackVariant: Unhandled type: {type}", Debugger.DebugLevel.ERROR);
                 return null;
             }
         }
@@ -470,7 +467,7 @@ namespace HLNC.Serialization
                 }
                 else
                 {
-                    Debugger.Log($"Failed to unpack array element {i}", Debugger.DebugLevel.ERROR);
+                    Debugger.Instance.Log($"Failed to unpack array element {i}", Debugger.DebugLevel.ERROR);
                 }
             }
             return result;
@@ -504,7 +501,7 @@ namespace HLNC.Serialization
                 }
                 else
                 {
-                    Debugger.Log($"Failed to unpack dictionary element {i}", Debugger.DebugLevel.ERROR);
+                    Debugger.Instance.Log($"Failed to unpack dictionary element {i}", Debugger.DebugLevel.ERROR);
                 }
             }
             return result;
@@ -523,10 +520,13 @@ namespace HLNC.Serialization
             return result;
         }
 
-        public static byte[] UnpackByteArray(HLBuffer buffer, int length = 0)
+        public static byte[] UnpackByteArray(HLBuffer buffer, int length = 0, bool untilEnd = false)
         {
             var size = length;
-            if (size == 0)
+            if (untilEnd)
+            {
+                size = buffer.bytes.Length - buffer.pointer;
+            } else if (size == 0)
             {
                 size = UnpackInt32(buffer);
             }

@@ -17,13 +17,13 @@ namespace HLNC.Serialization.Serializers
             public byte hasInputAuthority;
         }
 
-        private NetworkNodeWrapper wrapper;
+        private NetNodeWrapper wrapper;
 
         public override void _EnterTree()
         {
             base._EnterTree();
             Name = "SpawnSerializer";
-            wrapper = new NetworkNodeWrapper(GetParent());
+            wrapper = new NetNodeWrapper(GetParent());
         }
         private Dictionary<NetPeer, Tick> setupTicks = [];
 
@@ -47,7 +47,7 @@ namespace HLNC.Serialization.Serializers
 
         public void Begin() {}
 
-        public void Import(WorldRunner currentWorld, HLBuffer buffer, out NetworkNodeWrapper nodeOut)
+        public void Import(WorldRunner currentWorld, HLBuffer buffer, out NetNodeWrapper nodeOut)
         {
             nodeOut = wrapper;
             var data = Deserialize(buffer);
@@ -59,45 +59,45 @@ namespace HLNC.Serialization.Serializers
                 return;
             }
 
-            var networkId = wrapper.NetworkId;
+            var networkId = wrapper.NetId;
 
             // Deregister and delete the node, because it is simply a "Placeholder" that doesn't really exist
             currentWorld.DeregisterPeerNode(nodeOut);
             wrapper.Node.QueueFree();
 
-            var networkParent = currentWorld.GetNetworkNode(data.parentId);
+            var networkParent = currentWorld.GetNodeFromNetId(data.parentId);
             if (data.parentId != 0 && networkParent == null)
             {
                 // The parent node is not registered, so we can't spawn this node
-                Debugger.Log($"Parent node not found for: {NetworkScenesRegister.UnpackScene(data.classId).ResourcePath} - Parent ID: {data.parentId}", Debugger.DebugLevel.ERROR);
+                Debugger.Instance.Log($"Parent node not found for: {ProtocolRegistry.Instance.UnpackScene(data.classId).ResourcePath} - Parent ID: {data.parentId}", Debugger.DebugLevel.ERROR);
                 return;
             }
 
-            NetworkRunner.Instance.RemoveChild(nodeOut.Node);
-            var newNode = NetworkScenesRegister.UnpackScene(data.classId).Instantiate<INetworkNode>();
+            NetRunner.Instance.RemoveChild(nodeOut.Node);
+            var newNode = ProtocolRegistry.Instance.UnpackScene(data.classId).Instantiate<INetNode>();
             newNode.Network.IsClientSpawn = true;
-            newNode.Network.NetworkId = networkId;
+            newNode.Network.NetId = networkId;
             newNode.Network.CurrentWorld = currentWorld;
             newNode.SetupSerializers();
             nodeOut = newNode.Network.Owner;
-            NetworkRunner.Instance.AddChild(nodeOut.Node);
+            NetRunner.Instance.AddChild(nodeOut.Node);
             if (networkParent != null)
             {
-                nodeOut.NetworkParentId = networkParent.NetworkId;
+                nodeOut.NetParentId = networkParent.NetId;
             }
             currentWorld.TryRegisterPeerNode(nodeOut);
 
             // Iterate through all child nodes of nodeOut
-            // If the child node is a NetworkNodeWrapper, then we set it to dynamic spawn
-            // We don't register it as a node in the NetworkRunner because only the parent needs registration
+            // If the child node is a NetNodeWrapper, then we set it to dynamic spawn
+            // We don't register it as a node in the NetRunner because only the parent needs registration
             var children = nodeOut.Node.GetChildren().ToList();
-            List<NetworkNodeWrapper> networkChildren = new List<NetworkNodeWrapper>();
+            List<NetNodeWrapper> networkChildren = new List<NetNodeWrapper>();
             while (children.Count > 0)
             {
                 var child = children[0];
-                var networkChild = new NetworkNodeWrapper(child);
+                var networkChild = new NetNodeWrapper(child);
                 children.RemoveAt(0);
-                if (networkChild != null && networkChild.IsNetworkScene)
+                if (networkChild != null && networkChild.IsNetScene())
                 {
                     // Nested network scenes are spawned separately
                     networkChild.Node.GetParent().RemoveChild(networkChild.Node);
@@ -113,7 +113,7 @@ namespace HLNC.Serialization.Serializers
                 networkChildren.Add(networkChild);
             }
             networkChildren.Reverse();
-            NetworkRunner.Instance.RemoveChild(nodeOut.Node);
+            NetRunner.Instance.RemoveChild(nodeOut.Node);
 
             if (data.parentId == 0)
             {
@@ -123,10 +123,10 @@ namespace HLNC.Serialization.Serializers
 
             if (data.hasInputAuthority == 1)
             {
-                nodeOut.InputAuthority = NetworkRunner.Instance.ENetHost;
+                nodeOut.InputAuthority = NetRunner.Instance.ENetHost;
             }
 
-            networkParent.Node.GetNode(NetworkScenesRegister.UnpackNode(networkParent.Node.SceneFilePath, data.nodePathId)).AddChild(nodeOut.Node);
+            networkParent.Node.GetNode(ProtocolRegistry.Instance.UnpackNode(networkParent.Node.SceneFilePath, data.nodePathId)).AddChild(nodeOut.Node);
             if (nodeOut.Node is Node3D node) {
                 // node.Position = data.position;
                 // node.Rotation = data.rotation;
@@ -141,23 +141,23 @@ namespace HLNC.Serialization.Serializers
         public HLBuffer Export(WorldRunner currentWorld, NetPeer peer)
         {
             var buffer = new HLBuffer();
-            if (currentWorld.HasSpawnedForClient(wrapper.NetworkId, peer))
+            if (currentWorld.HasSpawnedForClient(wrapper.NetId, peer))
             {
                 // The target client is already aware of this node.
                 return buffer;
             }
 
-            if (wrapper.NetworkParent != null && !currentWorld.HasSpawnedForClient(wrapper.NetworkParent.NetworkId, peer))
+            if (wrapper.NetParent != null && !currentWorld.HasSpawnedForClient(wrapper.NetParent.NetId, peer))
             {
                 // The parent node is not registered with the client yet, so we can't spawn this node
                 return buffer;
             }
 
-            if (wrapper.Node is INetworkNode networkNode) {
+            if (wrapper.Node is INetNode netNode) {
                 // TODO: Maybe this should exist in the node wrapper?
-                if (!networkNode.Network.spawnReady.GetValueOrDefault(peer, false))
+                if (!netNode.Network.spawnReady.GetValueOrDefault(peer, false))
                 {
-                    networkNode.Network.PrepareSpawn(peer);
+                    netNode.Network.PrepareSpawn(peer);
                     // The node is not ready to be spawned yet
                     return buffer;
                 }
@@ -171,10 +171,10 @@ namespace HLNC.Serialization.Serializers
             }
 
             setupTicks[peer] = currentWorld.CurrentTick;
-            HLBytes.Pack(buffer, wrapper.NetworkSceneId);
+            HLBytes.Pack(buffer, wrapper.NetSceneId);
 
             // Pack the node path
-            if (wrapper.NetworkParent == null)
+            if (wrapper.NetParent == null)
             {
                 // If this scene has no parent, then it is the root scene
                 // In other words, this indicates a scene change
@@ -186,13 +186,13 @@ namespace HLNC.Serialization.Serializers
 
 
             // Pack the parent network ID and the node path
-            var parentId = currentWorld.GetPeerNodeId(peer, wrapper.NetworkParent);
+            var parentId = currentWorld.GetPeerNodeId(peer, wrapper.NetParent);
             HLBytes.Pack(buffer, parentId);
-            if (NetworkScenesRegister.PackNode(wrapper.NetworkParent.Node.SceneFilePath, wrapper.NetworkParent.Node.GetPathTo(wrapper.Node.GetParent()), out var nodePathId))
+            if (ProtocolRegistry.Instance.PackNode(wrapper.NetParent.Node.SceneFilePath, wrapper.NetParent.Node.GetPathTo(wrapper.Node.GetParent()), out var nodePathId))
             {
                 HLBytes.Pack(buffer, nodePathId);
             } else {
-                throw new System.Exception($"FAILED TO PACK FOR SPAWN: Node path not found for {wrapper.Node.GetPath()}");
+                throw new System.Exception($"FAILED TO PACK FOR SPAWN: Node path not found for {wrapper.Node.GetPath()} - Parent Path: { wrapper.NetParent.Node.GetPath()} - Parent Scene: {wrapper.NetParent.Node.SceneFilePath} - Parent Path To Parent: {wrapper.NetParent.Node.GetPathTo(wrapper.Node.GetParent())}");
             }
 
             if (wrapper.Node is Node3D node)
@@ -224,7 +224,7 @@ namespace HLNC.Serialization.Serializers
 
             if (tick >= peerTick)
             {
-                currentWorld.SetSpawnedForClient(wrapper.NetworkId, peer);
+                currentWorld.SetSpawnedForClient(wrapper.NetId, peer);
             }
         }
 

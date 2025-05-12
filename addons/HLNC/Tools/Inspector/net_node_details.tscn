@@ -1,0 +1,92 @@
+[gd_scene load_steps=8 format=3 uid="uid://cviurjqd8x2o0"]
+
+[ext_resource type="Script" uid="uid://ovs8naegkmwu" path="res://addons/HLNC/Tools/Inspector/inspect_net_scene.gd" id="1_a30bn"]
+[ext_resource type="PackedScene" uid="uid://ywhp3yi0fvpa" path="res://addons/HLNC/Tools/Inspector/accordion.tscn" id="2_208w3"]
+[ext_resource type="PackedScene" uid="uid://dgc5sfmxnea6h" path="res://addons/HLNC/Tools/Inspector/property_row.tscn" id="2_n37bw"]
+
+[sub_resource type="FontVariation" id="FontVariation_y0pd1"]
+variation_embolden = 0.25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u8610"]
+bg_color = Color(0.219608, 0.239216, 0.266667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgo8p"]
+bg_color = Color(0.129412, 0.14902, 0.180392, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w37so"]
+bg_color = Color(0.156863, 0.176471, 0.207843, 1)
+
+[node name="NetNodeDetails" type="VBoxContainer" node_paths=PackedStringArray("properties_parent", "properties_container", "functions_parent", "functions_container", "path_label", "property_count_label", "function_count_label")]
+theme_override_constants/separation = 0
+script = ExtResource("1_a30bn")
+properties_parent = NodePath("Container/Container/Properties")
+properties_container = NodePath("Container/Container/Properties/Container/Container")
+functions_parent = NodePath("Container/Container/Functions")
+functions_container = NodePath("Container/Container/Functions/Container/Container")
+path_label = NodePath("Container/Container/PathValue/Value")
+property_count_label = NodePath("Container/Container/PropertyCount/Value")
+function_count_label = NodePath("Container/Container/FunctionCount/Value")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_y0pd1")
+theme_override_styles/hover = SubResource("StyleBoxFlat_u8610")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wgo8p")
+theme_override_styles/normal = SubResource("StyleBoxFlat_w37so")
+action_mode = 0
+text = "▶"
+alignment = 0
+
+[node name="Container" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="Container" type="VBoxContainer" parent="Container"]
+layout_mode = 2
+
+[node name="PathValue" parent="Container/Container" instance=ExtResource("2_n37bw")]
+layout_mode = 2
+
+[node name="Name" parent="Container/Container/PathValue" index="0"]
+text = "Path"
+
+[node name="Value" parent="Container/Container/PathValue" index="1"]
+text = "."
+
+[node name="PropertyCount" parent="Container/Container" instance=ExtResource("2_n37bw")]
+layout_mode = 2
+
+[node name="Name" parent="Container/Container/PropertyCount" index="0"]
+text = "Properties"
+
+[node name="Value" parent="Container/Container/PropertyCount" index="1"]
+text = "0"
+
+[node name="FunctionCount" parent="Container/Container" instance=ExtResource("2_n37bw")]
+layout_mode = 2
+
+[node name="Name" parent="Container/Container/FunctionCount" index="0"]
+text = "Functions"
+
+[node name="Value" parent="Container/Container/FunctionCount" index="1"]
+text = "0"
+
+[node name="Properties" parent="Container/Container" instance=ExtResource("2_208w3")]
+visible = false
+layout_mode = 2
+
+[node name="Functions" parent="Container/Container" instance=ExtResource("2_208w3")]
+visible = false
+layout_mode = 2
+
+[node name="Button" parent="Container/Container/Functions" index="0"]
+text = "▶ Functions"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+
+[editable path="Container/Container/PathValue"]
+[editable path="Container/Container/PropertyCount"]
+[editable path="Container/Container/FunctionCount"]
+[editable path="Container/Container/Properties"]
+[editable path="Container/Container/Functions"]

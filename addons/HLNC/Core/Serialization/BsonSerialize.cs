@@ -6,8 +6,8 @@ using MongoDB.Bson;
 namespace HLNC.Serialization
 {
     public class BsonSerialize
-    {
-        public static BsonValue SerializeVariant(Variant context, Variant variant, VariantSubtype subtype = 0)
+        {
+        public static BsonValue SerializeVariant(Variant context, Variant variant, string subtype = "None")
         {
             if (variant.VariantType == Variant.Type.String)
             {
@@ -19,24 +19,17 @@ namespace HLNC.Serialization
             }
             else if (variant.VariantType == Variant.Type.Int)
             {
-                switch (subtype)
+                if (subtype == "Byte")
                 {
-                    case VariantSubtype.Byte:
-                        return variant.AsByte();
-                    case VariantSubtype.Int:
-                        return variant.AsInt32();
-                    case VariantSubtype.NetworkId:
-                        if (variant.AsInt64() != -1)
-                        {
-                            // Only record network ids that are not -1.
-                            return variant.AsInt64();
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    default:
-                        return variant.AsInt64();
+                    return variant.AsByte();
+                }
+                else if (subtype == "Int")
+                {
+                    return variant.AsInt32();
+                }
+                else
+                {
+                    return variant.AsInt64();
                 }
             }
             else if (variant.VariantType == Variant.Type.Bool)
@@ -66,25 +59,18 @@ namespace HLNC.Serialization
                 }
                 else
                 {
-                    // Ensure obj implements IBsonSerializable.
-                    if (!(obj is IBsonSerializable))
+                    if (obj is IBsonSerializableBase bsonSerializable)
                     {
-                        Debugger.Log($"Object does not implement IBsonSerializable: {obj}", Debugger.DebugLevel.ERROR);
-                        return null;
+                        return bsonSerializable.BsonSerialize(context);
                     }
-                    return (obj as IBsonSerializable).BsonSerialize(context);
+
+                    Debugger.Instance.Log($"Object does not implement IBsonSerializable<T>: {obj}", Debugger.DebugLevel.ERROR);
+                    return null;
                 }
             }
             else if (variant.VariantType == Variant.Type.PackedByteArray)
             {
-                if (subtype == VariantSubtype.Guid)
-                {
-                    return new BsonBinaryData(new Guid(variant.AsByteArray()), GuidRepresentation.Standard);
-                }
-                else
-                {
-                    return new BsonBinaryData(variant.AsByteArray(), BsonBinarySubType.Binary);
-                }
+                return new BsonBinaryData(variant.AsByteArray(), BsonBinarySubType.Binary);
             }
             else if (variant.VariantType == Variant.Type.Dictionary)
             {
@@ -98,7 +84,7 @@ namespace HLNC.Serialization
             }
             else
             {
-                Debugger.Log($"Serializing to JSON unsupported property type: {variant.VariantType}", Debugger.DebugLevel.ERROR);
+                Debugger.Instance.Log($"Serializing to JSON unsupported property type: {variant.VariantType}", Debugger.DebugLevel.ERROR);
                 return null;
             }
         }

@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using Godot;
 using HLNC.Serialization;
 using HLNC.Utils;
+using HLNC.Utils.Bson;
+using MongoDB.Bson;
 
 namespace HLNC
 {
@@ -20,22 +24,23 @@ namespace HLNC
             public NetPeer Peer;
             public Tick Tick;
             public PeerSyncStatus Status;
-            public Variant Id;
+            public UUID Id;
             public string Token;
-            public Dictionary<NetworkId, byte> WorldToPeerNodeMap;
-            public Dictionary<byte, NetworkId> PeerToWorldNodeMap;
-            public Dictionary<NetworkId, bool> SpawnAware;
+            public Dictionary<NetId, byte> WorldToPeerNodeMap;
+            public Dictionary<byte, NetId> PeerToWorldNodeMap;
+            public Dictionary<NetId, bool> SpawnAware;
             public long AvailableNodes;
         }
 
-        internal struct QueuedFunction {
+        internal struct QueuedFunction
+        {
             public Node Node;
-            public CollectedNetworkFunction FunctionInfo;
+            public CollectedNetFunction FunctionInfo;
             public Variant[] Args;
             public NetPeer Sender;
         }
 
-        public Guid WorldId { get; internal set; }
+        public UUID WorldId { get; internal set; }
 
         // A bit list of all nodes in use by each peer
         // For example, 0 0 0 0 (... etc ...) 0 1 0 1 would mean that the first and third nodes are in use
@@ -46,7 +51,7 @@ namespace HLNC
         [Signal]
         public delegate void OnPeerSyncStatusChangeEventHandler(string peerId, int status);
 
-        private List<QueuedFunction> queuedNetworkFunctions = [];
+        private List<QueuedFunction> queuedNetFunctions = [];
 
 
         /// <summary>
@@ -57,22 +62,99 @@ namespace HLNC
         /// <summary>
         /// Only used by the client to determine the current root scene.
         /// </summary>
-        public NetworkNodeWrapper RootScene;
+        public NetNodeWrapper RootScene;
 
-        internal NetworkId NetworkId_counter = 0;
-        internal System.Collections.Generic.Dictionary<NetworkId, NetworkNodeWrapper> NetworkScenes = [];
+        internal long networkIdCounter = 0;
+        private Dictionary<long, NetId> networkIds = [];
+        internal Dictionary<NetId, NetNodeWrapper> NetScenes = [];
         private Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> inputStore = [];
         public Godot.Collections.Dictionary<NetPeer, Godot.Collections.Dictionary<byte, Godot.Collections.Dictionary<int, Variant>>> InputStore => inputStore;
+
+        public ENetConnection DebugEnet { get; private set; }
+        public enum DebugDataType
+        {
+            TICK,
+            PAYLOADS,
+            EXPORT,
+            LOGS,
+            PEERS,
+            CALLS
+        }
+
+        private List<TickLog> tickLogBuffer = [];
+        public void Log(string message, Debugger.DebugLevel level = Debugger.DebugLevel.INFO)
+        {
+            if (NetRunner.Instance.IsServer)
+            {
+                tickLogBuffer.Add(new TickLog
+                {
+                    Message = message,
+                    Level = level,
+                });
+            }
+
+            Debugger.Instance.Log(message, level);
+        }
+
+        private int GetAvailablePort()
+        {
+            // Create a listener on port 0, which tells the OS to assign an available port
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
+
+            try
+            {
+                listener.Start();
+                int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+                return port;
+            }
+            finally
+            {
+                listener.Stop();
+            }
+        }
 
         public override void _Ready()
         {
             base._Ready();
             Name = "WorldRunner";
+
+            if (NetRunner.Instance.IsServer)
+            {
+                DebugEnet = new ENetConnection();
+                Error err;
+                int port = GetAvailablePort();
+                int attempts = 0;
+                const int MAX_ATTEMPTS = 1000;
+                do
+                {
+                    err = DebugEnet.CreateHostBound(NetRunner.Instance.ServerAddress, port, NetRunner.Instance.MaxPeers);
+                    if (err == Error.Ok) break;
+                    port = GetAvailablePort();
+                    attempts++;
+                } while (attempts < MAX_ATTEMPTS);
+                if (err != Error.Ok)
+                {
+                    Log($"Error starting debug server after {attempts} attempts: {err}", Debugger.DebugLevel.ERROR);
+                    return;
+                }
+                DebugEnet.Compress(ENetConnection.CompressionMode.RangeCoder);
+
+                Log($"World {WorldId} debug server started on port {DebugEnet.GetLocalPort()}", Debugger.DebugLevel.VERBOSE);
+            }
         }
 
-        internal void DebugPrint(string msg)
+        public override void _ExitTree()
         {
-            GD.Print($"{(NetworkRunner.Instance.IsServer ? "Server" : "Client")} (world {WorldId}): {msg}");
+            base._ExitTree();
+            if (NetRunner.Instance.IsServer)
+            {
+                foreach (var peer in DebugEnet.GetPeers())
+                {
+                    peer.PeerDisconnect(0);
+                }
+                DebugEnet.Destroy();
+            }
         }
 
         /// <summary>
@@ -80,47 +162,86 @@ namespace HLNC
         /// </summary>
         public int CurrentTick { get; internal set; } = 0;
 
-        public NetworkNodeWrapper GetNodeFromNetworkId(NetworkId network_id)
+        public NetNodeWrapper GetNodeFromNetId(NetId networkId)
         {
-            if (network_id == -1)
-                return new NetworkNodeWrapper(null);
-            if (!NetworkScenes.ContainsKey(network_id))
-                return new NetworkNodeWrapper(null);
-            return NetworkScenes[network_id];
+            if (networkId == null)
+                return new NetNodeWrapper(null);
+            if (!NetScenes.ContainsKey(networkId))
+                return new NetNodeWrapper(null);
+            return NetScenes[networkId];
+        }
+
+        public NetNodeWrapper GetNodeFromNetId(long networkId)
+        {
+            if (networkId == NetId.NONE)
+                return new NetNodeWrapper(null);
+            if (!networkIds.ContainsKey(networkId))
+                return new NetNodeWrapper(null);
+            return NetScenes[networkIds[networkId]];
+        }
+
+        public NetId AllocateNetId()
+        {
+            var networkId = new NetId(networkIdCounter);
+            networkIds[networkIdCounter] = networkId;
+            networkIdCounter++;
+            return networkId;
+        }
+
+        public NetId AllocateNetId(byte id)
+        {
+            var networkId = new NetId(id);
+            networkIds[id] = networkId;
+            return networkId;
+        }
+
+        public NetId GetNetId(long id)
+        {
+            if (!networkIds.ContainsKey(id))
+                return null;
+            return networkIds[id];
+        }
+
+        public NetId GetNetIdFromPeerId(NetPeer peer, byte id)
+        {
+            if (!PeerStates[peer].PeerToWorldNodeMap.ContainsKey(id))
+                return null;
+            return PeerStates[peer].PeerToWorldNodeMap[id];
         }
 
         [Signal]
         public delegate void OnAfterNetworkTickEventHandler(Tick tick);
 
         [Signal]
-        public delegate void OnPlayerJoinedEventHandler(string peerId);
+        public delegate void OnPlayerJoinedEventHandler(UUID peerId);
 
         private int _frameCounter = 0;
         /// <summary>
         /// This method is executed every tick on the Server side, and kicks off all logic which processes and sends data to every client.
         /// </summary>
-        public void ServerProcessTick()
+        public async void ServerProcessTick()
         {
 
-            foreach (var net_id in NetworkScenes.Keys)
+            foreach (var net_id in NetScenes.Keys)
             {
-                var networkNode = NetworkScenes[net_id];
-                if (networkNode == null)
+                var netNode = NetScenes[net_id];
+                if (netNode == null)
                     continue;
 
-                if (!IsInstanceValid(networkNode.Node) || networkNode.Node.IsQueuedForDeletion())
+                if (!IsInstanceValid(netNode.Node) || netNode.Node.IsQueuedForDeletion())
                 {
-                    NetworkScenes.Remove(net_id);
+                    NetScenes.Remove(net_id);
                     continue;
                 }
-                if (networkNode.Node.ProcessMode == ProcessModeEnum.Disabled)
+                if (netNode.Node.ProcessMode == ProcessModeEnum.Disabled)
                 {
                     continue;
                 }
-                foreach (var networkChild in networkNode.StaticNetworkChildren)
+                foreach (var networkChild in netNode.StaticNetworkChildren)
                 {
-                    if (networkChild.Node == null) {
-                        Debugger.Log($"Network child node is unexpectedly null: {networkNode.Node.SceneFilePath}", Debugger.DebugLevel.ERROR);
+                    if (networkChild.Node == null)
+                    {
+                        Log($"Network child node is unexpectedly null: {netNode.Node.SceneFilePath}", Debugger.DebugLevel.ERROR);
                     }
                     if (networkChild.Node.ProcessMode == ProcessModeEnum.Disabled)
                     {
@@ -128,36 +249,100 @@ namespace HLNC
                     }
                     networkChild._NetworkProcess(CurrentTick);
                 }
-                networkNode._NetworkProcess(CurrentTick);
+                netNode._NetworkProcess(CurrentTick);
             }
 
-            foreach (var queuedFunction in queuedNetworkFunctions) {
-                var args = queuedFunction.Args;
-                if (queuedFunction.FunctionInfo.WithPeer) {
-                    args = new List<Variant>(){queuedFunction.Sender}.Concat(args).ToArray();
+            if (DebugEnet != null)
+            {
+                // Notify the Debugger of the incoming tick
+                var debugBuffer = new HLBuffer();
+                HLBytes.Pack(debugBuffer, (byte)DebugDataType.TICK);
+                HLBytes.Pack(debugBuffer, DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+                HLBytes.Pack(debugBuffer, CurrentTick);
+                foreach (var debugPeer in DebugEnet.GetPeers())
+                {
+                    debugPeer.Send(0, debugBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
                 }
-                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetworkNode;
-                functionNode.Network.IsRemoteCall = true;
-                functionNode.Network.Owner.Call(queuedFunction.FunctionInfo.Name, args);
-                functionNode.Network.IsRemoteCall = false;
             }
-            queuedNetworkFunctions.Clear();
+
+            foreach (var queuedFunction in queuedNetFunctions)
+            {
+                var args = queuedFunction.Args;
+                if (queuedFunction.FunctionInfo.WithPeer)
+                {
+                    args = new List<Variant>() { queuedFunction.Sender }.Concat(args).ToArray();
+                }
+                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetNode;
+                functionNode.Network.IsInboundCall = true;
+                functionNode.Network.Owner.Node.Call(queuedFunction.FunctionInfo.Name, args);
+                functionNode.Network.IsInboundCall = false;
+
+                if (DebugEnet != null)
+                {
+                    // Notify the Debugger of the incoming tick
+                    var debugBuffer = new HLBuffer();
+                    HLBytes.Pack(debugBuffer, (byte)DebugDataType.CALLS);
+                    HLBytes.Pack(debugBuffer, queuedFunction.FunctionInfo.Name);
+                    HLBytes.Pack(debugBuffer, (byte)args.Length);
+                    foreach (var arg in args)
+                    {
+                        HLBytes.PackVariant(debugBuffer, arg, packType: true);
+                    }
+                    foreach (var debugPeer in DebugEnet.GetPeers())
+                    {
+                        debugPeer.Send(0, debugBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
+                    }
+                }
+            }
+            queuedNetFunctions.Clear();
+
+            foreach (var log in tickLogBuffer)
+            {
+                var logBuffer = new HLBuffer();
+                HLBytes.Pack(logBuffer, (byte)DebugDataType.LOGS);
+                HLBytes.Pack(logBuffer, (byte)log.Level);
+                HLBytes.Pack(logBuffer, log.Message);
+                foreach (var debugPeer in DebugEnet.GetPeers())
+                {
+                    debugPeer.Send(0, logBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
+                }
+            }
+            tickLogBuffer.Clear();
+
+            var fullGameState = DataTransformer.Instance.ToBSONDocument(RootScene.Node as INetNode, recurse: true);
+            var exportBuffer = new HLBuffer();
+            HLBytes.Pack(exportBuffer, (byte)DebugDataType.EXPORT);
+            HLBytes.Pack(exportBuffer, fullGameState.ToBson());
+            foreach (var debugPeer in DebugEnet.GetPeers())
+            {
+                debugPeer.Send(0, exportBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
+            }
 
             var peers = PeerStates.Keys.ToList();
             var exportedState = ExportState(peers);
             foreach (var peer in peers)
             {
-                var size = exportedState[peer].bytes.Length;
-                if (size > NetworkRunner.MTU)
-                {
-                    Debugger.Log($"Data size {size} exceeds MTU {NetworkRunner.MTU}", Debugger.DebugLevel.WARN);
-                }
-
                 var buffer = new HLBuffer();
                 HLBytes.Pack(buffer, CurrentTick);
-                HLBytes.Pack(buffer, exportedState[peer].bytes, true);
+                HLBytes.Pack(buffer, exportedState[peer].bytes);
+                var size = buffer.bytes.Length;
+                if (size > NetRunner.MTU)
+                {
+                    Log($"Data size {size} exceeds MTU {NetRunner.MTU}", Debugger.DebugLevel.WARN);
+                }
 
                 peer.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
+                if (DebugEnet != null)
+                {
+                    var debugBuffer = new HLBuffer();
+                    HLBytes.Pack(debugBuffer, (byte)DebugDataType.PAYLOADS);
+                    HLBytes.Pack(debugBuffer, PeerStates[peer].Id.ToByteArray());
+                    HLBytes.Pack(debugBuffer, exportedState[peer].bytes);
+                    foreach (var debugPeer in DebugEnet.GetPeers())
+                    {
+                        debugPeer.Send(0, debugBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
+                    }
+                }
             }
         }
 
@@ -165,10 +350,15 @@ namespace HLNC
         {
             base._PhysicsProcess(delta);
 
-            if (NetworkRunner.Instance.IsServer)
+            if (NetRunner.Instance.IsServer)
             {
+                if (DebugEnet != null)
+                {
+                    DebugEnet.Service();
+                }
+
                 _frameCounter += 1;
-                if (_frameCounter < NetworkRunner.PhysicsTicksPerNetworkTick)
+                if (_frameCounter < NetRunner.PhysicsTicksPerNetworkTick)
                     return;
                 _frameCounter = 0;
                 CurrentTick += 1;
@@ -177,7 +367,7 @@ namespace HLNC
             }
         }
 
-        public bool HasSpawnedForClient(NetworkId networkId, NetPeer peer)
+        public bool HasSpawnedForClient(NetId networkId, NetPeer peer)
         {
             if (!PeerStates.ContainsKey(peer))
             {
@@ -190,20 +380,20 @@ namespace HLNC
             return PeerStates[peer].SpawnAware[networkId];
         }
 
-        public void SetSpawnedForClient(NetworkId networkId, NetPeer peer)
+        public void SetSpawnedForClient(NetId networkId, NetPeer peer)
         {
             PeerStates[peer].SpawnAware[networkId] = true;
         }
 
-        public void ChangeScene(NetworkNodeWrapper node)
+        public void ChangeScene(NetNodeWrapper node)
         {
-            if (NetworkRunner.Instance.IsServer) return;
+            if (NetRunner.Instance.IsServer) return;
 
             if (RootScene != null)
             {
                 RootScene.Node.QueueFree();
             }
-            Debugger.Log("Changing scene to " + node.Node.Name);
+            Log("Changing scene to " + node.Node.Name);
             // TODO: Support this more generally
             GetTree().CurrentScene.AddChild(node.Node);
             RootScene = node;
@@ -211,9 +401,9 @@ namespace HLNC
             node._WorldReady();
         }
 
-        public PeerState? GetPeerWorldState(string peerId)
+        public PeerState? GetPeerWorldState(UUID peerId)
         {
-            var peer = NetworkRunner.Instance.GetPeer(peerId);
+            var peer = NetRunner.Instance.GetPeer(peerId);
             if (peer == null || !PeerStates.ContainsKey(peer))
             {
                 return null;
@@ -231,19 +421,20 @@ namespace HLNC
         }
 
         readonly private Dictionary<NetPeer, PeerState> pendingSyncStates = [];
-        public void SetPeerState(string peerId, PeerState state)
+        public void SetPeerState(UUID peerId, PeerState state)
         {
-            var peer = NetworkRunner.Instance.GetPeer(peerId);
+            var peer = NetRunner.Instance.GetPeer(peerId);
             SetPeerState(peer, state);
         }
         public void SetPeerState(NetPeer peer, PeerState state)
         {
             if (PeerStates[peer].Status != state.Status)
             {
-                EmitSignal("OnPeerSyncStatusChange", NetworkRunner.Instance.GetPeerId(peer), (int)state.Status);
+                // TODO: Should this have side-effects?
+                EmitSignal("OnPeerSyncStatusChange", NetRunner.Instance.GetPeerId(peer), (int)state.Status);
                 if (state.Status == PeerSyncStatus.IN_WORLD)
                 {
-                    EmitSignal("OnPlayerJoined", NetworkRunner.Instance.GetPeerId(peer));
+                    EmitSignal("OnPlayerJoined", NetRunner.Instance.GetPeerId(peer));
                 }
             }
             PeerStates[peer] = state;
@@ -256,27 +447,18 @@ namespace HLNC
             newState.Tick = CurrentTick;
             pendingSyncStates[peer] = newState;
         }
-
-        public NetworkNodeWrapper GetNetworkNode(NetworkId networkId)
-        {
-            if (NetworkScenes.ContainsKey(networkId))
-            {
-                return NetworkScenes[networkId];
-            }
-            return null;
-        }
-        public byte GetPeerNodeId(NetPeer peer, NetworkNodeWrapper node)
+        public byte GetPeerNodeId(NetPeer peer, NetNodeWrapper node)
         {
             if (node == null) return 0;
             if (!PeerStates.ContainsKey(peer))
             {
                 return 0;
             }
-            if (!PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetworkId))
+            if (!PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetId))
             {
                 return 0;
             }
-            return PeerStates[peer].WorldToPeerNodeMap[node.NetworkId];
+            return PeerStates[peer].WorldToPeerNodeMap[node.NetId];
         }
 
         /// <summary>
@@ -285,7 +467,7 @@ namespace HLNC
         /// <param name="peer"></param>
         /// <param name="networkId"></param>
         /// <returns></returns>
-        public NetworkNodeWrapper GetPeerNode(NetPeer peer, byte networkId)
+        public NetNodeWrapper GetPeerNode(NetPeer peer, byte networkId)
         {
             if (!PeerStates.ContainsKey(peer))
             {
@@ -295,29 +477,29 @@ namespace HLNC
             {
                 return null;
             }
-            return NetworkScenes[PeerStates[peer].PeerToWorldNodeMap[networkId]];
+            return NetScenes[PeerStates[peer].PeerToWorldNodeMap[networkId]];
         }
 
-        internal void DeregisterPeerNode(NetworkNodeWrapper node, NetPeer peer = null)
+        internal void DeregisterPeerNode(NetNodeWrapper node, NetPeer peer = null)
         {
-            if (NetworkRunner.Instance.IsServer)
+            if (NetRunner.Instance.IsServer)
             {
                 if (peer == null)
                 {
-                    Debugger.Log("Server must specify a peer when deregistering a node.", Debugger.DebugLevel.ERROR);
+                    Log("Server must specify a peer when deregistering a node.", Debugger.DebugLevel.ERROR);
                     return;
                 }
-                if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetworkId))
+                if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetId))
                 {
                     var peerState = PeerStates[peer];
-                    peerState.AvailableNodes &= ~(1 << PeerStates[peer].WorldToPeerNodeMap[node.NetworkId]);
+                    peerState.AvailableNodes &= ~(1 << PeerStates[peer].WorldToPeerNodeMap[node.NetId]);
                     PeerStates[peer] = peerState;
-                    PeerStates[peer].WorldToPeerNodeMap.Remove(node.NetworkId);
+                    PeerStates[peer].WorldToPeerNodeMap.Remove(node.NetId);
                 }
             }
             else
             {
-                NetworkScenes.Remove(node.NetworkId);
+                NetScenes.Remove(node.NetId);
             }
         }
 
@@ -327,26 +509,26 @@ namespace HLNC
         // Up to 64 nodes can be networked per peer at a time.
         // TODO: Consider supporting more
         // TODO: Handle de-registration of nodes (e.g. despawn, and object interest)
-        internal byte TryRegisterPeerNode(NetworkNodeWrapper node, NetPeer peer = null)
+        internal byte TryRegisterPeerNode(NetNodeWrapper node, NetPeer peer = null)
         {
-            if (NetworkRunner.Instance.IsServer)
+            if (NetRunner.Instance.IsServer)
             {
                 if (peer == null)
                 {
-                    Debugger.Log("Server must specify a peer when registering a node.", Debugger.DebugLevel.ERROR);
+                    Log("Server must specify a peer when registering a node.", Debugger.DebugLevel.ERROR);
                     return 0;
                 }
-                if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetworkId))
+                if (PeerStates[peer].WorldToPeerNodeMap.ContainsKey(node.NetId))
                 {
-                    return PeerStates[peer].WorldToPeerNodeMap[node.NetworkId];
+                    return PeerStates[peer].WorldToPeerNodeMap[node.NetId];
                 }
                 for (byte i = 0; i < MAX_NETWORK_NODES; i++)
                 {
                     byte localNodeId = (byte)(i + 1);
                     if ((PeerStates[peer].AvailableNodes & ((long)1 << localNodeId)) == 0)
                     {
-                        PeerStates[peer].WorldToPeerNodeMap[node.NetworkId] = localNodeId;
-                        PeerStates[peer].PeerToWorldNodeMap[localNodeId] = node.NetworkId;
+                        PeerStates[peer].WorldToPeerNodeMap[node.NetId] = localNodeId;
+                        PeerStates[peer].PeerToWorldNodeMap[localNodeId] = node.NetId;
                         var peerState = PeerStates[peer];
                         peerState.AvailableNodes |= (long)1 << localNodeId;
                         PeerStates[peer] = peerState;
@@ -354,34 +536,34 @@ namespace HLNC
                     }
                 }
 
-                Debugger.Log($"Peer {peer} has reached the maximum amount of nodes.", Debugger.DebugLevel.ERROR);
+                Log($"Peer {peer} has reached the maximum amount of nodes.", Debugger.DebugLevel.ERROR);
                 return 0;
             }
 
-            if (NetworkScenes.ContainsKey(node.NetworkId))
+            if (NetScenes.ContainsKey(node.NetId))
             {
                 return 0;
             }
 
-            NetworkScenes[node.NetworkId] = node;
+            NetScenes[node.NetId] = node;
             return 1;
         }
 
-        public T Spawn<T>(T node, NetworkNodeWrapper parent = null, NetPeer inputAuthority = null, string nodePath = ".") where T : Node, INetworkNode
+        public T Spawn<T>(T node, NetNodeWrapper parent = null, NetPeer inputAuthority = null, string nodePath = ".") where T : Node, INetNode
         {
-            if (NetworkRunner.Instance.IsClient) return null;
+            if (NetRunner.Instance.IsClient) return null;
 
             node.Network.IsClientSpawn = true;
             node.Network.CurrentWorld = this;
             node.Network.InputAuthority = inputAuthority;
             if (parent == null)
             {
-                node.Network.NetworkParent = RootScene;
-                node.Network.NetworkParent.Node.GetNode(nodePath).AddChild(node);
+                node.Network.NetParent = RootScene;
+                node.Network.NetParent.Node.GetNode(nodePath).AddChild(node);
             }
             else
             {
-                node.Network.NetworkParent = parent;
+                node.Network.NetParent = parent;
                 parent.Node.GetNode(nodePath).AddChild(node);
             }
             node.Network._NetworkPrepare(this);
@@ -391,9 +573,10 @@ namespace HLNC
 
         internal void JoinPeer(NetPeer peer, string token)
         {
-            NetworkRunner.Instance.PeerWorldMap[peer] = this;
+            NetRunner.Instance.PeerWorldMap[peer] = this;
             PeerStates[peer] = new PeerState
             {
+                Id = new UUID(),
                 Peer = peer,
                 Tick = 0,
                 Status = PeerSyncStatus.INITIAL,
@@ -404,10 +587,16 @@ namespace HLNC
             };
         }
 
+        internal void ExitPeer(NetPeer peer)
+        {
+            NetRunner.Instance.PeerWorldMap.Remove(peer);
+            PeerStates.Remove(peer);
+        }
+
         internal Dictionary<ENetPacketPeer, HLBuffer> ExportState(List<ENetPacketPeer> peers)
         {
             Dictionary<NetPeer, HLBuffer> peerBuffers = [];
-            foreach (var node in NetworkScenes.Values)
+            foreach (var node in NetScenes.Values)
             {
                 // Initialize serializers
                 foreach (var serializer in node.Serializers)
@@ -422,7 +611,7 @@ namespace HLNC
                 peerBuffers[peer] = new HLBuffer();
                 var peerNodesBuffers = new Dictionary<long, HLBuffer>();
                 var peerNodesSerializersList = new Dictionary<long, byte>();
-                foreach (var node in NetworkScenes.Values)
+                foreach (var node in NetScenes.Values)
                 {
                     var serializersBuffer = new HLBuffer();
                     byte serializersRun = 0;
@@ -441,7 +630,7 @@ namespace HLNC
                     {
                         continue;
                     }
-                    byte localNodeId = PeerStates[peer].WorldToPeerNodeMap[node.NetworkId];
+                    byte localNodeId = PeerStates[peer].WorldToPeerNodeMap[node.NetId];
                     updatedNodes |= (long)1 << localNodeId;
                     peerNodesSerializersList[localNodeId] = serializersRun;
                     peerNodesBuffers[localNodeId] = new HLBuffer();
@@ -465,7 +654,7 @@ namespace HLNC
                 }
             }
 
-            foreach (var node in NetworkScenes.Values)
+            foreach (var node in NetScenes.Values)
             {
                 // Finally, cleanup serializers
                 foreach (var serializer in node.Serializers)
@@ -494,14 +683,14 @@ namespace HLNC
             foreach (var nodeIdSerializerList in nodeIdToSerializerList)
             {
                 var localNodeId = nodeIdSerializerList.Key;
-                NetworkScenes.TryGetValue(localNodeId, out NetworkNodeWrapper node);
+                var node = GetNodeFromNetId(localNodeId);
                 if (node == null)
                 {
-                    var blankScene = new NetworkNode3D();
-                    blankScene.Network.NetworkId = localNodeId;
+                    var blankScene = new NetNode3D();
+                    blankScene.Network.NetId = AllocateNetId(localNodeId);
                     blankScene.SetupSerializers();
-                    NetworkRunner.Instance.AddChild(blankScene);
-                    node = new NetworkNodeWrapper(blankScene);
+                    NetRunner.Instance.AddChild(blankScene);
+                    node = new NetNodeWrapper(blankScene);
                 }
                 for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
                 {
@@ -510,7 +699,7 @@ namespace HLNC
                         continue;
                     }
                     var serializerInstance = node.Serializers[serializerIdx];
-                    serializerInstance.Import(this, stateBytes, out NetworkNodeWrapper nodeOut);
+                    serializerInstance.Import(this, stateBytes, out NetNodeWrapper nodeOut);
                     if (node != nodeOut)
                     {
                         node = nodeOut;
@@ -542,7 +731,7 @@ namespace HLNC
             //         pendingSyncStates.Remove(peer);
             //     }
             // }
-            foreach (var node in NetworkScenes.Values)
+            foreach (var node in NetScenes.Values)
             {
                 for (var serializerIdx = 0; serializerIdx < node.Serializers.Length; serializerIdx++)
                 {
@@ -560,14 +749,14 @@ namespace HLNC
             // GD.Print("INCOMING DATA: " + BitConverter.ToString(stateBytes));
             CurrentTick = incomingTick;
             ImportState(new HLBuffer(stateBytes));
-            foreach (var net_id in NetworkScenes.Keys)
+            foreach (var net_id in NetScenes.Keys)
             {
-                var node = NetworkScenes[net_id];
+                var node = NetScenes[net_id];
                 if (node == null)
                     continue;
                 if (node.Node.IsQueuedForDeletion())
                 {
-                    NetworkScenes.Remove(net_id);
+                    NetScenes.Remove(net_id);
                     continue;
                 }
                 node._NetworkProcess(CurrentTick);
@@ -584,38 +773,42 @@ namespace HLNC
                 }
             }
 
-            foreach (var queuedFunction in queuedNetworkFunctions) {
+            foreach (var queuedFunction in queuedNetFunctions)
+            {
                 var args = queuedFunction.Args;
-                if (queuedFunction.FunctionInfo.WithPeer) {
-                    args = new List<Variant>(){queuedFunction.Sender}.Concat(args).ToArray();
+                if (queuedFunction.FunctionInfo.WithPeer)
+                {
+                    args = new List<Variant>() { queuedFunction.Sender }.Concat(args).ToArray();
                 }
-                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetworkNode;
-                functionNode.Network.IsRemoteCall = true;
+                var functionNode = queuedFunction.Node.GetNode(queuedFunction.FunctionInfo.NodePath) as INetNode;
+                functionNode.Network.IsInboundCall = true;
                 functionNode.Network.Owner.Node.Call(queuedFunction.FunctionInfo.Name, args);
-                functionNode.Network.IsRemoteCall = false;
+                functionNode.Network.IsInboundCall = false;
             }
-            queuedNetworkFunctions.Clear();
+            queuedNetFunctions.Clear();
 
             // Acknowledge tick
             HLBuffer buffer = new HLBuffer();
             HLBytes.Pack(buffer, incomingTick);
-            NetworkRunner.Instance.ENetHost.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
+            NetRunner.Instance.ENetHost.Send(1, buffer.bytes, (int)ENetPacketPeer.FlagUnsequenced);
         }
 
-        public bool RegisterSpawn(NetworkNodeWrapper wrapper)
+        /// <summary>
+        /// This is called for nodes that are initialized in a scene by default.
+        /// Clients automatically dequeue all network nodes on initialization.
+        /// All network nodes on the client side must come from the server by gaining Interest in the node.
+        /// </summary>
+        /// <param name="wrapper"></param>
+        /// <returns></returns>
+        public bool CheckStaticInitialization(NetNodeWrapper wrapper)
         {
-            if (NetworkRunner.Instance.IsServer)
+            if (NetRunner.Instance.IsServer)
             {
-                if (wrapper.NetworkId == -1) {
-                    NetworkId_counter += 1;
-                    while (NetworkScenes.ContainsKey(NetworkId_counter))
-                    {
-                        NetworkId_counter += 1;
-                    }
-                    wrapper.NetworkId = NetworkId_counter;
-                }
-                NetworkScenes[wrapper.NetworkId] = wrapper;
-            } else {
+                wrapper.NetId = AllocateNetId();
+                NetScenes[wrapper.NetId] = wrapper;
+            }
+            else
+            {
                 if (!wrapper.IsClientSpawn)
                 {
                     wrapper.Node.QueueFree();
@@ -626,12 +819,12 @@ namespace HLNC
             return true;
         }
 
-        internal void SendInput(NetworkNodeWrapper networkNode)
+        internal void SendInput(NetNodeWrapper netNode)
         {
-            if (NetworkRunner.Instance.IsServer) return;
-            var setInputs = networkNode.InputBuffer.Keys.Aggregate((long)0, (acc, key) =>
+            if (NetRunner.Instance.IsServer) return;
+            var setInputs = netNode.InputBuffer.Keys.Aggregate((long)0, (acc, key) =>
             {
-                if (networkNode.PreviousInputBuffer.ContainsKey(key) && networkNode.PreviousInputBuffer[key].Equals(networkNode.InputBuffer[key]))
+                if (netNode.PreviousInputBuffer.ContainsKey(key) && netNode.PreviousInputBuffer[key].Equals(netNode.InputBuffer[key]))
                 {
                     return acc;
                 }
@@ -643,39 +836,38 @@ namespace HLNC
                 return;
             }
 
-            var inputBuffer = new HLBuffer();
-            HLBytes.Pack(inputBuffer, (byte)networkNode.NetworkId);
+            var inputBuffer = NetId.NetworkSerialize(this, NetRunner.Instance.ENetHost, netNode.NetId);
             HLBytes.Pack(inputBuffer, setInputs);
-            foreach (var key in networkNode.InputBuffer.Keys)
+            foreach (var key in netNode.InputBuffer.Keys)
             {
                 if ((setInputs & ((long)1 << key)) == 0)
                 {
                     continue;
                 }
-                networkNode.PreviousInputBuffer[key] = networkNode.InputBuffer[key];
+                netNode.PreviousInputBuffer[key] = netNode.InputBuffer[key];
                 HLBytes.Pack(inputBuffer, key);
-                HLBytes.PackVariant(inputBuffer, networkNode.InputBuffer[key], true, true);
+                HLBytes.PackVariant(inputBuffer, netNode.InputBuffer[key], true, true);
             }
 
-            NetworkRunner.Instance.ENetHost.Send((int)NetworkRunner.ENetChannelId.Input, inputBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
-            networkNode.InputBuffer = [];
+            NetRunner.Instance.ENetHost.Send((int)NetRunner.ENetChannelId.Input, inputBuffer.bytes, (int)ENetPacketPeer.FlagReliable);
+            netNode.InputBuffer = [];
         }
 
         internal void ReceiveInput(NetPeer peer, HLBuffer buffer)
         {
-            if (NetworkRunner.Instance.IsClient) return;
+            if (NetRunner.Instance.IsClient) return;
             var networkId = HLBytes.UnpackByte(buffer);
-            var worldNetworkId = PeerStates[peer].PeerToWorldNodeMap.GetValueOrDefault(networkId, -1);
-            var node = GetNodeFromNetworkId(worldNetworkId);
+            var worldNetId = GetNetIdFromPeerId(peer, networkId);
+            var node = GetNodeFromNetId(worldNetId);
             if (node == null)
             {
-                Debugger.Log($"Received input for unknown node {worldNetworkId}", Debugger.DebugLevel.ERROR);
+                Log($"Received input for unknown node {worldNetId}", Debugger.DebugLevel.ERROR);
                 return;
             }
 
             if (node.InputAuthority != peer)
             {
-                Debugger.Log($"Received input for node {worldNetworkId} from unauthorized peer {peer}", Debugger.DebugLevel.ERROR);
+                Log($"Received input for node {worldNetId} from unauthorized peer {peer}", Debugger.DebugLevel.ERROR);
                 return;
             }
 
@@ -693,48 +885,63 @@ namespace HLNC
         }
 
         // WARNING: These are not exactly tick-aligned for state reconcilliation. Could cause state issues because the assumed tick is when it is received?
-        internal void SendNetworkFunction(NetworkId netId, byte functionId, Variant[] args)
+        internal void SendNetFunction(NetId netId, byte functionId, Variant[] args)
         {
-            var buffer = new HLBuffer();
-            if (NetworkRunner.Instance.IsServer) {
-                var node = GetNodeFromNetworkId(netId);
+            if (NetRunner.Instance.IsServer)
+            {
+                var node = GetNodeFromNetId(netId);
                 // TODO: Apply interest layers for network function, like network property
-                foreach (var peer in node.InterestLayers.Keys) {
-                    HLBytes.Pack(buffer, GetPeerNodeId(NetworkRunner.Instance.Peers[peer], node));
+                foreach (var peer in node.InterestLayers.Keys)
+                {
+                    var buffer = NetId.NetworkSerialize(this, NetRunner.Instance.Peers[peer], netId);
+                    HLBytes.Pack(buffer, GetPeerNodeId(NetRunner.Instance.Peers[peer], node));
                     HLBytes.Pack(buffer, functionId);
                     foreach (var arg in args)
                     {
                         HLBytes.PackVariant(buffer, arg);
                     }
-                    NetworkRunner.Instance.Peers[peer].Send((int)NetworkRunner.ENetChannelId.Function, buffer.bytes, (int)ENetPacketPeer.FlagReliable);
+                    NetRunner.Instance.Peers[peer].Send((int)NetRunner.ENetChannelId.Function, buffer.bytes, (int)ENetPacketPeer.FlagReliable);
                 }
-            } else {
-                HLBytes.Pack(buffer, (byte)netId);
+            }
+            else
+            {
+                var buffer = NetId.NetworkSerialize(this, NetRunner.Instance.ENetHost, netId);
                 HLBytes.Pack(buffer, functionId);
                 foreach (var arg in args)
                 {
                     HLBytes.PackVariant(buffer, arg);
                 }
-                NetworkRunner.Instance.ENetHost.Send((int)NetworkRunner.ENetChannelId.Function, buffer.bytes, (int)ENetPacketPeer.FlagReliable);
+                NetRunner.Instance.ENetHost.Send((int)NetRunner.ENetChannelId.Function, buffer.bytes, (int)ENetPacketPeer.FlagReliable);
             }
         }
 
-        internal void ReceiveNetworkFunction(NetPeer peer, HLBuffer buffer)
+        internal void ReceiveNetFunction(NetPeer peer, HLBuffer buffer)
         {
             var netId = HLBytes.UnpackByte(buffer);
             var functionId = HLBytes.UnpackByte(buffer);
-            var node = NetworkRunner.Instance.IsServer ? GetPeerNode(peer, netId) : GetNodeFromNetworkId(netId);
+            var node = NetRunner.Instance.IsServer ? GetPeerNode(peer, netId) : GetNodeFromNetId(netId);
             List<Variant> args = [];
-            var functionInfo = NetworkScenesRegister.UnpackFunction(node.Node.SceneFilePath, functionId);
-            foreach (var arg in functionInfo.Arguments) {
-                var result = HLBytes.UnpackVariant(buffer, knownType: arg.Type);
-                if (!result.HasValue) {
-                    Debugger.Log($"Failed to unpack argument of type {arg} for function {functionInfo.Name}", Debugger.DebugLevel.ERROR);
+            var functionInfo = ProtocolRegistry.Instance.UnpackFunction(node.Node.SceneFilePath, functionId);
+            foreach (var arg in functionInfo.Arguments)
+            {
+                var result = HLBytes.UnpackVariant(buffer, knownType: arg.VariantType);
+                if (!result.HasValue)
+                {
+                    Log($"Failed to unpack argument of type {arg} for function {functionInfo.Name}", Debugger.DebugLevel.ERROR);
                     return;
                 }
                 args.Add(result.Value);
             }
-            queuedNetworkFunctions.Add(new QueuedFunction {
+            if (NetRunner.Instance.IsServer && (functionInfo.Sources & NetFunction.NetworkSources.Client) == 0)
+            {
+                return;
+            }
+            if (NetRunner.Instance.IsClient && (functionInfo.Sources & NetFunction.NetworkSources.Server) == 0)
+            {
+                return;
+            }
+            queuedNetFunctions.Add(new QueuedFunction
+            {
                 Node = node.Node,
                 FunctionInfo = functionInfo,
                 Args = args.ToArray(),

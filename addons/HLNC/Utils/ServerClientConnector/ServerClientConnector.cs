@@ -7,6 +7,7 @@ namespace HLNC.Utils
 	{
 		public override void _Ready()
 		{
+			GD.Print("ServerClientConnector _Ready");
 			if (Env.Instance.HasServerFeatures)
 			{
 				prepareServer();
@@ -19,14 +20,14 @@ namespace HLNC.Utils
 
 		private void prepareServer()
 		{
-			NetworkRunner.Instance.StartServer();
+			NetRunner.Instance.StartServer();
 			if (Env.Instance.InitialWorldScene != null)
 			{
-				Debugger.Log("Loading initial world scene: " + Env.Instance.InitialWorldScene);
-				Debugger.Log("No existing zone data found. Create fresh zone instance.");
+				Debugger.Instance.Log("Loading initial world scene: " + Env.Instance.InitialWorldScene);
+				Debugger.Instance.Log("No existing zone data found. Create fresh zone instance.");
 				var InitialWorldScene = GD.Load<PackedScene>(Env.Instance.InitialWorldScene);
-				NetworkRunner.Instance.CreateWorldPacked(Env.Instance.InitialWorldId, InitialWorldScene);
-				Debugger.Log("Server ready");
+				NetRunner.Instance.CreateWorldPacked(Env.Instance.InitialWorldId, InitialWorldScene);
+				Debugger.Instance.Log("Server ready");
 			}
 			else
 			{
@@ -36,7 +37,8 @@ namespace HLNC.Utils
 
 		private void prepareClient()
 		{
-			NetworkRunner.Instance.StartClient();
+			GD.Print("ServerClientConnector prepareClient");
+			NetRunner.Instance.StartClient();
 		}
 	}
 }

@@ -4,6 +4,7 @@ using Godot;
 
 namespace HLNC.Utils
 {
+    [Tool]
     public partial class Env : Node
     {
         public static Env Instance { get; private set; }
@@ -42,11 +43,11 @@ namespace HLNC.Utils
 
             if (StartArgs.ContainsKey("worldId"))
             {
-                InitialWorldId = new Guid(StartArgs["worldId"]);
+                InitialWorldId = new UUID(StartArgs["worldId"]);
             }
             else
             {
-                InitialWorldId = Guid.Empty;
+                InitialWorldId = UUID.Empty;
             }
         }
 
@@ -87,7 +88,7 @@ namespace HLNC.Utils
 
         public string InitialWorldScene { get; private set; }
 
-        public Guid InitialWorldId { get; private set; }
+        public UUID InitialWorldId { get; private set; }
 
         /// <inheritdoc/>
 

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Godot;
 
 namespace HLNC.Serialization
@@ -9,9 +7,19 @@ namespace HLNC.Serialization
     /// Used extensively by <see cref="HLBytes"/>.
     /// </summary>
     /// <param name="bytes"></param>
-    public partial class HLBuffer(byte[] bytes = null): RefCounted
+    public partial class HLBuffer: RefCounted
     {
-        public byte[] bytes = bytes ?? [];
+        public HLBuffer()
+        {
+            bytes = [];
+        }
+
+        public HLBuffer(byte[] bytes)
+        {
+            this.bytes = bytes;
+        }
+
+        public byte[] bytes;
         public int pointer = 0;
         public bool IsPointerEnd => pointer >= bytes.Length;
         public const int CONSISTENCY_BUFFER_SIZE_LIMIT = 256;

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using HLNC.Serialization;
-
 namespace HLNC.Serialization.Serializers
 {
     public interface IDeserializedData { };
@@ -19,7 +14,7 @@ namespace HLNC.Serialization.Serializers
         /// <param name="networkState"></param>
         /// <param name="data"></param>
         /// <param name="nodeOut"></param>
-        public void Import(WorldRunner currentWorld, HLBuffer data, out NetworkNodeWrapper nodeOut);
+        public void Import(WorldRunner currentWorld, HLBuffer data, out NetNodeWrapper nodeOut);
 
         /// <summary>
         /// Server-side only. Serialize and send data to the client.

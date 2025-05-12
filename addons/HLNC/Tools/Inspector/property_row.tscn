@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://dgc5sfmxnea6h"]
+
+[node name="PropertyRow" type="HBoxContainer"]
+
+[node name="Name" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Yellow"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "String"
+vertical_alignment = 1
