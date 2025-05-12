@@ -58,7 +58,7 @@
     <NamingMethod>MemberName</NamingMethod>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <RootNamespaceContainer>False</RootNamespaceContainer>
-    <NamespaceGrouping>False</NamespaceGrouping>
+    <NamespaceGrouping>True</NamespaceGrouping>
     <MaximumGroupParts>2</MaximumGroupParts>
     <Preliminary>False</Preliminary>
     <SdkLinkTarget>Blank</SdkLinkTarget>
@@ -85,6 +85,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="Content\" />
+    <Folder Include="Content\Documentation\" />
+    <Folder Include="Content\Images\" />
+    <Folder Include="Content\Tutorials\" />
     <Folder Include="icons" />
     <Folder Include="media" />
   </ItemGroup>
@@ -97,13 +101,15 @@
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup> -->
   <ItemGroup>
+    <Content Include="Content\Documentation\1.Introduction.md" />
+    <Content Include="Content\Documentation\2.Network Lifecycle.md" />
+    <Content Include="Content\Notes.md" />
     <Content Include="icons\Help.png" />
   </ItemGroup>
   <ItemGroup>
     <SiteMap Include="Documentation.sitemap" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Introduction.md" />
     <Content Include="media\Pasted image 20250510132846.png">
       <ImageId>Pasted image 20250510132846</ImageId>
       <AlternateText>Pasted image 20250510132846</AlternateText>
@@ -125,6 +131,32 @@
       <AlternateText>Pasted image 20250510140902</AlternateText>
     </Content>
     <Content Include="media\Pasted image 20250510143316.png">
+      <ImageId>Pasted image 20250510143316</ImageId>
+      <AlternateText>Pasted image 20250510143316</AlternateText>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\Images\Pasted image 20250510132846.png">
+      <ImageId>Pasted image 20250510132846</ImageId>
+      <AlternateText>Pasted image 20250510132846</AlternateText>
+    </Content>
+    <Content Include="Content\Images\Pasted image 20250510135723.png">
+      <ImageId>Pasted image 20250510135723</ImageId>
+      <AlternateText>Pasted image 20250510135723</AlternateText>
+    </Content>
+    <Content Include="Content\Images\Pasted image 20250510140558.png">
+      <ImageId>Pasted image 20250510140558</ImageId>
+      <AlternateText>Pasted image 20250510140558</AlternateText>
+    </Content>
+    <Content Include="Content\Images\Pasted image 20250510140619.png">
+      <ImageId>Pasted image 20250510140619</ImageId>
+      <AlternateText>Pasted image 20250510140619</AlternateText>
+    </Content>
+    <Content Include="Content\Images\Pasted image 20250510140902.png">
+      <ImageId>Pasted image 20250510140902</ImageId>
+      <AlternateText>Pasted image 20250510140902</AlternateText>
+    </Content>
+    <Content Include="Content\Images\Pasted image 20250510143316.png">
       <ImageId>Pasted image 20250510143316</ImageId>
       <AlternateText>Pasted image 20250510143316</AlternateText>
     </Content>
