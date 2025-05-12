@@ -1,7 +1,5 @@
 namespace HLNC.Serialization.Serializers
 {
-    public interface IDeserializedData { };
-
     /// <summary>
     /// Defines an object which the server utilizes to serialize and send data to the client, and the client can then receive and deserialize from the server.
     /// </summary>

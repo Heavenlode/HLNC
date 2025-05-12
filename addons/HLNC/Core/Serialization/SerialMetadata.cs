@@ -3,7 +3,7 @@ using Godot;
 namespace HLNC.Serialization {
     /// <summary>
     /// This resource is used to extend Godot's Variant type,
-    /// particularly for the types sent across the network for <see cref="CollectedNetProperty"/> and <see cref="CollectedNetFunction"/>.
+    /// particularly for the types sent across the network for <see cref="ProtocolNetProperty"/> and <see cref="ProtocolNetFunction"/>.
     /// The purpose is to have additional information at runtime about how the data should be encoded and decoded without using reflection.
     /// We can't depend on Godot's variant alone, as the provided types in Variant.Type are not detailed enough.
     /// 

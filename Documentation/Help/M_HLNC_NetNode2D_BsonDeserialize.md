@@ -7,7 +7,7 @@
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -28,7 +28,7 @@ public static NetNode2D BsonDeserialize(
 \[Missing &lt;returns&gt; documentation for "M:HLNC.NetNode2D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode2D)"\]
 
 #### Implements
-<a href="M_HLNC_IBsonSerializable_1_BsonDeserialize">IBsonSerializable(T).BsonDeserialize(Variant, Byte[], T)</a>  
+<a href="M_HLNC_Serialization_IBsonSerializable_1_BsonDeserialize">IBsonSerializable(T).BsonDeserialize(Variant, Byte[], T)</a>  
 
 
 ## See Also

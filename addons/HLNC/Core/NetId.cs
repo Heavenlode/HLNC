@@ -5,6 +5,11 @@ using MongoDB.Bson;
 
 namespace HLNC
 {
+    /**
+    <summary>
+    A unique identifier for a networked object. The NetId for a node is different between the server and client. On the client side, a NetId is only a byte, whereas on the server side it is an int64. The server's <see cref="WorldRunner"/> keeps a map of all NetIds to their corresponding value on each client for serialization.
+    </summary>
+    */
     [SerialTypeIdentifier("NetId")]
     public partial class NetId : RefCounted, INetSerializable<NetId>, IBsonSerializable<NetId>
     {

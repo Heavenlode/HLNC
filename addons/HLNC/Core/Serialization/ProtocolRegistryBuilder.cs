@@ -170,7 +170,7 @@ namespace HLNC.Serialization
                 if (result.Properties.Count > 0)
                 {
                     resource.PROPERTIES_MAP[sceneResourcePath] = result.Properties;
-                    resource.PROPERTIES_LOOKUP[sceneResourcePath] = new Dictionary<int, CollectedNetProperty>();
+                    resource.PROPERTIES_LOOKUP[sceneResourcePath] = new Dictionary<int, ProtocolNetProperty>();
 
                     int propId = 0;
                     foreach (var node in result.Properties)
@@ -185,7 +185,7 @@ namespace HLNC.Serialization
                 if (result.Functions.Count > 0)
                 {
                     resource.FUNCTIONS_MAP[sceneResourcePath] = result.Functions;
-                    resource.FUNCTIONS_LOOKUP[sceneResourcePath] = new Dictionary<int, CollectedNetFunction>();
+                    resource.FUNCTIONS_LOOKUP[sceneResourcePath] = new Dictionary<int, ProtocolNetFunction>();
 
                     int funcId = 0;
                     foreach (var node in result.Functions)
@@ -268,8 +268,8 @@ namespace HLNC.Serialization
 
             SceneBytecode result = new SceneBytecode
             {
-                Properties = new Dictionary<string, Dictionary<string, CollectedNetProperty>>(),
-                Functions = new Dictionary<string, Dictionary<string, CollectedNetFunction>>(),
+                Properties = new Dictionary<string, Dictionary<string, ProtocolNetProperty>>(),
+                Functions = new Dictionary<string, Dictionary<string, ProtocolNetFunction>>(),
                 StaticNetNodes = new Array<Dictionary>(),
                 IsNetScene = false
             };
@@ -345,7 +345,7 @@ namespace HLNC.Serialization
 
                     var propType = GetVariantType(propertyInfo.Property.PropertyType);
 
-                    var networkProp = new CollectedNetProperty
+                    var networkProp = new ProtocolNetProperty
                     {
                         NodePath = nodePath,
                         Name = propertyInfo.Property.Name,
@@ -361,7 +361,7 @@ namespace HLNC.Serialization
 
                     if (!result.Properties.ContainsKey(nodePath))
                     {
-                        result.Properties[nodePath] = new Dictionary<string, CollectedNetProperty>();
+                        result.Properties[nodePath] = new Dictionary<string, ProtocolNetProperty>();
                     }
                     result.Properties[nodePath][propertyInfo.Property.Name] = networkProp;
                 }
@@ -380,7 +380,7 @@ namespace HLNC.Serialization
                         variantTypes[i] = GetVariantType(parameters[i].ParameterType);
                     }
 
-                    var networkFunc = new CollectedNetFunction
+                    var networkFunc = new ProtocolNetFunction
                     {
                         NodePath = nodePath,
                         Name = methodInfo.Method.Name,
@@ -395,7 +395,7 @@ namespace HLNC.Serialization
 
                     if (!result.Functions.ContainsKey(nodePath))
                     {
-                        result.Functions[nodePath] = new Dictionary<string, CollectedNetFunction>();
+                        result.Functions[nodePath] = new Dictionary<string, ProtocolNetFunction>();
                     }
                     result.Functions[nodePath][methodInfo.Method.Name] = networkFunc;
                 }

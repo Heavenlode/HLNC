@@ -8,7 +8,7 @@ Cached name for the 'NetworkLerpNetRotation' method.
 
 ## Definition
 </SectionTitle>**Namespace:** <a href="N_HLNC_Utility_Nodes">HLNC.Utility.Nodes</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#

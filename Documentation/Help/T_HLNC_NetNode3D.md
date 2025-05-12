@@ -1,13 +1,13 @@
 # NetNode3D Class
 
 
-Node3D, extended with HLNC networking capabilities. This is the most basic networked 3D object. On every network tick, all NetNode3D nodes in the scene tree automatically have their network properties updated with the latest data from the server. Then, the special NetworkProcess method is called, which indicates that a network Tick has occurred. Network properties can only update on the server side. For a client to update network properties, they must send client inputs to the server via implementing the INetworkInputHandler interface, or network function calls via NetFunction attributes. The server receives client inputs, can access them via GetInput, and handle them accordingly within NetworkProcess to mutate state.
+Node3D, extended with HLNC networking capabilities. This is the most basic networked 3D object. See <a href="T_HLNC_NetNode">NetNode</a> for more information.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -18,7 +18,7 @@ public class NetNode3D : Node3D, INetNode,
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  Node  →  Node3D  →  NetNode3D</td></tr>
 <tr><td><strong>Derived</strong></td><td><a href="T_HLNC_Utility_Nodes_NetTransform3D">HLNC.Utility.Nodes.NetTransform3D</a></td></tr>
-<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_IBsonSerializable_1">IBsonSerializable</a>(NetNode3D), <a href="T_HLNC_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_INetNode">INetNode</a>, <a href="T_HLNC_INetSerializable_1">INetSerializable</a>(NetNode3D), <a href="https://learn.microsoft.com/dotnet/api/system.componentmodel.inotifypropertychanged" target="_blank" rel="noopener noreferrer">INotifyPropertyChanged</a></td></tr>
+<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_INetNode">INetNode</a>, <a href="T_HLNC_Serialization_IBsonSerializable_1">IBsonSerializable</a>(NetNode3D), <a href="T_HLNC_Serialization_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_Serialization_INetSerializable_1">INetSerializable</a>(NetNode3D), <a href="https://learn.microsoft.com/dotnet/api/system.componentmodel.inotifypropertychanged" target="_blank" rel="noopener noreferrer">INotifyPropertyChanged</a></td></tr>
 </table>
 
 

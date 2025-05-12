@@ -14,10 +14,10 @@ Corresponds to the NotificationEnterTree notification in _Notification(Int32).</
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_GetPropertyCount">GetPropertyCount</a></td>
 <td>Get the number of NetProperties in a scene.</td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(CollectedNetProperty, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(ProtocolNetProperty, StaticMethodType)</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_IsNetScene">IsNetScene</a></td>

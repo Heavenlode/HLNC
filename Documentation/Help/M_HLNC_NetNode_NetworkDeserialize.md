@@ -7,7 +7,7 @@
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -29,7 +29,7 @@ public static NetNode NetworkDeserialize(
 \[Missing &lt;returns&gt; documentation for "M:HLNC.NetNode.NetworkDeserialize(HLNC.WorldRunner,Godot.ENetPacketPeer,HLNC.Serialization.HLBuffer,HLNC.NetNode)"\]
 
 #### Implements
-<a href="M_HLNC_INetSerializable_1_NetworkDeserialize">INetSerializable(T).NetworkDeserialize(WorldRunner, ENetPacketPeer, HLBuffer, T)</a>  
+<a href="M_HLNC_Serialization_INetSerializable_1_NetworkDeserialize">INetSerializable(T).NetworkDeserialize(WorldRunner, ENetPacketPeer, HLBuffer, T)</a>  
 
 
 ## See Also

@@ -1,13 +1,13 @@
 # NetNode2D Class
 
 
-Node2D, extended with HLNC networking capabilities. This is the most basic networked 3D object. On every network tick, all NetNode2D nodes in the scene tree automatically have their <a href="T_HLNC_NetProperty">network properties</a> updated with the latest data from the server. Then, the special <a href="M_HLNC_NetNode2D__NetworkProcess">NetworkProcess</a> method is called, which indicates that a network Tick has occurred. Network properties can only update on the server side. For a client to update network properties, they must send client inputs to the server via implementing the [!:INetworkInputHandler] interface, or network function calls via <a href="T_HLNC_NetFunction">NetFunction</a> attributes. The server receives client inputs, can access them via [!:GetInput], and handle them accordingly within <a href="M_HLNC_NetNode2D__NetworkProcess">NetworkProcess</a> to mutate state.
+Node2D, extended with HLNC networking capabilities. This is the most basic networked 2D object. See <a href="T_HLNC_NetNode">NetNode</a> for more information.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -18,7 +18,7 @@ public class NetNode2D : Node2D, INetNode,
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  Node  →  CanvasItem  →  Node2D  →  NetNode2D</td></tr>
 <tr><td><strong>Derived</strong></td><td><a href="T_HLNC_Utility_Nodes_NetTransform2D">HLNC.Utility.Nodes.NetTransform2D</a></td></tr>
-<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_IBsonSerializable_1">IBsonSerializable</a>(NetNode2D), <a href="T_HLNC_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_INetNode">INetNode</a>, <a href="T_HLNC_INetSerializable_1">INetSerializable</a>(NetNode2D), <a href="https://learn.microsoft.com/dotnet/api/system.componentmodel.inotifypropertychanged" target="_blank" rel="noopener noreferrer">INotifyPropertyChanged</a></td></tr>
+<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_INetNode">INetNode</a>, <a href="T_HLNC_Serialization_IBsonSerializable_1">IBsonSerializable</a>(NetNode2D), <a href="T_HLNC_Serialization_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_Serialization_INetSerializable_1">INetSerializable</a>(NetNode2D), <a href="https://learn.microsoft.com/dotnet/api/system.componentmodel.inotifypropertychanged" target="_blank" rel="noopener noreferrer">INotifyPropertyChanged</a></td></tr>
 </table>
 
 

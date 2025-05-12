@@ -6,7 +6,7 @@ namespace HLNC
     /// Mark a property as being Networked.
     /// The <see cref="WorldRunner"/> automatically processes these through the <see cref="Serialization.Serializers.NetPropertiesSerializer"/> to be optimally sent across the network.
     /// Only changes are networked.
-    /// When the client receives a change on the property, if a method exists <code>OnNetworkChange{PropertyName}(int tick, T oldValue, T newValue)</code> it will be called on the client side.
+    /// When the NetNode receives a change on the property, it will also attempt to call a method <code>NetNode.OnNetworkChange{PropertyName}(int tick, T oldValue, T newValue)</code> on the client side if it exists.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class NetProperty : Attribute

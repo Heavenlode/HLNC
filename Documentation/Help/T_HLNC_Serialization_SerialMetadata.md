@@ -1,13 +1,13 @@
 # SerialMetadata Class
 
 
-This resource is used to extend Godot's Variant type, particularly for the types sent across the network for <a href="T_HLNC_Serialization_CollectedNetProperty">CollectedNetProperty</a> and <a href="T_HLNC_Serialization_CollectedNetFunction">CollectedNetFunction</a>. The purpose is to have additional information at runtime about how the data should be encoded and decoded without using reflection. We can't depend on Godot's variant alone, as the provided types in Variant.Type are not detailed enough. The value used for the TypeIdentifier comes from the [!:ProtocolRegistry.SerialTypeIdentifiers] dictionary, which itself is populated at compile time by the <a href="T_HLNC_Serialization_SerialTypeIdentifier">SerialTypeIdentifier</a> attribute.
+This resource is used to extend Godot's Variant type, particularly for the types sent across the network for <a href="T_HLNC_Serialization_ProtocolNetProperty">ProtocolNetProperty</a> and <a href="T_HLNC_Serialization_ProtocolNetFunction">ProtocolNetFunction</a>. The purpose is to have additional information at runtime about how the data should be encoded and decoded without using reflection. We can't depend on Godot's variant alone, as the provided types in Variant.Type are not detailed enough. The value used for the TypeIdentifier comes from the [!:ProtocolRegistry.SerialTypeIdentifiers] dictionary, which itself is populated at compile time by the <a href="T_HLNC_Serialization_SerialTypeIdentifier">SerialTypeIdentifier</a> attribute.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#

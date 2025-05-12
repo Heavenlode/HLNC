@@ -1,13 +1,13 @@
 # WorldRunner Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.WorldRunner"\]
+Manages the network state of all <a href="T_HLNC_NetNode">NetNode</a>s in the scene. Inside the <a href="T_HLNC_NetRunner">NetRunner</a> are one or more “Worlds”. Each World represents some part of the game that is isolated from other parts. For example, different maps, dungeon instances, etc. Worlds are dynamically created by calling [!:NetRunner.CreateWorld]. Worlds cannot directly interact with each other and do not share state. Players only exist in one World at a time, so it can be helpful to think of the clients as being connected to a World directly.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#

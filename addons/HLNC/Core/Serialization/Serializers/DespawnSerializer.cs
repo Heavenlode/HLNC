@@ -1,6 +1,6 @@
 namespace HLNC.Serialization.Serializers
 {
-    internal class DespawnSerializer(NetNodeWrapper node) : IStateSerializer
+    class DespawnSerializer(NetNodeWrapper node) : IStateSerializer
     {
         private struct Data
         {

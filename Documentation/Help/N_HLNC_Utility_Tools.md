@@ -8,9 +8,6 @@
 ## Classes
 <table>
 <tr>
-<td><a href="T_HLNC_Utility_Tools_BsonTransformer">BsonTransformer</a></td>
-<td> </td></tr>
-<tr>
 <td><a href="T_HLNC_Utility_Tools_Debugger">Debugger</a></td>
 <td> </td></tr>
 <tr>

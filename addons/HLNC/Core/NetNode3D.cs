@@ -9,14 +9,12 @@ using MongoDB.Bson.Serialization;
 
 namespace HLNC
 {
-	/// <summary>
-	/// Node3D, extended with HLNC networking capabilities. This is the most basic networked 3D object.
-	/// On every network tick, all NetNode3D nodes in the scene tree automatically have their network properties updated with the latest data from the server.
-	/// Then, the special NetworkProcess method is called, which indicates that a network Tick has occurred.
-	/// Network properties can only update on the server side.
-	/// For a client to update network properties, they must send client inputs to the server via implementing the INetworkInputHandler interface, or network function calls via NetFunction attributes.
-	/// The server receives client inputs, can access them via GetInput, and handle them accordingly within NetworkProcess to mutate state.
-	/// </summary>
+	/**
+		<summary>
+		<see cref="Node3D">Node3D</see>, extended with HLNC networking capabilities. This is the most basic networked 3D object.
+		See <see cref="NetNode"/> for more information.
+		</summary>
+	*/
 	[SerialTypeIdentifier("NetNode"), Icon("res://addons/HLNC/Core/NetNode3D.png")]
 	public partial class NetNode3D : Node3D, INetNode, INotifyPropertyChanged, INetSerializable<NetNode3D>, IBsonSerializable<NetNode3D>
 	{

@@ -63,7 +63,7 @@ namespace HLNC.Serialization
             return STATIC_METHOD_CALLABLES[staticMethodIndex][type];
         }
 
-        public Callable? GetStaticMethodCallable(CollectedNetProperty property, StaticMethodType type)
+        public Callable? GetStaticMethodCallable(ProtocolNetProperty property, StaticMethodType type)
         {
             if (property.ClassIndex == -1)
                 return null;
@@ -121,11 +121,11 @@ namespace HLNC.Serialization
         /// <param name="property">The property name.</param>
         /// <param name="prop">The property, if found.</param>
         /// <returns>True if the property was found, false otherwise.</returns>
-        public bool LookupProperty(string scene, string node, string property, out CollectedNetProperty prop)
+        public bool LookupProperty(string scene, string node, string property, out ProtocolNetProperty prop)
         {
             if (!resource.PROPERTIES_MAP.ContainsKey(scene) || !resource.PROPERTIES_MAP[scene].ContainsKey(node) || !resource.PROPERTIES_MAP[scene][node].ContainsKey(property))
             {
-                prop = new CollectedNetProperty();
+                prop = new ProtocolNetProperty();
                 return false;
             }
 
@@ -172,7 +172,7 @@ namespace HLNC.Serialization
             {
                 var entry = new Dictionary();
                 entry["nodePath"] = node.Key;
-                entry["properties"] = new Array<CollectedNetProperty>(node.Value.Values);
+                entry["properties"] = new Array<ProtocolNetProperty>(node.Value.Values);
                 result.Add(entry);
             }
             return result;
@@ -184,7 +184,7 @@ namespace HLNC.Serialization
         /// <param name="scene">The scene path.</param>
         /// <param name="node">The node path.</param>
         /// <returns>An array of NetProperties.</returns>
-        public Array<CollectedNetProperty> ListProperties(string scene, string node)
+        public Array<ProtocolNetProperty> ListProperties(string scene, string node)
         {
             if (!resource.PROPERTIES_MAP.ContainsKey(scene) || !resource.PROPERTIES_MAP[scene].ContainsKey(node))
             {
@@ -199,7 +199,7 @@ namespace HLNC.Serialization
         /// <param name="scene">The scene path.</param>
         /// <param name="node">The node path.</param>
         /// <returns>An array of NetFunctions.</returns>
-        public Array<CollectedNetFunction> ListFunctions(string scene, string node)
+        public Array<ProtocolNetFunction> ListFunctions(string scene, string node)
         {
             if (!resource.FUNCTIONS_MAP.ContainsKey(scene) || !resource.FUNCTIONS_MAP[scene].ContainsKey(node))
             {
@@ -227,7 +227,7 @@ namespace HLNC.Serialization
         /// <param name="scene">The scene path.</param>
         /// <param name="propertyId">The property index.</param>
         /// <returns>The property.</returns>
-        public CollectedNetProperty UnpackProperty(string scene, int propertyId)
+        public ProtocolNetProperty UnpackProperty(string scene, int propertyId)
         {
             return resource.PROPERTIES_LOOKUP[scene][propertyId];
         }
@@ -299,11 +299,11 @@ namespace HLNC.Serialization
         /// <param name="function">The function name.</param>
         /// <param name="func">The function, if found.</param>
         /// <returns>True if the function was found, false otherwise.</returns>
-        public bool LookupFunction(string scene, string node, string function, out CollectedNetFunction func)
+        public bool LookupFunction(string scene, string node, string function, out ProtocolNetFunction func)
         {
             if (!resource.FUNCTIONS_MAP.ContainsKey(scene) || !resource.FUNCTIONS_MAP[scene].ContainsKey(node) || !resource.FUNCTIONS_MAP[scene][node].ContainsKey(function))
             {
-                func = new CollectedNetFunction();
+                func = new ProtocolNetFunction();
                 return false;
             }
 
@@ -317,7 +317,7 @@ namespace HLNC.Serialization
         /// <param name="scene">The scene path.</param>
         /// <param name="functionId">The function index.</param>
         /// <returns>The function.</returns>
-        public CollectedNetFunction UnpackFunction(string scene, byte functionId)
+        public ProtocolNetFunction UnpackFunction(string scene, byte functionId)
         {
             return resource.FUNCTIONS_LOOKUP[scene][functionId];
         }

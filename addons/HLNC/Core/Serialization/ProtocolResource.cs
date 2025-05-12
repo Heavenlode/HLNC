@@ -27,16 +27,16 @@ namespace HLNC.Serialization
         public Dictionary<string, Dictionary<string, byte>> STATIC_NETWORK_NODE_PATHS_PACK = [];
 
         [Export]
-        public Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetProperty>>> PROPERTIES_MAP = [];
+        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetProperty>>> PROPERTIES_MAP = [];
 
         [Export]
-        public Dictionary<string, Dictionary<string, Dictionary<string, CollectedNetFunction>>> FUNCTIONS_MAP = [];
+        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetFunction>>> FUNCTIONS_MAP = [];
 
         [Export]
-        public Dictionary<string, Dictionary<int, CollectedNetFunction>> FUNCTIONS_LOOKUP = [];
+        public Dictionary<string, Dictionary<int, ProtocolNetFunction>> FUNCTIONS_LOOKUP = [];
 
         [Export]
-        public Dictionary<string, Dictionary<int, CollectedNetProperty>> PROPERTIES_LOOKUP = [];
+        public Dictionary<string, Dictionary<int, ProtocolNetProperty>> PROPERTIES_LOOKUP = [];
 
         [Export]
         public Dictionary<string, int> SERIAL_TYPE_PACK = [];

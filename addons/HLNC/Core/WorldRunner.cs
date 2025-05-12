@@ -7,11 +7,20 @@ using Godot;
 using HLNC.Internal.Editor.DTO;
 using HLNC.Serialization;
 using HLNC.Utility.Tools;
-using HLNC.Utility.Tools;
 using MongoDB.Bson;
 
 namespace HLNC
 {
+    /**
+    <summary>
+    Manages the network state of all <see cref="NetNode"/>s in the scene.
+    Inside the <see cref="NetRunner"/> are one or more “Worlds”. Each World represents some part of the game that is isolated from other parts. For example, different maps, dungeon instances, etc. Worlds are dynamically created by calling <see cref="NetRunner.CreateWorld"/>.
+
+    Worlds cannot directly interact with each other and do not share state.
+
+    Players only exist in one World at a time, so it can be helpful to think of the clients as being connected to a World directly.
+    </summary>
+    */
     public partial class WorldRunner : Node
     {
         public enum PeerSyncStatus
@@ -36,7 +45,7 @@ namespace HLNC
         internal struct QueuedFunction
         {
             public Node Node;
-            public CollectedNetFunction FunctionInfo;
+            public ProtocolNetFunction FunctionInfo;
             public Variant[] Args;
             public NetPeer Sender;
         }

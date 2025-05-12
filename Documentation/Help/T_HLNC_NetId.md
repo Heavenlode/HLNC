@@ -1,13 +1,13 @@
 # NetId Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetId"\]
+A unique identifier for a networked object. The NetId for a node is different between the server and client. On the client side, a NetId is only a byte, whereas on the server side it is an int64. The server's <a href="T_HLNC_WorldRunner">WorldRunner</a> keeps a map of all NetIds to their corresponding value on each client for serialization.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -16,7 +16,7 @@ public class NetId : RefCounted, INetSerializable<NetId>,
 ```
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  RefCounted  →  NetId</td></tr>
-<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_IBsonSerializable_1">IBsonSerializable</a>(NetId), <a href="T_HLNC_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_INetSerializable_1">INetSerializable</a>(NetId)</td></tr>
+<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_Serialization_IBsonSerializable_1">IBsonSerializable</a>(NetId), <a href="T_HLNC_Serialization_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_Serialization_INetSerializable_1">INetSerializable</a>(NetId)</td></tr>
 </table>
 
 

@@ -8,6 +8,11 @@ using HLNC.Utility.Tools;
 
 namespace HLNC
 {
+	/**
+		<summary>
+		Manages the network state of a <see cref="NetNode"/> (including <see cref="NetNode2D"/> and <see cref="NetNode3D"/>).
+		</summary>
+	*/
 	public partial class NetworkController : RefCounted
 	{
 		public NetNodeWrapper Owner { get; internal set; }
@@ -214,7 +219,7 @@ namespace HLNC
 				foreach (var nodePropertyDetail in ProtocolRegistry.Instance.ListProperties(Owner.Node.SceneFilePath))
 				{
 					var nodePath = nodePropertyDetail["nodePath"].AsString();
-					var nodeProps = nodePropertyDetail["properties"].As<Godot.Collections.Array<CollectedNetProperty>>();
+					var nodeProps = nodePropertyDetail["properties"].As<Godot.Collections.Array<ProtocolNetProperty>>();
 
 					// Ensure every networked "INetNode" property is correctly linked to the WorldRunner.
 					foreach (var property in nodeProps)

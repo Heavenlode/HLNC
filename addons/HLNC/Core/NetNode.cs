@@ -11,12 +11,12 @@ namespace HLNC
 {
 	/**
 		<summary>
-		<see cref="Node">Node</see>, extended with HLNC networking capabilities. This is the most basic networked 3D object.
+		<see cref="Node">Node</see>, extended with HLNC networking capabilities. This is the most basic networked object.
 		On every network tick, all NetNode nodes in the scene tree automatically have their <see cref="NetProperty">network properties</see> updated with the latest data from the server.
 		Then, the special <see cref="_NetworkProcess(int)">NetworkProcess</see> method is called, which indicates that a network Tick has occurred.
 		Network properties can only update on the server side.
 		For a client to update network properties, they must send client inputs to the server via implementing the <see cref="INetworkInputHandler"/> interface, or network function calls via <see cref="NetFunction"/> attributes.
-		The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
+		The server receives client inputs, can access them via <see cref="NetworkController.GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
 		</summary>
 	*/
 	[SerialTypeIdentifier("NetNode"), Icon("res://addons/HLNC/Core/NetNode.png")]

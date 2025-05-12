@@ -6,6 +6,11 @@ using MethodBoundaryAspect.Fody.Attributes;
 
 namespace HLNC
 {
+    /**
+    <summary>
+    Marks a method as a network function. Similar to an RPC.
+    </summary>
+    */
     public sealed class NetFunction : OnMethodBoundaryAspect
     {
         public enum NetworkSources
@@ -16,7 +21,7 @@ namespace HLNC
         }
 
         // TODO: Ensure this is used in WorldRunner to correctly filter out invalid calls
-        public NetworkSources Source {get; set; } = NetworkSources.All;
+        public NetworkSources Source { get; set; } = NetworkSources.All;
         public bool ExecuteOnCaller { get; set; } = true;
         public bool WithPeer { get; set; } = false;
         public override void OnEntry(MethodExecutionArgs args)
@@ -60,7 +65,7 @@ namespace HLNC
                     netId = netNode.Network.NetParent.NetId;
                 }
 
-                CollectedNetFunction functionInfo;
+                ProtocolNetFunction functionInfo;
                 if (!ProtocolRegistry.Instance.LookupFunction(networkScene, netNode.Network.NodePathFromNetScene(), args.Method.Name, out functionInfo))
                 {
                     throw new Exception($"Function {args.Method.Name} not found in network scene {networkScene}");

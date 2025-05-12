@@ -7,16 +7,18 @@ using HLNC.Utility.Tools;
 
 namespace HLNC {
 
-    /// <summary>
-    /// Generic interface to utilize network nodes across languages (e.g. C#, GDScript).
-    /// Particularly useful when operating on network nodes under ambiguous circumstances.
-    /// </summary>
-    /// <remarks>
-    /// This class automatically handles NetNode validation. For example:
-    /// <code language="csharp">
-    /// var maybeNetNode = new NetNodeWrapper(GetNodeOrNull("MyAmbiguousNode"));
-    /// // If MyAmbiguousNode is not a NetNode, maybeNetNode == null
-    /// </code>
+    /**
+    <summary>
+    Helper class to safely interface with NetNodes across languages (e.g. C#, GDScript) or in situations where the node type is unknown.
+    </summary>
+    <remarks>
+    This class automatically handles NetNode validation. For example:
+    <code language="csharp">
+    var maybeNetNode = new NetNodeWrapper(GetNodeOrNull("MyAmbiguousNode"));
+    // If MyAmbiguousNode is not a NetNode, maybeNetNode == null
+    </code>
+    </remarks>
+    **/
     public partial class NetNodeWrapper : RefCounted {
 
         // Custom operator overload to validate null

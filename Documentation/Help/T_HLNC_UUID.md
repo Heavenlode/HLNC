@@ -1,13 +1,13 @@
 # UUID Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.UUID"\]
+A UUID implementation for HLNC. Serializes into 16 bytes.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -16,7 +16,7 @@ public class UUID : RefCounted, INetSerializable<UUID>,
 ```
 
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  RefCounted  →  UUID</td></tr>
-<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_IBsonSerializable_1">IBsonSerializable</a>(UUID), <a href="T_HLNC_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_INetSerializable_1">INetSerializable</a>(UUID)</td></tr>
+<tr><td><strong>Implements</strong></td><td><a href="T_HLNC_Serialization_IBsonSerializable_1">IBsonSerializable</a>(UUID), <a href="T_HLNC_Serialization_IBsonSerializableBase">IBsonSerializableBase</a>, <a href="T_HLNC_Serialization_INetSerializable_1">INetSerializable</a>(UUID)</td></tr>
 </table>
 
 

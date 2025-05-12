@@ -7,7 +7,7 @@ The singleton instance of the ProtocolRegistry. This is used to serialize and de
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -47,10 +47,10 @@ Corresponds to the NotificationEnterTree notification in _Notification(Int32).</
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_GetPropertyCount">GetPropertyCount</a></td>
 <td>Get the number of NetProperties in a scene.</td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(CollectedNetProperty, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(ProtocolNetProperty, StaticMethodType)</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="M_HLNC_Serialization_ProtocolRegistry_IsNetScene">IsNetScene</a></td>

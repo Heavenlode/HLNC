@@ -7,8 +7,11 @@ using MongoDB.Bson.Serialization;
 
 namespace HLNC {
 
-    // Guid works great with Bson and third-party libraries, but isn't compatible with Variant.
-    // Therefore, we wrap with this class.
+    /**
+    <summary>
+    A UUID implementation for HLNC. Serializes into 16 bytes.
+    </summary>
+    */
     public partial class UUID : RefCounted, INetSerializable<UUID>, IBsonSerializable<UUID> {
         public Guid Guid => new(_bytes);
         public static UUID Empty { get; } = new UUID("00000000-0000-0000-0000-000000000000");

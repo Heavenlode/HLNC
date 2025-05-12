@@ -15,7 +15,7 @@ namespace HLNC.Serialization.Serializers
         public const int BitsInLong = 64;
     }
 
-    internal partial class NetPropertiesSerializer : Node, IStateSerializer
+    public partial class NetPropertiesSerializer : Node, IStateSerializer
     {
         private struct Data
         {
@@ -27,7 +27,7 @@ namespace HLNC.Serialization.Serializers
         private Dictionary<int, Variant> cachedPropertyChanges = new Dictionary<int, Variant>();
         public struct LerpableChangeQueue
         {
-            public CollectedNetProperty Prop;
+            public ProtocolNetProperty Prop;
             public Variant From;
             public Variant To;
             public double Weight;
@@ -90,7 +90,7 @@ namespace HLNC.Serialization.Serializers
 
         }
 
-        public void ImportProperty(CollectedNetProperty prop, Tick tick, Variant value)
+        public void ImportProperty(ProtocolNetProperty prop, Tick tick, Variant value)
         {
             var propNode = wrapper.Node.GetNode(prop.NodePath);
             Variant oldVal = propNode.Get(prop.Name);

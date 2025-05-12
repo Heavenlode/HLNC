@@ -4,10 +4,10 @@
 ## Overload List
 <table>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(CollectedNetProperty, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
 <td> </td></tr>
 <tr>
-<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable_1">GetStaticMethodCallable(Int32, StaticMethodType)</a></td>
+<td><a href="M_HLNC_Serialization_ProtocolRegistry_GetStaticMethodCallable">GetStaticMethodCallable(ProtocolNetProperty, StaticMethodType)</a></td>
 <td> </td></tr>
 </table>
 

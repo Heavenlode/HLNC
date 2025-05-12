@@ -5,7 +5,7 @@ using HLNC.Utility.Tools;
 
 namespace HLNC.Serialization.Serializers
 {
-    internal partial class SpawnSerializer : Node, IStateSerializer
+    partial class SpawnSerializer : Node, IStateSerializer
     {
         private struct Data
         {

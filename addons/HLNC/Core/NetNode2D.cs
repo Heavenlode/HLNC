@@ -11,19 +11,16 @@ namespace HLNC
 {
 	/**
 		<summary>
-		<see cref="Node2D">Node2D</see>, extended with HLNC networking capabilities. This is the most basic networked 3D object.
-		On every network tick, all NetNode2D nodes in the scene tree automatically have their <see cref="NetProperty">network properties</see> updated with the latest data from the server.
-		Then, the special <see cref="_NetworkProcess(int)">NetworkProcess</see> method is called, which indicates that a network Tick has occurred.
-		Network properties can only update on the server side.
-		For a client to update network properties, they must send client inputs to the server via implementing the <see cref="INetworkInputHandler"/> interface, or network function calls via <see cref="NetFunction"/> attributes.
-		The server receives client inputs, can access them via <see cref="GetInput"/>, and handle them accordingly within <see cref="_NetworkProcess(int)">NetworkProcess</see> to mutate state.
+		<see cref="Node2D">Node2D</see>, extended with HLNC networking capabilities. This is the most basic networked 2D object.
+		See <see cref="NetNode"/> for more information.
 		</summary>
 	*/
 	[SerialTypeIdentifier("NetNode"), Icon("res://addons/HLNC/Core/NetNode2D.png")]
 	public partial class NetNode2D : Node2D, INetNode, INotifyPropertyChanged, INetSerializable<NetNode2D>, IBsonSerializable<NetNode2D>
 	{
 		public NetworkController Network { get; internal set; }
-		public NetNode2D() {
+		public NetNode2D()
+		{
 			Network = new NetworkController(this);
 		}
 		// Cannot have more than 8 serializers
@@ -38,11 +35,11 @@ namespace HLNC
 			Serializers = [spawnSerializer, propertySerializer];
 		}
 
-		public virtual void _WorldReady() {}
-		public virtual void _NetworkProcess(int _tick) {}
+		public virtual void _WorldReady() { }
+		public virtual void _NetworkProcess(int _tick) { }
 
 		/// <inheritdoc/>
-		public override void _PhysicsProcess(double delta) {}
+		public override void _PhysicsProcess(double delta) { }
 		public static HLBuffer NetworkSerialize(WorldRunner currentWorld, NetPeer peer, NetNode2D obj)
 		{
 			var buffer = new HLBuffer();

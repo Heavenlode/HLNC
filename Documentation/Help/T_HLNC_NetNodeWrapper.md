@@ -1,13 +1,13 @@
 # NetNodeWrapper Class
 
 
-\[Missing &lt;summary&gt; documentation for "T:HLNC.NetNodeWrapper"\]
+Helper class to safely interface with NetNodes across languages (e.g. C#, GDScript) or in situations where the node type is unknown.
 
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+03b6c1d2e487070ae6af3c88edccb51282b75ac1
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
 
 **C#**
 ``` C#
@@ -17,6 +17,16 @@ public class NetNodeWrapper : RefCounted
 <table><tr><td><strong>Inheritance</strong></td><td><a href="https://learn.microsoft.com/dotnet/api/system.object" target="_blank" rel="noopener noreferrer">Object</a>  →  GodotObject  →  RefCounted  →  NetNodeWrapper</td></tr>
 </table>
 
+
+
+## Remarks
+This class automatically handles NetNode validation. For example: 
+
+**C#**  
+``` C#
+var maybeNetNode = new NetNodeWrapper(GetNodeOrNull("MyAmbiguousNode"));
+// If MyAmbiguousNode is not a NetNode, maybeNetNode == null
+```
 
 
 ## Constructors
