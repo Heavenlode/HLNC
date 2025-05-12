@@ -6,4 +6,6 @@
     <siteMapNode title="1. Introduction" url="Getting_Started_1__Introduction.md" />
     <siteMapNode title="2. Network Lifecycle" url="Getting_Started_2__Network_Lifecycle.md" />
   </siteMapNode>
+  <siteMapNode title="Home" url="Home.md">
+  </siteMapNode>
 </siteMap>
