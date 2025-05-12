@@ -1,13 +1,11 @@
 # NetworkSerialize Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.INetSerializable`1.NetworkSerialize(HLNC.WorldRunner,Godot.ENetPacketPeer,`0)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -21,11 +19,10 @@ HLBuffer NetworkSerialize(
 
 
 #### Parameters
-<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd>\[Missing &lt;param name="currentWorld"/&gt; documentation for "M:HLNC.Serialization.INetSerializable`1.NetworkSerialize(HLNC.WorldRunner,Godot.ENetPacketPeer,`0)"\]</dd><dt>  ENetPacketPeer</dt><dd>\[Missing &lt;param name="peer"/&gt; documentation for "M:HLNC.Serialization.INetSerializable`1.NetworkSerialize(HLNC.WorldRunner,Godot.ENetPacketPeer,`0)"\]</dd><dt>  <a href="T_HLNC_Serialization_INetSerializable_1">T</a></dt><dd>\[Missing &lt;param name="obj"/&gt; documentation for "M:HLNC.Serialization.INetSerializable`1.NetworkSerialize(HLNC.WorldRunner,Godot.ENetPacketPeer,`0)"\]</dd></dl>
+<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd> </dd><dt>  ENetPacketPeer</dt><dd> </dd><dt>  <a href="T_HLNC_Serialization_INetSerializable_1">T</a></dt><dd> </dd></dl>
 
 #### Return Value
-<a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.INetSerializable`1.NetworkSerialize(HLNC.WorldRunner,Godot.ENetPacketPeer,`0)"\]
+<a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a>
 
 ## See Also
 

@@ -7,7 +7,7 @@ Client-side only. Receive and deserialize binary received from the server.
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization_Serializers">HLNC.Serialization.Serializers</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -21,7 +21,7 @@ void Import(
 
 
 #### Parameters
-<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd>\[Missing &lt;param name="currentWorld"/&gt; documentation for "M:HLNC.Serialization.Serializers.IStateSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd><dt>  <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a></dt><dd>\[Missing &lt;param name="data"/&gt; documentation for "M:HLNC.Serialization.Serializers.IStateSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd>\[Missing &lt;param name="nodeOut"/&gt; documentation for "M:HLNC.Serialization.Serializers.IStateSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd></dl>
+<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd> </dd><dt>  <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a></dt><dd /><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd /></dl>
 
 ## See Also
 

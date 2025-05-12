@@ -1,13 +1,11 @@
 # BsonDeserialize Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.NetNode3D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode3D)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -21,11 +19,10 @@ public static NetNode3D BsonDeserialize(
 
 
 #### Parameters
-<dl><dt>  Variant</dt><dd>\[Missing &lt;param name="context"/&gt; documentation for "M:HLNC.NetNode3D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode3D)"\]</dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.byte" target="_blank" rel="noopener noreferrer">Byte</a>[]</dt><dd>\[Missing &lt;param name="bson"/&gt; documentation for "M:HLNC.NetNode3D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode3D)"\]</dd><dt>  <a href="T_HLNC_NetNode3D">NetNode3D</a></dt><dd>\[Missing &lt;param name="obj"/&gt; documentation for "M:HLNC.NetNode3D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode3D)"\]</dd></dl>
+<dl><dt>  Variant</dt><dd> </dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.byte" target="_blank" rel="noopener noreferrer">Byte</a>[]</dt><dd> </dd><dt>  <a href="T_HLNC_NetNode3D">NetNode3D</a></dt><dd> </dd></dl>
 
 #### Return Value
-<a href="T_HLNC_NetNode3D">NetNode3D</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.NetNode3D.BsonDeserialize(Godot.Variant,System.Byte[],HLNC.NetNode3D)"\]
+<a href="T_HLNC_NetNode3D">NetNode3D</a>
 
 #### Implements
 <a href="M_HLNC_Serialization_IBsonSerializable_1_BsonDeserialize">IBsonSerializable(T).BsonDeserialize(Variant, Byte[], T)</a>  

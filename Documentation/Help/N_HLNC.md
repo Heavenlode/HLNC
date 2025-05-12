@@ -1,7 +1,7 @@
 # HLNC Namespace
 
 
-\[Missing &lt;summary&gt; documentation for "N:HLNC"\]
+
 
 
 
@@ -72,9 +72,6 @@ NetNode.OnNetworkChange{PropertyName}(int tick, T oldValue, T newValue)
 <td> </td></tr>
 <tr>
 <td><a href="T_HLNC_NetworkController_NetPropertyChangedEventHandler">NetworkController.NetPropertyChangedEventHandler</a></td>
-<td> </td></tr>
-<tr>
-<td><a href="T_HLNC_NetworkController_Yolo">NetworkController.Yolo</a></td>
 <td> </td></tr>
 <tr>
 <td><a href="T_HLNC_WorldRunner_OnAfterNetworkTickEventHandler">WorldRunner.OnAfterNetworkTickEventHandler</a></td>

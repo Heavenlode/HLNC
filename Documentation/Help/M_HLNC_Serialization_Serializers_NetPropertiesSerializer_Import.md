@@ -1,13 +1,11 @@
 # Import Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization_Serializers">HLNC.Serialization.Serializers</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -21,7 +19,7 @@ public void Import(
 
 
 #### Parameters
-<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd>\[Missing &lt;param name="currentWorld"/&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd><dt>  <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a></dt><dd>\[Missing &lt;param name="buffer"/&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd>\[Missing &lt;param name="nodeOut"/&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer.Import(HLNC.WorldRunner,HLNC.Serialization.HLBuffer,HLNC.NetNodeWrapper@)"\]</dd></dl>
+<dl><dt>  <a href="T_HLNC_WorldRunner">WorldRunner</a></dt><dd> </dd><dt>  <a href="T_HLNC_Serialization_HLBuffer">HLBuffer</a></dt><dd> </dd><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd> </dd></dl>
 
 #### Implements
 <a href="M_HLNC_Serialization_Serializers_IStateSerializer_Import">IStateSerializer.Import(WorldRunner, HLBuffer, NetNodeWrapper)</a>  

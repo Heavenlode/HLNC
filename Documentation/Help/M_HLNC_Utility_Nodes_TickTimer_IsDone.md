@@ -1,13 +1,11 @@
 # IsDone Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Utility.Nodes.TickTimer.IsDone(System.Int32)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Utility_Nodes">HLNC.Utility.Nodes</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -19,11 +17,10 @@ public bool IsDone(
 
 
 #### Parameters
-<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.int32" target="_blank" rel="noopener noreferrer">Int32</a></dt><dd>\[Missing &lt;param name="currentTick"/&gt; documentation for "M:HLNC.Utility.Nodes.TickTimer.IsDone(System.Int32)"\]</dd></dl>
+<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.int32" target="_blank" rel="noopener noreferrer">Int32</a></dt><dd> </dd></dl>
 
 #### Return Value
-<a href="https://learn.microsoft.com/dotnet/api/system.boolean" target="_blank" rel="noopener noreferrer">Boolean</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Utility.Nodes.TickTimer.IsDone(System.Int32)"\]
+<a href="https://learn.microsoft.com/dotnet/api/system.boolean" target="_blank" rel="noopener noreferrer">Boolean</a>
 
 ## See Also
 

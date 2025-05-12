@@ -1,13 +1,11 @@
 # PrepareSpawn Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.NetworkController.PrepareSpawn(Godot.ENetPacketPeer)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -19,7 +17,7 @@ public void PrepareSpawn(
 
 
 #### Parameters
-<dl><dt>  ENetPacketPeer</dt><dd>\[Missing &lt;param name="peer"/&gt; documentation for "M:HLNC.NetworkController.PrepareSpawn(Godot.ENetPacketPeer)"\]</dd></dl>
+<dl><dt>  ENetPacketPeer</dt><dd> </dd></dl>
 
 ## See Also
 

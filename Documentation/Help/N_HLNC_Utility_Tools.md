@@ -1,7 +1,7 @@
 # HLNC.Utility.Tools Namespace
 
 
-\[Missing &lt;summary&gt; documentation for "N:HLNC.Utility.Tools"\]
+
 
 
 

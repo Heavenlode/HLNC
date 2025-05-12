@@ -127,8 +127,6 @@ namespace HLNC
 			Owner = new NetNodeWrapper(owner);
 		}
 
-		public delegate void Yolo();
-
 		[Signal]
 		public delegate void NetPropertyChangedEventHandler(string nodePath, StringName propertyName);
 		public NetId NetId { get; internal set; }

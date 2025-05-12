@@ -1,13 +1,11 @@
 # FromBSON&lt;T&gt;(ProtocolRegistry, Variant, BsonDocument, T) Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization">HLNC.Serialization</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -24,14 +22,13 @@ where T : Node, INetNode
 
 
 #### Parameters
-<dl><dt>  <a href="T_HLNC_Serialization_ProtocolRegistry">ProtocolRegistry</a></dt><dd>\[Missing &lt;param name="protocolRegistry"/&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]</dd><dt>  Variant</dt><dd>\[Missing &lt;param name="context"/&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]</dd><dt>  BsonDocument</dt><dd>\[Missing &lt;param name="data"/&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]</dd><dt>  T  (Optional)</dt><dd>\[Missing &lt;param name="fillNode"/&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]</dd></dl>
+<dl><dt>  <a href="T_HLNC_Serialization_ProtocolRegistry">ProtocolRegistry</a></dt><dd> </dd><dt>  Variant</dt><dd> </dd><dt>  BsonDocument</dt><dd> </dd><dt>  T  (Optional)</dt><dd> </dd></dl>
 
 #### Type Parameters
-<dl><dt /><dd>\[Missing &lt;typeparam name="T"/&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]</dd></dl>
+<dl><dt /><dd /></dl>
 
 #### Return Value
-<a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1" target="_blank" rel="noopener noreferrer">Task</a>(T)  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Serialization.BsonTransformer.FromBSON``1(HLNC.Serialization.ProtocolRegistry,Godot.Variant,MongoDB.Bson.BsonDocument,``0)"\]
+<a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1" target="_blank" rel="noopener noreferrer">Task</a>(T)
 
 ## See Also
 

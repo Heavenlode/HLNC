@@ -77,11 +77,11 @@
             label: "Attention",
           },
         },
+        loadFooter: "_Footer.md",
         // Your other Docsify configurations
         plugins: [
           function (hook, vm) {
             hook.beforeEach(function (content) {
-
               // Find and replace Obsidian image wikilinks
               content = content.replace(
                 /!\[\[(.*?)\]\]/g,
@@ -94,8 +94,10 @@
               );
 
               // This is required because SHFB replaces > with &gt;
-              content = content.replace(/&gt; */g, ">");
-              console.log(content);
+              content = content.replace(/^&gt; */gm, ">");
+
+              // SHFB uses C# for code blocks, but it should be cs.
+              content = content.replace(/``` C#/g, "```cs");
               return content;
             });
           },
@@ -116,5 +118,7 @@
 
     <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-clike.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-csharp.min.js"></script>
+
+    <script src="//cdn.jsdelivr.net/npm/@alertbox/docsify-footer/dist/docsify-footer.min.js"></script>
   </body>
 </html>

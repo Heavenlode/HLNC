@@ -1,6 +1,5 @@
-﻿HLNC Documentation
 
+---
+Made with ❤️ by [Team Heavenlode](https://www.heavenlode.com)
 
-<p><a href="https://raw.githubusercontent.com/Heavenlode/HLNC/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT Licensed</a></p>
-
-Send comments on this topic to [](mailto:?Subject=HLNC%20Documentation)
+[MIT Licensed](https://raw.githubusercontent.com/Heavenlode/HLNC/main/LICENSE) &copy; 2024 [Heavenlode](https://heavenlode.com) &bull; Send comments to [wyatt@heavenlode.com](mailto:wyatt@heavenlode.com)

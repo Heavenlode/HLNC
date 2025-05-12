@@ -1,13 +1,11 @@
 # NetworkLerpNetRotation Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Utility.Nodes.NetTransform2D.NetworkLerpNetRotation(Godot.Variant,Godot.Variant,System.Double)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Utility_Nodes">HLNC.Utility.Nodes</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -21,11 +19,10 @@ public double NetworkLerpNetRotation(
 
 
 #### Parameters
-<dl><dt>  Variant</dt><dd>\[Missing &lt;param name="from"/&gt; documentation for "M:HLNC.Utility.Nodes.NetTransform2D.NetworkLerpNetRotation(Godot.Variant,Godot.Variant,System.Double)"\]</dd><dt>  Variant</dt><dd>\[Missing &lt;param name="to"/&gt; documentation for "M:HLNC.Utility.Nodes.NetTransform2D.NetworkLerpNetRotation(Godot.Variant,Godot.Variant,System.Double)"\]</dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a></dt><dd>\[Missing &lt;param name="weight"/&gt; documentation for "M:HLNC.Utility.Nodes.NetTransform2D.NetworkLerpNetRotation(Godot.Variant,Godot.Variant,System.Double)"\]</dd></dl>
+<dl><dt>  Variant</dt><dd> </dd><dt>  Variant</dt><dd> </dd><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a></dt><dd> </dd></dl>
 
 #### Return Value
-<a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.Utility.Nodes.NetTransform2D.NetworkLerpNetRotation(Godot.Variant,Godot.Variant,System.Double)"\]
+<a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a>
 
 ## See Also
 

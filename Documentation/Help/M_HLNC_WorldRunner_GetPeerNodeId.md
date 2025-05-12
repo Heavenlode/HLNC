@@ -1,13 +1,11 @@
 # GetPeerNodeId Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.WorldRunner.GetPeerNodeId(Godot.ENetPacketPeer,HLNC.NetNodeWrapper)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC">HLNC</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -20,11 +18,10 @@ public byte GetPeerNodeId(
 
 
 #### Parameters
-<dl><dt>  ENetPacketPeer</dt><dd>\[Missing &lt;param name="peer"/&gt; documentation for "M:HLNC.WorldRunner.GetPeerNodeId(Godot.ENetPacketPeer,HLNC.NetNodeWrapper)"\]</dd><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd>\[Missing &lt;param name="node"/&gt; documentation for "M:HLNC.WorldRunner.GetPeerNodeId(Godot.ENetPacketPeer,HLNC.NetNodeWrapper)"\]</dd></dl>
+<dl><dt>  ENetPacketPeer</dt><dd> </dd><dt>  <a href="T_HLNC_NetNodeWrapper">NetNodeWrapper</a></dt><dd> </dd></dl>
 
 #### Return Value
-<a href="https://learn.microsoft.com/dotnet/api/system.byte" target="_blank" rel="noopener noreferrer">Byte</a>  
-\[Missing &lt;returns&gt; documentation for "M:HLNC.WorldRunner.GetPeerNodeId(Godot.ENetPacketPeer,HLNC.NetNodeWrapper)"\]
+<a href="https://learn.microsoft.com/dotnet/api/system.byte" target="_blank" rel="noopener noreferrer">Byte</a>
 
 ## See Also
 

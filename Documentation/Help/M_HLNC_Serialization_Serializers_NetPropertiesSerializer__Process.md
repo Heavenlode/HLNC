@@ -1,13 +1,11 @@
 # _Process Method
 
 
-\[Missing &lt;summary&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer._Process(System.Double)"\]
-
 
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization_Serializers">HLNC.Serialization.Serializers</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+7c8369b309950da5e6f9dfc534f2804635131157
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f8729a03e7629d74435a0f1f1b469444b44e5bbc
 
 **C#**
 ``` C#
@@ -19,7 +17,7 @@ public override void _Process(
 
 
 #### Parameters
-<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a></dt><dd>\[Missing &lt;param name="delta"/&gt; documentation for "M:HLNC.Serialization.Serializers.NetPropertiesSerializer._Process(System.Double)"\]</dd></dl>
+<dl><dt>  <a href="https://learn.microsoft.com/dotnet/api/system.double" target="_blank" rel="noopener noreferrer">Double</a></dt><dd> </dd></dl>
 
 ## See Also
 
