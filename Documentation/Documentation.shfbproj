@@ -30,9 +30,9 @@
       <Argument Key="logoAlignment" Value="left" xmlns="" />
       <Argument Key="maxVersionParts" Value="" xmlns="" />
     </TransformComponentArguments>
-    <HelpFileFormat>Website</HelpFileFormat>
+    <HelpFileFormat>Markdown</HelpFileFormat>
     <SyntaxFilters>C#</SyntaxFilters>
-    <PresentationStyle>Default2022</PresentationStyle>
+    <PresentationStyle>Markdown</PresentationStyle>
     <CleanIntermediates>False</CleanIntermediates>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
@@ -90,16 +90,46 @@
     <Folder Include="icons" />
     <Folder Include="media" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <None Include="Content\VersionHistory\v1.0.0.0.aml" />
     <None Include="Content\VersionHistory\VersionHistory.aml" />
     <None Include="Content\Welcome.aml" />
   </ItemGroup>
   <ItemGroup>
     <ContentLayout Include="ContentLayout.content" />
-  </ItemGroup>
+  </ItemGroup> -->
   <ItemGroup>
     <Content Include="icons\Help.png" />
+    <Content Include="Introduction.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <SiteMap Include="Documentation.sitemap" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="media\Pasted image 20250510132846.png">
+      <ImageId>Pasted image 20250510132846</ImageId>
+      <AlternateText>Pasted image 20250510132846</AlternateText>
+    </Content>
+    <Content Include="media\Pasted image 20250510135723.png">
+      <ImageId>Pasted image 20250510135723</ImageId>
+      <AlternateText>Pasted image 20250510135723</AlternateText>
+    </Content>
+    <Content Include="media\Pasted image 20250510140558.png">
+      <ImageId>Pasted image 20250510140558</ImageId>
+      <AlternateText>Pasted image 20250510140558</AlternateText>
+    </Content>
+    <Content Include="media\Pasted image 20250510140619.png">
+      <ImageId>Pasted image 20250510140619</ImageId>
+      <AlternateText>Pasted image 20250510140619</AlternateText>
+    </Content>
+    <Content Include="media\Pasted image 20250510140902.png">
+      <ImageId>Pasted image 20250510140902</ImageId>
+      <AlternateText>Pasted image 20250510140902</AlternateText>
+    </Content>
+    <Content Include="media\Pasted image 20250510143316.png">
+      <ImageId>Pasted image 20250510143316</ImageId>
+      <AlternateText>Pasted image 20250510143316</AlternateText>
+    </Content>
   </ItemGroup>
   <!-- Import the common build targets during NuGet restore because before the packages are being installed, $(SHFBROOT) is not set yet -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="'$(MSBuildRestoreSessionId)' != ''" />
@@ -114,4 +144,16 @@
     </PostBuildEvent>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
+
+  <PropertyGroup>
+  <!-- Hide the unwanted items -->
+  <HideNamespaces>False</HideNamespaces>
+  <HidePrivateTypes>True</HidePrivateTypes>
+  <IncludeVersionInfoPage>False</IncludeVersionInfoPage>
+  <IncludeGettingStartedPage>False</IncludeGettingStartedPage>
+  
+  <!-- Create a nested structure for APIs -->
+  <RootNamespaceContainer>True</RootNamespaceContainer>
+  <RootNamespaceTitle>API Details</RootNamespaceTitle>
+</PropertyGroup>
 </Project>
