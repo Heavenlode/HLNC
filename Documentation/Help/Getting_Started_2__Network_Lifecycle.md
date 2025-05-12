@@ -54,7 +54,7 @@ public partial class PlayableCharacter : NetNode3D
 
 In the code example above, the logic code to increment the Money value is only run if the NetRunner is a server.
 
-&gt;[!info] Info
+&gt;[!NOTE]
 &gt;_(this note isn't strictly necessary to know. if it's confusing or overwhelming, feel free to disregard)_
 &gt;
 &gt;The game state is managed by the WorldRunner, because every World has its own unique state and logic. Everything listed earlier under the "Server characteristics" is what each WorldRunner does!
@@ -119,7 +119,7 @@ In this example, the client runs some code to determine if the player's latest M
 
 If they are, then they can trigger some special view/UI actions such as playing particle emitters, showing popup dialogs, etc. (Things that don't happen on the server.)
 
-&gt;[!Note]
+&gt;[!NOTE]
  Unlike the `Money` property, `IsRich` is not a `NetProperty`. This means that it doesn't live in the game network--so it never receives updates from the server--and the client can mutate it freely.
 
 ## Inputs
@@ -155,7 +155,7 @@ public int Money { get; set; }
 
 Now only the player who "owns" a NetNode will receive updates about that property.
 
-&gt;[!tip]
+&gt;[!TIP]
 &gt;You can also designate your own layers beyond these three. Think of it like a 'collision layer' in Godot. It's essentially a clean slate of layers for you to customize however you want. This can be useful for team games, factions, etc.
 
 ## Lifecycle Overview

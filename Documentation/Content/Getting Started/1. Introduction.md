@@ -23,8 +23,11 @@ When a client connects to an HLNC server, the NetRunner assigns that client to a
 
 ![[Content/Images/Pasted image 20250510140558.png]]
 ![[Content/Images/Pasted image 20250510140619.png]]
+
 > [!NOTE]
+> 
 > Despite the server potentially having multiple WorldRunners, the client will only ever have one WorldRunner--for the world that the Server put them in!
+
 ## NetNode / NetScene
 
 The root scene of a WorldRunner is a kind of node called a "NetNode."
@@ -45,7 +48,7 @@ In other words, NetNodes cannot be individually instantiated while the game is r
 
 Also, when you do instantiate a NetScene, it can only be added as a child of another NetScene or a NetNode. You can't instantiate a NetScene to be a child of some non-net Node. Thems the rules!
 
->[!help] "But why ..."
+>[!NOTE]
 >
 >More technical details are available. TL;DR it's part of how the network is optimized to be low bandwidth and highly efficient.
 
