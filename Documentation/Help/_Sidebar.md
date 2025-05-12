@@ -1,4 +1,6 @@
-- [1. Introduction](1.Introduction)
+- [Getting Started](Getting_Started)
+  - [1. Introduction](Getting_Started_1__Introduction)
+  - [2. Network Lifecycle](Getting_Started_2__Network_Lifecycle)
 - [API Details](R_Project_Documentation)
   - [HLNC Namespace](N_HLNC)
     - [Downloader Class](T_HLNC_Downloader)

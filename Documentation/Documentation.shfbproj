@@ -4,7 +4,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <!-- A target framework version is required by Visual Studio.  It can be any version with a targeting pack installed. -->
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <!-- The configuration and platform will be used to determine which assemblies to include from solution and
 				 project documentation sources -->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -65,6 +65,8 @@
     <CopyrightHref>https://raw.githubusercontent.com/Heavenlode/HLNC/main/LICENSE</CopyrightHref>
     <CopyrightText>MIT Licensed</CopyrightText>
     <VisibleItems>Protected, ProtectedInternalAsProtected, NonBrowsable</VisibleItems>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
@@ -101,39 +103,10 @@
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup> -->
   <ItemGroup>
-    <Content Include="Content\Documentation\1.Introduction.md" />
-    <Content Include="Content\Documentation\2.Network Lifecycle.md" />
-    <Content Include="Content\Notes.md" />
     <Content Include="icons\Help.png" />
   </ItemGroup>
   <ItemGroup>
     <SiteMap Include="Documentation.sitemap" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="media\Pasted image 20250510132846.png">
-      <ImageId>Pasted image 20250510132846</ImageId>
-      <AlternateText>Pasted image 20250510132846</AlternateText>
-    </Content>
-    <Content Include="media\Pasted image 20250510135723.png">
-      <ImageId>Pasted image 20250510135723</ImageId>
-      <AlternateText>Pasted image 20250510135723</AlternateText>
-    </Content>
-    <Content Include="media\Pasted image 20250510140558.png">
-      <ImageId>Pasted image 20250510140558</ImageId>
-      <AlternateText>Pasted image 20250510140558</AlternateText>
-    </Content>
-    <Content Include="media\Pasted image 20250510140619.png">
-      <ImageId>Pasted image 20250510140619</ImageId>
-      <AlternateText>Pasted image 20250510140619</AlternateText>
-    </Content>
-    <Content Include="media\Pasted image 20250510140902.png">
-      <ImageId>Pasted image 20250510140902</ImageId>
-      <AlternateText>Pasted image 20250510140902</AlternateText>
-    </Content>
-    <Content Include="media\Pasted image 20250510143316.png">
-      <ImageId>Pasted image 20250510143316</ImageId>
-      <AlternateText>Pasted image 20250510143316</AlternateText>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Images\Pasted image 20250510132846.png">
@@ -163,6 +136,7 @@
   </ItemGroup>
   <!-- Import the common build targets during NuGet restore because before the packages are being installed, $(SHFBROOT) is not set yet -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="'$(MSBuildRestoreSessionId)' != ''" />
+  <Import Project="MarkdownCompiler\MarkdownContent.targets" />
   <!-- Import the SHFB build targets during build -->
   <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" Condition="'$(MSBuildRestoreSessionId)' == ''" />
   <!-- The pre-build and post-build event properties must appear *after* the targets file import in order to be

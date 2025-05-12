@@ -1,3 +1,4 @@
+# 2. Network Lifecycle
 In order to understand the network lifecycle, you first need to understand how the Server and Client are different from each other--despite both running the same game.
 ## Server characteristics
 * Runs game logic.

@@ -7,7 +7,7 @@
 
 ## Definition
 **Namespace:** <a href="N_HLNC_Serialization_Serializers">HLNC.Serialization.Serializers</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+b0975625c25154a1fdd31b2c47aff0d2d2f398ac
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
 
 **C#**
 ``` C#

@@ -8,7 +8,7 @@ Initializes a new instance of the <a href="T_HLNC_Editor_DockNetScenes_PropertyN
 
 ## Definition
 </SectionTitle>**Namespace:** <a href="N_HLNC_Editor">HLNC.Editor</a>  
-**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+b0975625c25154a1fdd31b2c47aff0d2d2f398ac
+**Assembly:** HLNC (in HLNC.dll) Version: 1.0.0+f84931ebd138c456b4e0448f1a8e3814bd665733
 
 **C#**
 ``` C#

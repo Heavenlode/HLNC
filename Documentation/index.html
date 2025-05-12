@@ -70,7 +70,7 @@
               // Properly encode the URL by replacing spaces with %20
               const encodedFilename = filename.replace(/ /g, '%20');
               // Create proper markdown image syntax
-              return '![' + filename + '](' + "media/" + encodedFilename + ')';
+              return '![' + filename + '](' + encodedFilename + ')';
             });
           });
         }
