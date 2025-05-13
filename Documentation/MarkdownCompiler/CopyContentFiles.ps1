@@ -45,6 +45,12 @@ function Get-FormattedFileName {
     )
     
     try {
+        # Get the original filename
+        $originalFileName = [System.IO.Path]::GetFileName($filePath)
+        
+        # If the file starts with underscore, preserve that in the output
+        $startsWithUnderscore = $originalFileName.StartsWith("_")
+        
         # Get directories inside Content folder, not including Content itself
         $fullPath = [System.IO.Path]::GetFullPath($filePath)
         
@@ -83,6 +89,11 @@ function Get-FormattedFileName {
         } else {
             # No subdirectories, just use the cleaned filename
             $formattedName = $fileNameWithoutExt + $extension
+        }
+        
+        # If the original file started with underscore, ensure it's preserved
+        if ($startsWithUnderscore -and -not $formattedName.StartsWith("_")) {
+            $formattedName = "_" + $formattedName
         }
         
         return $formattedName
@@ -178,10 +189,11 @@ foreach ($file in $processedFiles) {
     }
     
     # Look for a potential parent file that corresponds to the directory name
-    # The parent filename would match the directory name
+    # The parent filename would match the directory name, but we need to be more flexible
     $potentialParentName = $file.ParentDir
     $parentFile = $processedFiles | Where-Object { 
-        $_.OriginalNameWithoutExt -eq $potentialParentName -and
+        ($_.OriginalNameWithoutExt -eq $potentialParentName -or 
+         $_.OriginalNameWithoutExt -match [regex]::Escape($potentialParentName)) -and
         $_.ParentDir -eq $null # The parent should be directly in the Content folder
     } | Select-Object -First 1
     
@@ -210,12 +222,12 @@ try {
     foreach ($parent in $parentNodes) {
         # Find all child files of this parent
         $childFiles = $processedFiles | Where-Object { 
-            $_.ParentDir -eq $parent.OriginalNameWithoutExt -and
+            $_.ParentDir -eq ($parent.OriginalNameWithoutExt -replace '^\d+\.\s*', '') -and
             $_.IsSubfile -eq $true
         } | Sort-Object -Property NewName
         
         # If this node has children, make it a parent node
-        $defaultAttributes = if ($isFirstParent) { ' isDefault="true" isSelected="true" splitToc="true"' } else { '' }
+        $defaultAttributes = if ($isFirstParent) { ' isDefault="true" isSelected="true"' } else { '' }
         
         # Start the parent node
         $xmlContent += "`n  <siteMapNode title=`"$($parent.Title)`" url=`"$($parent.Url)`"$defaultAttributes>"

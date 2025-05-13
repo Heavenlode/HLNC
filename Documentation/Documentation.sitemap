@@ -1,11 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0">
-  <siteMapNode title=" Footer" url="_Footer.md" isDefault="true" isSelected="true" splitToc="true">
+  <siteMapNode title=" Footer" url="_Footer.md" isDefault="true" isSelected="true">
   </siteMapNode>
-  <siteMapNode title="Getting Started" url="Getting_Started.md">
+  <siteMapNode title="1. Home" url="1__Home.md">
+  </siteMapNode>
+  <siteMapNode title="2. Getting Started" url="2__Getting_Started.md">
     <siteMapNode title="1. Introduction" url="Getting_Started_1__Introduction.md" />
     <siteMapNode title="2. Network Lifecycle" url="Getting_Started_2__Network_Lifecycle.md" />
   </siteMapNode>
-  <siteMapNode title="Home" url="Home.md">
+  <siteMapNode title="3. Tutorials" url="3__Tutorials.md">
+    <siteMapNode title="1. Snake" url="Tutorials_1__Snake.md" />
   </siteMapNode>
 </siteMap>
