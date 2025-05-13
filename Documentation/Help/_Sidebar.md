@@ -4,6 +4,7 @@
   - [2. Network Lifecycle](Getting_Started_2__Network_Lifecycle)
 - [Tutorials](3__Tutorials)
   - [Snake](Tutorials_1__Snake)
+    - [Snake Game - Chapter 1](Tutorials_Snake_1__Create_a_Snake)
 - [API Details](R_Project_Documentation)
   - [HLNC Namespace](N_HLNC)
     - [INetNode Interface](T_HLNC_INetNode)

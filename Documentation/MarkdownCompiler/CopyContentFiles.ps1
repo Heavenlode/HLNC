@@ -182,24 +182,43 @@ foreach ($file in $mdFiles) {
 }
 
 # Now determine parent-child relationships
+# First, identify all potential parent files (files directly in Content folder)
+$parentFiles = $processedFiles | Where-Object { $_.ParentDir -eq $null }
+
+# Then process each file that's in a subdirectory
 foreach ($file in $processedFiles) {
     # Skip files that are directly in the Content folder
     if ($null -eq $file.ParentDir) {
         continue
     }
     
+    Write-Host "Looking for parent for file $($file.OriginalNameWithoutExt) in directory $($file.ParentDir)"
+    
     # Look for a potential parent file that corresponds to the directory name
-    # The parent filename would match the directory name, but we need to be more flexible
     $potentialParentName = $file.ParentDir
-    $parentFile = $processedFiles | Where-Object { 
-        ($_.OriginalNameWithoutExt -eq $potentialParentName -or 
-         $_.OriginalNameWithoutExt -match [regex]::Escape($potentialParentName)) -and
-        $_.ParentDir -eq $null # The parent should be directly in the Content folder
+    
+    # First try to find a parent in the root Content folder
+    $parentFile = $parentFiles | Where-Object { 
+        Write-Host "  Checking potential parent: $($_.OriginalNameWithoutExt) (ParentDir: $($_.ParentDir))"
+        $_.OriginalNameWithoutExt -eq $potentialParentName -or 
+        $_.OriginalNameWithoutExt -match [regex]::Escape($potentialParentName)
     } | Select-Object -First 1
+    
+    # If no parent found in root, look for a parent in any subdirectory
+    if ($null -eq $parentFile) {
+        $parentFile = $processedFiles | Where-Object {
+            Write-Host "  Checking potential parent in subdir: $($_.OriginalNameWithoutExt) (ParentDir: $($_.ParentDir))"
+            $_.OriginalNameWithoutExt -eq $potentialParentName -or 
+            $_.OriginalNameWithoutExt -match [regex]::Escape($potentialParentName)
+        } | Select-Object -First 1
+    }
     
     if ($null -ne $parentFile) {
         # This file is a child of a parent file
         $file.IsSubfile = $true
+        Write-Host "Found parent: $($parentFile.OriginalNameWithoutExt)"
+    } else {
+        Write-Host "No parent found for $($file.OriginalNameWithoutExt)"
     }
 }
 
@@ -211,6 +230,11 @@ try {
     # Find the root-level parent nodes
     $parentNodes = $processedFiles | Where-Object { $_.ParentDir -eq $null } | Sort-Object -Property NewName
     
+    Write-Host "Found parent nodes:"
+    foreach ($parent in $parentNodes) {
+        Write-Host "  Parent: $($parent.OriginalNameWithoutExt) (ParentDir: $($parent.ParentDir))"
+    }
+    
     # Create XML content as a string
     $xmlContent = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -220,11 +244,28 @@ try {
     # Process each potential parent node
     $isFirstParent = $true
     foreach ($parent in $parentNodes) {
+        Write-Host "Processing parent: $($parent.OriginalNameWithoutExt)"
+        
         # Find all child files of this parent
         $childFiles = $processedFiles | Where-Object { 
-            $_.ParentDir -eq ($parent.OriginalNameWithoutExt -replace '^\d+\.\s*', '') -and
-            $_.IsSubfile -eq $true
+            Write-Host "  Checking file: $($_.OriginalNameWithoutExt) (ParentDir: $($_.ParentDir), IsSubfile: $($_.IsSubfile))"
+            
+            # Get the clean name of the parent (without number prefix)
+            $cleanParentName = $parent.OriginalNameWithoutExt -replace '^\d+\.\s*', ''
+            
+            # Check if this file is a child
+            $isChild = $_.IsSubfile -eq $true -and (
+                # Direct children in the parent's directory
+                $_.ParentDir -eq $cleanParentName
+            )
+            
+            if ($isChild) {
+                Write-Host "    Found child: $($_.OriginalNameWithoutExt)"
+            }
+            $isChild
         } | Sort-Object -Property NewName
+        
+        Write-Host "  Found $($childFiles.Count) children for $($parent.OriginalNameWithoutExt)"
         
         # If this node has children, make it a parent node
         $defaultAttributes = if ($isFirstParent) { ' isDefault="true" isSelected="true"' } else { '' }
@@ -234,7 +275,35 @@ try {
         
         # Add child nodes
         foreach ($child in $childFiles) {
-            $xmlContent += "`n    <siteMapNode title=`"$($child.Title)`" url=`"$($child.Url)`" />"
+            Write-Host "  Processing child: $($child.OriginalNameWithoutExt)"
+            
+            # Find nested children for this child
+            $nestedChildren = $processedFiles | Where-Object {
+                Write-Host "    Checking for nested child: $($_.OriginalNameWithoutExt) (ParentDir: $($_.ParentDir), IsSubfile: $($_.IsSubfile))"
+                $cleanChildName = $child.OriginalNameWithoutExt -replace '^\d+\.\s*', ''
+                Write-Host "    Comparing with clean child name: $cleanChildName"
+                
+                $isNestedChild = $_.IsSubfile -eq $true -and
+                    $_.ParentDir -eq $cleanChildName
+                
+                if ($isNestedChild) {
+                    Write-Host "      Found nested child: $($_.OriginalNameWithoutExt)"
+                }
+                $isNestedChild
+            } | Sort-Object -Property NewName
+            
+            Write-Host "    Found $($nestedChildren.Count) nested children for $($child.OriginalNameWithoutExt)"
+            
+            # Always create a parent node for the child, even if it has no children
+            $xmlContent += "`n    <siteMapNode title=`"$($child.Title)`" url=`"$($child.Url)`">"
+            
+            # Add nested children if any exist
+            foreach ($nestedChild in $nestedChildren) {
+                $xmlContent += "`n      <siteMapNode title=`"$($nestedChild.Title)`" url=`"$($nestedChild.Url)`" />"
+            }
+            
+            # Close the child node
+            $xmlContent += "`n    </siteMapNode>"
         }
         
         # Close the parent node
