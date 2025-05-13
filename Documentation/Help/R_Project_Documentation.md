@@ -6,12 +6,12 @@
 ## Namespaces
 <table>
 <tr>
-<td><a href="N_HLNC">HLNC</a></td>
+<td><a href="N_Nebula">Nebula</a></td>
 <td></td></tr>
 <tr>
-<td><a href="G_HLNC_Serialization">HLNC.Serialization</a></td>
+<td><a href="G_Nebula_Serialization">Nebula.Serialization</a></td>
 <td></td></tr>
 <tr>
-<td><a href="G_HLNC_Utility">HLNC.Utility</a></td>
+<td><a href="G_Nebula_Utility">Nebula.Utility</a></td>
 <td></td></tr>
 </table>

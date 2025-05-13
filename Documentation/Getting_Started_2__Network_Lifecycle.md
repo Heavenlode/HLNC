@@ -28,7 +28,7 @@ Game logic is only executed by the server. For example, a game character NetNode
 
 ```cs
 using Godot;
-using HLNC;
+using Nebula;
 
 public partial class PlayableCharacter : NetNode3D
 {
@@ -84,7 +84,7 @@ Wondering what the client even uses `_NetworkProcess` for? Whenever the function
 
 ```cs
 using Godot;
-using HLNC;
+using Nebula;
 
 public partial class PlayableCharacter : NetNode3D
 {
@@ -125,7 +125,7 @@ If they are, then they can trigger some special view/UI actions such as playing 
 ## Inputs
 If the client cant make any changes to the game state, then how do they even play the game?
 
-That's what inputs and NetFunctions are for. HLNC supports sending an "Input"
+That's what inputs and NetFunctions are for. Nebula supports sending an "Input"
 ## State "awareness" (or, Interest Management)
 Interest Management is a feature for the server to decide _who_ gets to see _what._ Think about a game with hidden information: another player's money or items; cards in a card game; "fog of war"; etc.
 

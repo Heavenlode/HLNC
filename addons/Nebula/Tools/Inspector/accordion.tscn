@@ -1,0 +1,39 @@
+[gd_scene load_steps=6 format=3 uid="uid://ywhp3yi0fvpa"]
+
+[ext_resource type="Script" uid="uid://cp1ggehx01rbf" path="res://addons/Nebula/Tools/Inspector/accordion.gd" id="1_y0pd1"]
+
+[sub_resource type="FontVariation" id="FontVariation_y0pd1"]
+variation_embolden = 0.25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u8610"]
+bg_color = Color(0.219608, 0.239216, 0.266667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgo8p"]
+bg_color = Color(0.129412, 0.14902, 0.180392, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w37so"]
+bg_color = Color(0.156863, 0.176471, 0.207843, 1)
+
+[node name="Accordion" type="VBoxContainer"]
+theme_override_constants/separation = 0
+script = ExtResource("1_y0pd1")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_y0pd1")
+theme_override_styles/hover = SubResource("StyleBoxFlat_u8610")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wgo8p")
+theme_override_styles/normal = SubResource("StyleBoxFlat_w37so")
+action_mode = 0
+text = "▶ Properties"
+alignment = 0
+
+[node name="Container" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="Container" type="VBoxContainer" parent="Container"]
+layout_mode = 2
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

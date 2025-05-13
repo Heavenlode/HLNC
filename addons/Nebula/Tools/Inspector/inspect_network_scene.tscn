@@ -1,0 +1,92 @@
+[gd_scene load_steps=5 format=3 uid="uid://d0q0xyjdl1fbd"]
+
+[ext_resource type="Script" uid="uid://ovs8naegkmwu" path="res://addons/Nebula/Tools/Inspector/inspect_net_scene.gd" id="1_u8610"]
+[ext_resource type="PackedScene" uid="uid://ywhp3yi0fvpa" path="res://addons/Nebula/Tools/Inspector/accordion.tscn" id="2_w37so"]
+[ext_resource type="PackedScene" uid="uid://dgc5sfmxnea6h" path="res://addons/Nebula/Tools/Inspector/property_row.tscn" id="3_gp7ba"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r6w0v"]
+bg_color = Color(0.31175, 0.1935, 0.43, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+
+[node name="VBoxContainer" type="VBoxContainer" node_paths=PackedStringArray("properties_parent", "properties_container", "functions_parent", "functions_container", "children_parent", "children_container", "title_label", "property_count_label", "function_count_label")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+script = ExtResource("1_u8610")
+properties_parent = NodePath("Items/Properties")
+properties_container = NodePath("Items/Properties/Container/Container")
+functions_parent = NodePath("Items/Functions")
+functions_container = NodePath("Items/Functions/Container/Container")
+children_parent = NodePath("Items/Children")
+children_container = NodePath("Items/Children/Container/Container")
+title_label = NodePath("Heading/Label")
+property_count_label = NodePath("Items/PropertyCount/Value")
+function_count_label = NodePath("Items/FunctionCount/Value")
+
+[node name="Heading" type="Panel" parent="."]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_r6w0v")
+
+[node name="Label" type="Label" parent="Heading"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 1
+text = "Network"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Items" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PropertyCount" parent="Items" instance=ExtResource("3_gp7ba")]
+layout_mode = 2
+
+[node name="Name" parent="Items/PropertyCount" index="0"]
+text = "Properties"
+
+[node name="Value" parent="Items/PropertyCount" index="1"]
+text = "0"
+
+[node name="FunctionCount" parent="Items" instance=ExtResource("3_gp7ba")]
+layout_mode = 2
+
+[node name="Name" parent="Items/FunctionCount" index="0"]
+text = "Functions"
+
+[node name="Value" parent="Items/FunctionCount" index="1"]
+text = "0"
+
+[node name="Properties" parent="Items" instance=ExtResource("2_w37so")]
+visible = false
+layout_mode = 2
+
+[node name="Functions" parent="Items" instance=ExtResource("2_w37so")]
+visible = false
+layout_mode = 2
+
+[node name="Button" parent="Items/Functions" index="0"]
+text = "▶ Functions"
+
+[node name="Children" parent="Items" instance=ExtResource("2_w37so")]
+visible = false
+layout_mode = 2
+
+[node name="Button" parent="Items/Children" index="0"]
+text = "▶ Children"
+
+[editable path="Items/PropertyCount"]
+[editable path="Items/FunctionCount"]
+[editable path="Items/Properties"]
+[editable path="Items/Functions"]
+[editable path="Items/Children"]

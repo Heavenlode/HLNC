@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://dom5ndqxbmsqc"]
+
+[ext_resource type="Script" uid="uid://bu73h1bt5s25b" path="res://addons/Nebula/Tools/AddonManager/AddonManager.cs" id="1_6wwgw"]
+
+[node name="AddonManager" type="Window" node_paths=PackedStringArray("AddonList", "AddonDescription")]
+title = "Nebula Addons"
+size = Vector2i(640, 480)
+visible = false
+script = ExtResource("1_6wwgw")
+AddonList = NodePath("HBoxContainer/VBoxContainer/ItemList")
+AddonDescription = NodePath("HBoxContainer/RichTextLabel")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemList" type="ItemList" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Install"
+
+[node name="RichTextLabel" type="RichTextLabel" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[connection signal="close_requested" from="." to="." method="_OnCloseRequested"]
+[connection signal="item_selected" from="HBoxContainer/VBoxContainer/ItemList" to="." method="_OnItemSelected"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/Button" to="." method="_OnInstall"]

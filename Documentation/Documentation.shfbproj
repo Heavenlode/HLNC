@@ -40,7 +40,7 @@
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\HLNC.csproj" xmlns="" />
+      <DocumentationSource sourceFile="..\Nebula.csproj" xmlns="" />
     </DocumentationSources>
     <PlugInConfigurations>
       <PlugInConfig id="XPath Reflection File Filter" enabled="True">
@@ -53,7 +53,7 @@
         </configuration>
       </PlugInConfig>
     </PlugInConfigurations>
-    <HelpTitle>HLNC Documentation</HelpTitle>
+    <HelpTitle>Nebula Documentation</HelpTitle>
     <HelpFileVersion>1.0.0.0</HelpFileVersion>
     <NamingMethod>MemberName</NamingMethod>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
@@ -62,14 +62,14 @@
     <MaximumGroupParts>2</MaximumGroupParts>
     <Preliminary>False</Preliminary>
     <SdkLinkTarget>Blank</SdkLinkTarget>
-    <CopyrightHref>https://raw.githubusercontent.com/Heavenlode/HLNC/main/LICENSE</CopyrightHref>
+    <CopyrightHref>https://raw.githubusercontent.com/Heavenlode/Nebula/main/LICENSE</CopyrightHref>
     <CopyrightText>MIT Licensed</CopyrightText>
     <VisibleItems>Protected, ProtectedInternalAsProtected, NonBrowsable</VisibleItems>
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkProfile />
     <ApiFilter>
-      <Filter entryType="Namespace" fullName="HLNC.Internal.Editor" isExposed="False" xmlns="" />
-      <Filter entryType="Namespace" fullName="HLNC.Internal.Editor.DTO" isExposed="False" xmlns="" />
+      <Filter entryType="Namespace" fullName="Nebula.Internal.Editor" isExposed="False" xmlns="" />
+      <Filter entryType="Namespace" fullName="Nebula.Internal.Editor.DTO" isExposed="False" xmlns="" />
     </ApiFilter>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <FooterText>&amp;lt%3bhr /&amp;gt%3b</FooterText>

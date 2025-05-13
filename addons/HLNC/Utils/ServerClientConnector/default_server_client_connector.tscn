@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://c18ded3drxmoq"]
-
-[ext_resource type="Script" uid="uid://cmkrunp781fsq" path="res://addons/HLNC/Utils/ServerClientConnector/ServerClientConnector.cs" id="1_aqxkk"]
-
-[node name="DefaultServerClientConnector" type="Node"]
-script = ExtResource("1_aqxkk")

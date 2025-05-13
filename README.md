@@ -1,9 +1,9 @@
-# HLNC
+# Nebula
 
 Simple yet powerful netcode for Godot!
 
 ## Table of contents
-- [HLNC](#hlnc)
+- [Nebula](#Nebula)
   - [Table of contents](#table-of-contents)
   - [Sample](#sample)
   - [Features](#features)
@@ -22,7 +22,7 @@ Simple yet powerful netcode for Godot!
 
 ```cs
 using Godot;
-using HLNC;
+using Nebula;
 
 namespace MyGame
 {
@@ -70,54 +70,38 @@ namespace MyGame
 
 ### Setup steps
 
-1. Add HLNC to your "addons"
-2. Import HLNC in your `.csproj`. For example:
+1. Add Nebula to your "addons"
+2. Import Nebula in your `.csproj`. For example:
 ```xml
 <Project Sdk="Godot.NET.Sdk/4.3.0-beta.1">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
-  <Import Project="addons\HLNC\HLNC.props" />
+  <Import Project="addons\Nebula\Nebula.props" />
 </Project>
 ```
-3. Enable the HLNC plugin in Godot
+3. Enable the Nebula plugin in Godot
 
 #### Help
-Better documentation and demo projects are coming soon. In the meantime, feel free to [open a ticket](https://github.com/Heavenlode/HLNC/issues/new) with any questions or concerns.
+Better documentation and demo projects are coming soon. In the meantime, feel free to [open a ticket](https://github.com/Heavenlode/Nebula/issues/new) with any questions or concerns.
 
 ## Examples
-* [Bouncing Balls](https://github.com/Heavenlode/HLNC-Demo-BouncingBalls/tree/main)
-* [Movable Players](https://github.com/Heavenlode/HLNC-Demo-MovablePlayers)
+* [Bouncing Balls](https://github.com/Heavenlode/Nebula-Demo-BouncingBalls/tree/main)
+* [Movable Players](https://github.com/Heavenlode/Nebula-Demo-MovablePlayers)
 
 ## Documentation
 
-More comprehensive documentation is available here: https://heavenlode.github.io/HLNC/
+More comprehensive documentation is available here: https://nebula.dev.heavenlode.com
 
 ## What is this?
 
-HLNC is a library for developing online multiplayer games with Godot. It is a tick-aligned system, respects input authority, and all state is managed by the server.
+Nebula is a library for developing online multiplayer games with Godot. It is a tick-aligned system, respects input authority, and all state is managed by the server.
 
 This library is still in BETA, therefore it is not quite production-ready and is subject to changes as we approach stability.
 
-HLNC is an acronym for Heavenlode Netcode. The library originated from the author's own online game "Heavenlode" (not yet public).
-
-## Why?
-
-_(NOTE: It goes without saying that the Godot team is full of highly intelligent and awesome people. So, keep in mind this section is opinionated and not meant to be disparaging!)_
-
-Ideally, the purpose of HLNC is to provide developers more confidence and control of their game's networking with a powerful abstraction layer that allows quick and easy development. At minimum, it provides an *alternative* over Godot's synchronization/RPCs.
-
-The author of HLNC had experience using another popular networking library called [Photon Fusion](https://www.photonengine.com/fusion). Those familiar with Fusion might immediately recognize that HLNC is heavily inspired by it.
-
-Godot provides its own Multiplayer API which includes RPCs and synchronizers. However, the author is of the opinion that these are too opaque to feel confident using them for highly performant and/or competitve games.
-
-For example, UDP packets should stay under ~1500 bytes to mitigate packet-splitting and other network instability issues. It isn't clear how Godot addresses this--if at all. HLNC makes it easy for developers to keep their data well within these configurable limits.
-
-Also, Godot encourages utilizing RPCs. The author feels that using RPCs for game networking is clunky, error-prone, and unreliable at scale. HLNC uses a tick-based system wherein the game state is serialized and transferred over the wire using user-friendly abstractions which avoid RPCs.
-
 ## How to contribute
 
-If you have questions, comments, or concerns, please feel free to [open a ticket](https://github.com/Heavenlode/HLNC/issues/new).
+If you have questions, comments, or concerns, please feel free to [open a ticket](https://github.com/Heavenlode/Nebula/issues/new).
 
-If you want to contribute code and/or documentation, you're amazing! To maximize your odds of your feature/PR getting merged in, you are encouraged to first [open a ticket](https://github.com/Heavenlode/HLNC/issues/new) with your proposal. Once approved, any and all work is very much appreciated.
+If you want to contribute code and/or documentation, you're amazing! To maximize your odds of your feature/PR getting merged in, you are encouraged to first [open a ticket](https://github.com/Heavenlode/Nebula/issues/new) with your proposal. Once approved, any and all work is very much appreciated.

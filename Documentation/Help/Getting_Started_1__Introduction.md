@@ -1,7 +1,7 @@
 # 1. Introduction
-HLNC (High-level Netcode) is a fun, efficient, extensible networking framework for Godot.
+Nebula is a fun, efficient, extensible networking framework for Godot.
 
-At the base of any HLNC game/network is the NetRunner. The details of this node doesn't really matter much here (although more technical deep-dives are available if you are interested).
+At the base of any Nebula game/network is the NetRunner. The details of this node doesn't really matter much here (although more technical deep-dives are available if you are interested).
 
 For now, all you need to know is the NetRunner handles all client connections, data transmission, etc. It is the lowest abstraction level and exists as a global singleton.
 
@@ -17,9 +17,9 @@ Players only exist in one World at a time, so it can be helpful to think of the 
 ![[Content/Images/Pasted image 20250510140902.png]]
 
 
-Just as in a normal Godot game where you have an "initial scene" that first opens when running the game, the WorldRunner also has an initial scene when you enter the World. In this way, you can think of the HLNC server as being able to run multiple "games" simultaneously.
+Just as in a normal Godot game where you have an "initial scene" that first opens when running the game, the WorldRunner also has an initial scene when you enter the World. In this way, you can think of the Nebula server as being able to run multiple "games" simultaneously.
 
-When a client connects to an HLNC server, the NetRunner assigns that client to a World and tells the client what the scene is. The client then sets things up on their end to match the server.
+When a client connects to an Nebula server, the NetRunner assigns that client to a World and tells the client what the scene is. The client then sets things up on their end to match the server.
 
 ![[Content/Images/Pasted image 20250510140558.png]]
 ![[Content/Images/Pasted image 20250510140619.png]]
@@ -53,4 +53,4 @@ Also, when you do instantiate a NetScene, it can only be added as a child of ano
 &gt;More technical details are available. TL;DR it's part of how the network is optimized to be low bandwidth and highly efficient.
 
 ## Conclusion
-That's the absolute bare-bones basics of HLNC concepts. In the next chapter, we'll go over the Network Lifecycle, including an overview of how data is sent across the network.
+That's the absolute bare-bones basics of Nebula concepts. In the next chapter, we'll go over the Network Lifecycle, including an overview of how data is sent across the network.
