@@ -34,8 +34,17 @@ namespace Nebula.Serialization
         public bool Build()
         {
             var resource = new ProtocolResource();
-            var sceneDataCache = new Dictionary<string, SceneBytecode>();
-            serializableTypesMap = new Dictionary<string, int>();
+            resource.STATIC_METHODS = [];
+            resource.SCENES_MAP = [];
+            resource.SCENES_PACK = [];
+            resource.STATIC_NETWORK_NODE_PATHS_MAP = [];
+            resource.STATIC_NETWORK_NODE_PATHS_PACK = [];
+            resource.PROPERTIES_MAP = [];
+            resource.FUNCTIONS_MAP = [];
+            resource.PROPERTIES_LOOKUP = [];
+            resource.FUNCTIONS_LOOKUP = [];
+            SceneDataCache = [];
+            serializableTypesMap = [];
 
             // This is necessary because in Godot you cannot call a static method from a GD.Load() Script.
             // And we don't want to perform reflection every single time we want to serialize or deserialize
@@ -256,7 +265,7 @@ namespace Nebula.Serialization
             return new ExtendedVariantType { Type = Variant.Type.Nil };
         }
 
-        private Dictionary<string, SceneBytecode> SceneDataCache = new Dictionary<string, SceneBytecode>();
+        private Dictionary<string, SceneBytecode> SceneDataCache;
         private Dictionary<string, int> serializableTypesMap = new Dictionary<string, int>();
         private SceneBytecode GenerateSceneBytecode(string sceneResourcePath, Dictionary<string, string> sceneFileContentByPath, System.Collections.Generic.Dictionary<string, NetworkTypeInfo> nodeNetworkTypes)
         {

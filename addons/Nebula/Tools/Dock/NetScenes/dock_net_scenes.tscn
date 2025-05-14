@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cj5cn0ynovfmp"]
 
-[ext_resource type="Script" uid="uid://d3r6666mfwaxk" path="res://addons/Nebula/Tools/Dock/NetScenes/DockNetScenes.cs" id="1_dms5x"]
-[ext_resource type="Script" uid="uid://b4cygdapnebjn" path="res://addons/Nebula/Tools/Dock/NetScenes/net_scenes_tree.gd" id="2_ird18"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/Dock/NetScenes/DockNetScenes.cs" id="1_dms5x"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/Dock/NetScenes/net_scenes_tree.gd" id="2_ird18"]
 
 [node name="DockNetScenes" type="Control" node_paths=PackedStringArray("ScenesTree")]
 layout_mode = 3

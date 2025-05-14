@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c8xrt1bikdy6d"]
 
-[ext_resource type="Script" uid="uid://dd8fn5k6doy58" path="res://addons/Nebula/Tools/Debugger/Ticks/tick_frame.gd" id="1_luydj"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/Debugger/Ticks/tick_frame.gd" id="1_luydj"]
 [ext_resource type="StyleBox" uid="uid://1f1v44mbwwdj" path="res://addons/Nebula/Tools/Debugger/Ticks/tick_frame_bar_color_red.tres" id="1_xayk1"]
 [ext_resource type="StyleBox" uid="uid://bjhpbidul18uv" path="res://addons/Nebula/Tools/Debugger/Ticks/tick_frame_unselected.tres" id="3_bbijn"]
 

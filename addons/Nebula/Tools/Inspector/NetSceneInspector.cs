@@ -80,7 +80,7 @@ namespace Nebula.Internal.Editor
             {
                 if (inspectorScene == null)
                 {
-                    inspectorScene = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspect_net_scene.tscn");
+                    inspectorScene = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspect_network_scene.tscn");
                 }
                 var sceneRootItem = GetEditorSceneTree().GetRoot();
                 var selectedNodeItem = GetEditorSceneTree().GetSelected();

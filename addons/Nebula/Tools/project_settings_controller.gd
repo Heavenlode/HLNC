@@ -9,7 +9,6 @@ func _enter_tree():
         "type": TYPE_INT,
         "hint": PROPERTY_HINT_ENUM,
         "hint_string": "Error:1,Warn:2,Info:4,Verbose:8",
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
 
     ## Network Settings
@@ -17,7 +16,6 @@ func _enter_tree():
     ProjectSettings.add_property_info({
         "name": "Nebula/network/IP",
         "type": TYPE_STRING,
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
     ProjectSettings.set_setting("Nebula/network/default_port", ProjectSettings.get_setting("Nebula/network/default_port", 8888))
     ProjectSettings.add_property_info({
@@ -25,7 +23,6 @@ func _enter_tree():
         "type": TYPE_INT,
         "hint": PROPERTY_HINT_RANGE,
         "hint_string": "1000,65535,1",
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
     ProjectSettings.set_setting("Nebula/network/MTU", ProjectSettings.get_setting("Nebula/network/MTU", 1400))
     ProjectSettings.add_property_info({
@@ -33,7 +30,6 @@ func _enter_tree():
         "type": TYPE_INT,
         "hint": PROPERTY_HINT_RANGE,
         "hint_string": "100,65535,1",
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
 
     ## World Settings
@@ -44,14 +40,12 @@ func _enter_tree():
         "type": TYPE_STRING,
         "hint": PROPERTY_HINT_FILE,
         "hint_string": "*.tscn",
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
 
     ProjectSettings.set_setting("Nebula/world/managed_entrypoint", ProjectSettings.get_setting("Nebula/world/managed_entrypoint", true))
     ProjectSettings.add_property_info({
         "name": "Nebula/world/managed_entrypoint",
         "type": TYPE_BOOL,
-        "usage": PROPERTY_USAGE_DEFAULT,
     })
 
     if ProjectSettings.get_setting("Nebula/world/managed_entrypoint", true):

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bq4fgpxhp5lg6"]
 
-[ext_resource type="Script" uid="uid://1gy3ppr6w877" path="res://addons/Nebula/Tools/Inspector/inspector_field.gd" id="1_6w8pf"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/Inspector/inspector_field.gd" id="1_6w8pf"]
 
 [node name="FieldTickId" type="MarginContainer"]
 theme_override_constants/margin_left = 8

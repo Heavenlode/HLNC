@@ -47,6 +47,12 @@ namespace Nebula.Serialization
             Instance = this;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            STATIC_METHOD_CALLABLES.Clear();
+            base.Dispose(disposing);
+        }
+
         public void Load()
         {
             LoadProtocol();

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dom5ndqxbmsqc"]
 
-[ext_resource type="Script" uid="uid://bu73h1bt5s25b" path="res://addons/Nebula/Tools/AddonManager/AddonManager.cs" id="1_6wwgw"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/AddonManager/AddonManager.cs" id="1_6wwgw"]
 
 [node name="AddonManager" type="Window" node_paths=PackedStringArray("AddonList", "AddonDescription")]
 title = "Nebula Addons"

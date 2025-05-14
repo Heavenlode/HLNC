@@ -13,32 +13,32 @@ namespace Nebula.Serialization
     public partial class ProtocolResource : Resource
     {
         [Export]
-        public Dictionary<int, StaticMethodResource> STATIC_METHODS = [];
+        public Dictionary<int, StaticMethodResource> STATIC_METHODS;
 
         [Export]
-        public Dictionary<byte, string> SCENES_MAP = [];
+        public Dictionary<byte, string> SCENES_MAP;
 
         [Export]
-        public Dictionary<string, byte> SCENES_PACK = [];
+        public Dictionary<string, byte> SCENES_PACK;
         [Export]
-        public Dictionary<string, Dictionary<byte, string>> STATIC_NETWORK_NODE_PATHS_MAP = [];
+        public Dictionary<string, Dictionary<byte, string>> STATIC_NETWORK_NODE_PATHS_MAP;
 
         [Export]
-        public Dictionary<string, Dictionary<string, byte>> STATIC_NETWORK_NODE_PATHS_PACK = [];
+        public Dictionary<string, Dictionary<string, byte>> STATIC_NETWORK_NODE_PATHS_PACK;
 
         [Export]
-        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetProperty>>> PROPERTIES_MAP = [];
+        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetProperty>>> PROPERTIES_MAP;
 
         [Export]
-        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetFunction>>> FUNCTIONS_MAP = [];
+        public Dictionary<string, Dictionary<string, Dictionary<string, ProtocolNetFunction>>> FUNCTIONS_MAP;
 
         [Export]
-        public Dictionary<string, Dictionary<int, ProtocolNetFunction>> FUNCTIONS_LOOKUP = [];
+        public Dictionary<string, Dictionary<int, ProtocolNetFunction>> FUNCTIONS_LOOKUP;
 
         [Export]
-        public Dictionary<string, Dictionary<int, ProtocolNetProperty>> PROPERTIES_LOOKUP = [];
+        public Dictionary<string, Dictionary<int, ProtocolNetProperty>> PROPERTIES_LOOKUP;
 
         [Export]
-        public Dictionary<string, int> SERIAL_TYPE_PACK = [];
+        public Dictionary<string, int> SERIAL_TYPE_PACK;
     }
 }

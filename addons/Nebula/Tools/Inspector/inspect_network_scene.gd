@@ -17,7 +17,7 @@ class_name InspectNetScene extends Accordion
 
 var function_row_scene = preload("res://addons/Nebula/Tools/Inspector/property_row.tscn")
 var property_row_scene = preload("res://addons/Nebula/Tools/Inspector/property_row.tscn")
-var network_node_details_scene = load("res://addons/Nebula/Tools/Inspector/network_node_details.tscn")
+var net_node_details_scene = load("res://addons/Nebula/Tools/Inspector/net_node_details.tscn")
 
 var child_details: Array[InspectNetScene] = []
 var properties: Dictionary = {}
@@ -69,7 +69,7 @@ func add_function(name: String, type: String, child_detail_id: int = -1) -> void
     functions_parent.visible = true
 
 func add_child_detail(name: String) -> int:
-    var child_detail = network_node_details_scene.instantiate()
+    var child_detail = net_node_details_scene.instantiate()
     child_detail.get_node("Button").text = child_detail.get_node("Button").text + " " + name
     child_details.append(child_detail)
     children_container.add_child(child_detail)

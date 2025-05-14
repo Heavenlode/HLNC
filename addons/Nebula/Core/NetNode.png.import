@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqt7bbld8fov0"
-path="res://.godot/imported/NetNode.png-8ad915d4c5e533d380aae1938df87e82.ctex"
+path="res://.godot/imported/NetNode.png-673298b029cf27d6e8f08cfea7e77893.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,13 +11,15 @@ metadata={
 [deps]
 
 source_file="res://addons/Nebula/Core/NetNode.png"
-dest_files=["res://.godot/imported/NetNode.png-8ad915d4c5e533d380aae1938df87e82.ctex"]
+dest_files=["res://.godot/imported/NetNode.png-673298b029cf27d6e8f08cfea7e77893.ctex"]
 
 [params]
 
 compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

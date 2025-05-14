@@ -6,7 +6,7 @@ const AUTOLOAD_PROTOCOL_REGISTRY = "ProtocolRegistry"
 const AUTOLOAD_PROTOCOL_REGISTRY_BUILDER = "ProtocolRegistryBuilder"
 const AUTOLOAD_ENV = "Env"
 const AUTOLOAD_DEBUGGER = "Debugger"
-const AUTOLOAD_DATA_TRANSFORMER = "DataTransformer"
+const AUTOLOAD_DATA_TRANSFORMER = "BsonTransformer"
 
 const DockNetScenes = preload("res://addons/Nebula/Tools/Dock/NetScenes/dock_net_scenes.tscn")
 var dock_net_scenes_instance: Control
@@ -14,7 +14,6 @@ var dock_net_scenes_instance: Control
 const ServerDebugClient = preload("res://addons/Nebula/Tools/Debugger/server_debug_client.tscn")
 var server_debug_client_instance: Window
 
-const DataTransformer = preload("res://addons/Nebula/Utils/Bson/DataTransformer.cs")
 const NetSceneInspector = preload("res://addons/Nebula/Tools/Inspector/NetSceneInspector.cs")
 const AddonManager = preload("res://addons/Nebula/Tools/AddonManager/addon_manager.tscn")
 const ToolMenu = preload("res://addons/Nebula/Tools/tool_menu.tscn")
@@ -43,7 +42,7 @@ func _enter_tree():
 
     add_autoload_singleton(AUTOLOAD_DEBUGGER, "res://addons/Nebula/Utils/Debugger/Debugger.cs")
     add_autoload_singleton(AUTOLOAD_ENV, "res://addons/Nebula/Utils/Env/Env.cs")
-    add_autoload_singleton(AUTOLOAD_DATA_TRANSFORMER, "res://addons/Nebula/Utils/Bson/DataTransformer.cs")
+    add_autoload_singleton(AUTOLOAD_DATA_TRANSFORMER, "res://addons/Nebula/Core/Serialization/BsonTransformer.cs")
     add_autoload_singleton(AUTOLOAD_PROTOCOL_REGISTRY, "res://addons/Nebula/Core/Serialization/ProtocolRegistry.cs")
     add_autoload_singleton(AUTOLOAD_RUNNER, "res://addons/Nebula/Core/NetRunner.cs")
     add_autoload_singleton(AUTOLOAD_PROTOCOL_REGISTRY_BUILDER, "res://addons/Nebula/Core/Serialization/ProtocolRegistryBuilder.cs")

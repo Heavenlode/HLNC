@@ -18,7 +18,7 @@ namespace Nebula.Internal.Editor
         private PackedScene inspectorTitleScene = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspector_title.tscn");
         private PackedScene inspectorFieldScene = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspector_field.tscn");
 
-        private PackedScene networkSceneInspector = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspect_net_scene.tscn");
+        private PackedScene networkSceneInspector = GD.Load<PackedScene>("res://addons/Nebula/Tools/Inspector/inspect_network_scene.tscn");
         private Control networkSceneInpsectorInstance;
 
         private Dictionary currentNodeData;

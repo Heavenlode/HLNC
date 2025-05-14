@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://cviurjqd8x2o0"]
 
-[ext_resource type="Script" uid="uid://ovs8naegkmwu" path="res://addons/Nebula/Tools/Inspector/inspect_net_scene.gd" id="1_a30bn"]
+[ext_resource type="Script" path="res://addons/Nebula/Tools/Inspector/inspect_network_scene.gd" id="1_a30bn"]
 [ext_resource type="PackedScene" uid="uid://ywhp3yi0fvpa" path="res://addons/Nebula/Tools/Inspector/accordion.tscn" id="2_208w3"]
 [ext_resource type="PackedScene" uid="uid://dgc5sfmxnea6h" path="res://addons/Nebula/Tools/Inspector/property_row.tscn" id="2_n37bw"]
 
